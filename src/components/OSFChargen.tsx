@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import wcg from '../images/wcg_logo.png';
 import { DownOutlined } from '@ant-design/icons';
 import { Col, Row, Dropdown, Space, Steps } from "antd";
-import type { MenuProps } from 'antd';
+import type { MenuProps, StepProps } from 'antd';
 import ModeCard from "./ModeCard";
 
 const FEATURES_STEP_TITLE: string = "Features";
@@ -53,7 +53,7 @@ const wickedHardSteps = [
     }
 ];
 
-var traditionalSteps = [
+const traditionalSteps = [
     {
         title: 'Species'
     },
@@ -76,13 +76,14 @@ var traditionalSteps = [
 
 export const OSFChargen: React.FC = () => {
     const [level, setLevel] = useState<number | null>(null);
+    const [traditionalStepsForLevel, setTraditionalStepsForLevel] = useState<StepProps[] | undefined>(traditionalSteps);
 
     const onClick: MenuProps['onClick'] = ({ key }) => {
         let charLevel = parseInt(key);
 
         // Level 1 characters don't select features
         if (charLevel === 1) {
-            traditionalSteps = traditionalSteps.filter((step) => step.title !== FEATURES_STEP_TITLE);
+            setTraditionalStepsForLevel(traditionalSteps.filter((step) => step.title !== FEATURES_STEP_TITLE));
         }
 
         setLevel(charLevel);
@@ -101,14 +102,14 @@ export const OSFChargen: React.FC = () => {
                     <Col span={12}>
                         <div>
                             <ModeCard title="Traditional Start" description="Create a Level 1-7 character with a specific character class.">
-                            <Dropdown menu={{ items, onClick }}>
-                            <a onClick={(e) => e.preventDefault()}>
-                            <Space>
-                                Level
-                                <DownOutlined />
-                            </Space>
-                            </a>
-                        </Dropdown>
+                                <Dropdown menu={{ items, onClick }}>
+                                    <a onClick={(e) => e.preventDefault()}>
+                                        <Space>
+                                            Level
+                                            <DownOutlined />
+                                        </Space>
+                                    </a>
+                                </Dropdown>
                             </ModeCard>
                         </div>
                     </Col>
@@ -132,7 +133,7 @@ export const OSFChargen: React.FC = () => {
     else
     {
         return (
-            <Steps current={0} items={traditionalSteps} />
+            <Steps current={0} items={traditionalStepsForLevel} />
         );
     }
 }
