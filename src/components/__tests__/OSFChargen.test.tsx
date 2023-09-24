@@ -29,6 +29,7 @@ jest.mock("antd", () => {
             let onClickFn = menu.onClick;
             radioButtons.push(<input type="radio"
                 name="mockDropDown"
+                key={idStr}
                 data-testid={idStr}
                 onClick={event => {
                     if (onClickFn) {

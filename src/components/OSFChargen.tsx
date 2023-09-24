@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import wcg from '../images/wcg_logo.png';
 import { DownOutlined } from '@ant-design/icons';
-import { Col, Row, Dropdown, Space, Steps } from "antd";
+import { Col, Row, Dropdown, Space } from "antd";
 import type { MenuProps, StepProps } from 'antd';
 import ModeCard from "./ModeCard";
+import ChargenStepper from "./ChargenStepper";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -74,7 +75,7 @@ const traditionalSteps = [
     }
 ];
 
-export const OSFChargen: React.FC = () => {
+const OSFChargen: React.FC = () => {
     const [level, setLevel] = useState<number | null>(null);
     const [traditionalStepsForLevel, setTraditionalStepsForLevel] = useState<StepProps[] | undefined>(traditionalSteps);
 
@@ -126,14 +127,14 @@ export const OSFChargen: React.FC = () => {
     // Wicked Hard Mode stepper
     else if (level === 0) {
         return (
-            <Steps current={0} items={wickedHardSteps} />
+            <ChargenStepper steps={wickedHardSteps} />
         );
     }
     // Traditional Mode stepper
     else
     {
         return (
-            <Steps current={0} items={traditionalStepsForLevel} />
+            <ChargenStepper steps={traditionalStepsForLevel} />
         );
     }
 }
