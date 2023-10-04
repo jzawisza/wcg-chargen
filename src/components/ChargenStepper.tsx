@@ -1,9 +1,9 @@
-import { Button, StepProps, Steps } from "antd";
+import { Button, Steps } from "antd";
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 
 type ChargenStepperProps = {
-    steps: StepProps[] | undefined;
+    steps: {title: string, content: ReactNode | undefined}[];
 };
 
 const ChargenStepper = (props: ChargenStepperProps) => {
@@ -13,6 +13,8 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     return (
         <div>
             <Steps current={current} items={props.steps} />
+            <div>{props.steps[current].content}</div>
+            <hr />
             {current > 0 && (
                 <Button type="text" className="prevButton" onClick={() => setCurrent(current - 1)} icon={<LeftOutlined />}>
                     Previous

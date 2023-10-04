@@ -5,6 +5,7 @@ import { Col, Row, Dropdown, Space } from "antd";
 import type { MenuProps, StepProps } from 'antd';
 import ModeCard from "./ModeCard";
 import ChargenStepper from "./ChargenStepper";
+import Species from "./steps/Species";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -41,43 +42,53 @@ const items: MenuProps['items'] = [
 
 const wickedHardSteps = [
     {
-        title: 'Species'
+        title: 'Species',
+        content: <Species />
     },
     {
-        title: 'Profession'
+        title: 'Profession',
+        content: <div />
     },
     {
-        title: 'Attributes'
+        title: 'Attributes',
+        content: <div />
     },
     {
-        title: 'Create Character'
+        title: 'Create Character',
+        content: <div />
     }
 ];
 
 const traditionalSteps = [
     {
-        title: 'Species'
+        title: 'Species',
+        content: <Species />
     },
     {
-        title: 'Class'
+        title: 'Class',
+        content: <div />
     },
     {
-        title: 'Skills'
+        title: 'Skills',
+        content: <div />
     },
     {
-        title: 'Attributes'
+        title: 'Attributes',
+        content: <div />
     },
     {
-        title: FEATURES_STEP_TITLE
+        title: FEATURES_STEP_TITLE,
+        content: <div />
     },
     {
-        title: 'Create Character'
+        title: 'Create Character',
+        content: <div />
     }
 ];
 
 const OSFChargen: React.FC = () => {
     const [level, setLevel] = useState<number | null>(null);
-    const [traditionalStepsForLevel, setTraditionalStepsForLevel] = useState<StepProps[] | undefined>(traditionalSteps);
+    const [traditionalStepsForLevel, setTraditionalStepsForLevel] = useState(traditionalSteps);
 
     const onClick: MenuProps['onClick'] = ({ key }) => {
         let charLevel = parseInt(key);

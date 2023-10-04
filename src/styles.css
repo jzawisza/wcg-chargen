@@ -33,3 +33,19 @@
 .nextButton {
   float: right
 }
+
+.speciesCardWrapper {
+  padding: 2%;
+}
+
+.speciesCard {
+  width: 20em;
+  height: 15em;
+  cursor: pointer;
+}
+
+.speciesCard-selected {
+  border-style: solid;
+  border-width: thick;
+  border-color: black;
+}
