@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Col, Row } from "antd";
 import SpeciesCard from "./SpeciesCard";
+import { CharacterContext, NextButtonEnabledContext } from "../../Context";
 
 const dwarfTraits = (
     <ul>
@@ -43,12 +44,20 @@ const humanTraits = (
 );
 
 const Species: React.FC = () => {
-    const [species, setSpecies] = useState<string | null>(null);
+    const { setNextEnabled } = useContext(NextButtonEnabledContext);
+    const { species, setSpecies } = useContext(CharacterContext);
+
+    const onSpeciesCardClick = (speciesName: string) => {
+        setSpecies(speciesName);
+        setNextEnabled(true);
+    };
 
     return (
         <div>
+            <p>Select the species you want to play as, and then click Next to proceed.</p>
+            <p>Hover over or click the information icons for more details on the traits of each species.</p>
             <Row justify="center">
-                <div className="speciesCardWrapper" onClick={() => setSpecies('dwarf')}>
+                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('dwarf')}>
                     <Col span={8}>
                         <SpeciesCard species="Dwarf"
                             description="Dwarves are tough, stocky, bearded, gruff, naturally magic resistant creatures just under five feet tall."
@@ -57,7 +66,7 @@ const Species: React.FC = () => {
                         />
                     </Col>
                 </div>
-                <div className="speciesCardWrapper" onClick={() => setSpecies('elf')}>
+                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('elf')}>
                     <Col span={8}>
                         <SpeciesCard species="Elf"
                             description="Slender, patient, graceful, sylvan-dwelling artisans with an affinity for magic, elves sometimes live for two centuries."
@@ -68,7 +77,7 @@ const Species: React.FC = () => {
                 </div>
             </Row>
             <Row justify="center">
-                <div className="speciesCardWrapper" onClick={() => setSpecies('halfling')}>
+                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('halfling')}>
                     <Col span={8}>
                         <SpeciesCard species="Halfling"
                             description="Halflings are short, lighthearted, stealthy, comfort loving, nimble folk.   Sporting a slight build, they rarely reach four feet."
@@ -77,7 +86,7 @@ const Species: React.FC = () => {
                         />
                     </Col>
                 </div>
-                <div className="speciesCardWrapper" onClick={() => setSpecies('human')}>
+                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('human')}>
                     <Col span={8}>
                         <SpeciesCard species="Human"
                             description="The most common character species, humans are adaptable, ambitious, resilient folk."

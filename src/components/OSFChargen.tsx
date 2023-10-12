@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import wcg from '../images/wcg_logo.png';
 import { DownOutlined } from '@ant-design/icons';
 import { Col, Row, Dropdown, Space } from "antd";
-import type { MenuProps, StepProps } from 'antd';
+import type { MenuProps } from 'antd';
 import ModeCard from "./ModeCard";
 import ChargenStepper from "./ChargenStepper";
 import Species from "./steps/Species";
