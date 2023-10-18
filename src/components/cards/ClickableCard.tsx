@@ -1,12 +1,14 @@
 import { Card } from "antd";
 import { PropsWithChildren } from 'react';
 
-type ModeCardProps = {
+type ClickableCardProps = {
     title: string,
     description: string
 };
 
-const ModeCard = (props: PropsWithChildren<ModeCardProps>) => (
+// Card that can be directly clicked on to transition to a new screen.
+// Supports embedding components within the card.
+const ClickableCard = (props: PropsWithChildren<ClickableCardProps>) => (
     <Card title={props.title}
         hoverable
         className="modeCard">
@@ -15,4 +17,4 @@ const ModeCard = (props: PropsWithChildren<ModeCardProps>) => (
     </Card>
 );
 
-export default ModeCard;
+export default ClickableCard;

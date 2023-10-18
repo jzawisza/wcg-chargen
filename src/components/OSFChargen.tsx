@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import wcg from '../images/wcg_logo.png';
 import { DownOutlined } from '@ant-design/icons';
 import { Col, Row, Dropdown, Space } from "antd";
 import type { MenuProps } from 'antd';
-import ModeCard from "./ModeCard";
+import wcg from '../images/wcg_logo.png';
 import ChargenStepper from "./ChargenStepper";
+import ClickableCard from "./cards/ClickableCard";
 import Species from "./steps/Species";
 import CreateCharacter from "./steps/CreateCharacter";
 import Profession from "./steps/Profession";
@@ -115,7 +115,7 @@ const OSFChargen: React.FC = () => {
                 <Row justify="center">
                     <Col span={12}>
                         <div>
-                            <ModeCard title="Traditional Start" description="Create a Level 1-7 character with a specific character class.">
+                            <ClickableCard title="Traditional Start" description="Create a Level 1-7 character with a specific character class.">
                                 <Dropdown menu={{ items, onClick }}>
                                     <a onClick={(e) => e.preventDefault()}>
                                         <Space>
@@ -124,13 +124,13 @@ const OSFChargen: React.FC = () => {
                                         </Space>
                                     </a>
                                 </Dropdown>
-                            </ModeCard>
+                            </ClickableCard>
                         </div>
                     </Col>
                     <div onClick={() => setLevel(0)}>
                         <Col span={12}>
-                            <ModeCard title="Wicked Hard Mode"
-                                description="Make Level 0 unskilled commoner characters.  Those lucky enough to survive will be promoted to 1st level."></ModeCard>                    
+                            <ClickableCard title="Wicked Hard Mode"
+                                description="Make Level 0 unskilled commoner characters.  Those lucky enough to survive will be promoted to 1st level."></ClickableCard>                    
                         </Col>
                     </div>
                 </Row>

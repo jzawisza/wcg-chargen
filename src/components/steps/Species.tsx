@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Col, Row } from "antd";
-import SpeciesCard from "./SpeciesCard";
+import SelectableCard from "../cards/SelectableCard";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
 
 const dwarfTraits = (
@@ -59,18 +59,18 @@ const Species: React.FC = () => {
             <Row justify="center">
                 <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('dwarf')}>
                     <Col span={8}>
-                        <SpeciesCard species="Dwarf"
+                        <SelectableCard title="Dwarf"
                             description="Dwarves are tough, stocky, bearded, gruff, naturally magic resistant creatures just under five feet tall."
-                            traits={dwarfTraits}
+                            features={dwarfTraits}
                             selected={species === 'dwarf'}
                         />
                     </Col>
                 </div>
                 <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('elf')}>
                     <Col span={8}>
-                        <SpeciesCard species="Elf"
+                        <SelectableCard title="Elf"
                             description="Slender, patient, graceful, sylvan-dwelling artisans with an affinity for magic, elves sometimes live for two centuries."
-                            traits={elfTraits}
+                            features={elfTraits}
                             selected={species === 'elf'}
                         />
                     </Col>
@@ -79,18 +79,18 @@ const Species: React.FC = () => {
             <Row justify="center">
                 <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('halfling')}>
                     <Col span={8}>
-                        <SpeciesCard species="Halfling"
+                        <SelectableCard title="Halfling"
                             description="Halflings are short, lighthearted, stealthy, comfort loving, nimble folk.   Sporting a slight build, they rarely reach four feet."
-                            traits={halflingTraits}
+                            features={halflingTraits}
                             selected={species === 'halfling'}
                         />
                     </Col>
                 </div>
                 <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('human')}>
                     <Col span={8}>
-                        <SpeciesCard species="Human"
+                        <SelectableCard title="Human"
                             description="The most common character species, humans are adaptable, ambitious, resilient folk."
-                            traits={humanTraits}
+                            features={humanTraits}
                             selected={species === 'human'}
                         />
                     </Col>

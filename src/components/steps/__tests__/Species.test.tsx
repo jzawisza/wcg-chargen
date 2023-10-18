@@ -37,5 +37,5 @@ test.each([
 
     const speciesCardTitleElt = screen.getByText(speciesStr);
     const speciesCardElt = speciesCardTitleElt.parentElement?.parentElement?.parentElement;
-    expect(speciesCardElt).toHaveClass('speciesCard-selected');
+    expect(speciesCardElt).toHaveClass('selectableCard-selected');
 });

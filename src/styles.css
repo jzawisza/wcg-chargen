@@ -38,13 +38,13 @@
   padding: 2%;
 }
 
-.speciesCard {
+.selectableCard {
   width: 20em;
   height: 15em;
   cursor: pointer;
 }
 
-.speciesCard-selected {
+.selectableCard-selected {
   border-style: solid;
   border-width: thick;
   border-color: black;

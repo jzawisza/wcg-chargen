@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import ModeCard from "../ModeCard";
+import ClickableCard from "../ClickableCard";
 
 test('card displays title and description', () => {
     const expectedTitle = "ExpectedTitle";
     const expectedDesc = "ExpectedDescription";
 
-    render(<ModeCard title={expectedTitle} description={expectedDesc} />);
+    render(<ClickableCard title={expectedTitle} description={expectedDesc} />);
 
     const titleElt = screen.getByText(expectedTitle);
     const descriptionElt = screen.getByText(expectedDesc);
@@ -17,7 +17,7 @@ test('card displays title and description', () => {
 test('card correctly renders children', () => {
     const dataTestId = "ChildElement";
 
-    render(<ModeCard title="foo" description="bar"><div data-testid={dataTestId} /></ModeCard>);
+    render(<ClickableCard title="foo" description="bar"><div data-testid={dataTestId} /></ClickableCard>);
 
     const childElt = screen.getByTestId(dataTestId);
     
