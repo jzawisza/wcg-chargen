@@ -22,13 +22,15 @@ test.each([
     ["Halfling"],
     ["Human"]
 ])('selecting species %s highlights correct card', async (speciesStr) => {
-    const speciesContext = {
+    const charInfoContext = {
         species: speciesStr.toLowerCase(),
-        setSpecies: (newSpecies: string) => {}
+        setSpecies: (newSpecies: string) => {},
+        profession: '',
+        setProfession: (newProfession: string) => {}
     };
 
     render(
-        <CharacterContext.Provider value={speciesContext}>
+        <CharacterContext.Provider value={charInfoContext}>
             <Species />
         </CharacterContext.Provider>
     );

@@ -7,6 +7,7 @@ import ModeCard from "./ModeCard";
 import ChargenStepper from "./ChargenStepper";
 import Species from "./steps/Species";
 import CreateCharacter from "./steps/CreateCharacter";
+import Profession from "./steps/Profession";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -48,7 +49,7 @@ const wickedHardSteps = [
     },
     {
         title: 'Profession',
-        content: <div />
+        content: <Profession />
     },
     {
         title: 'Attributes',

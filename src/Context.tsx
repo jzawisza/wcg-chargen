@@ -9,5 +9,7 @@ export const NextButtonEnabledContext = createContext({
 // Information about the character being created
 export const CharacterContext = createContext({
     species: '',
-    setSpecies: (newSpecies: string) => {}
+    setSpecies: (newSpecies: string) => {},
+    profession: '',
+    setProfession: (newProfession: string) => {}
 });

@@ -11,16 +11,17 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [current, setCurrent] = useState(0);
     const [nextEnabled, setNextEnabled] = useState(false);
     const [species, setSpecies] = useState('');
+    const [profession, setProfession] = useState('');
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
-    const speciesValue = {species, setSpecies};
+    const characterInfoValue = {species, setSpecies, profession, setProfession};
 
     const numSteps = props.steps ? props.steps.length : 0;
 
     return (
         <div>
             <NextButtonEnabledContext.Provider value={nextEnabledValue}>
-            <CharacterContext.Provider value={speciesValue}>
+            <CharacterContext.Provider value={characterInfoValue}>
                 <Steps current={current} items={props.steps} />
                 <div>{props.steps[current].content}</div>
                 <hr />

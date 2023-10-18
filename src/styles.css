@@ -63,3 +63,8 @@
   transform: translate(7.5%, 0);
   margin-top: 20px;
 }
+
+.professionCenter {
+  margin: auto;
+  width: 30%;
+}
