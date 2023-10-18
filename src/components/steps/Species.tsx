@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { Col, Row } from "antd";
 import SpeciesCard from "./SpeciesCard";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";

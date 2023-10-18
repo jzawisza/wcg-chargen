@@ -6,6 +6,7 @@ import type { MenuProps } from 'antd';
 import ModeCard from "./ModeCard";
 import ChargenStepper from "./ChargenStepper";
 import Species from "./steps/Species";
+import CreateCharacter from "./steps/CreateCharacter";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -55,7 +56,7 @@ const wickedHardSteps = [
     },
     {
         title: 'Create Character',
-        content: <div />
+        content: <CreateCharacter />
     }
 ];
 
@@ -82,7 +83,7 @@ const traditionalSteps = [
     },
     {
         title: 'Create Character',
-        content: <div />
+        content: <CreateCharacter />
     }
 ];
 

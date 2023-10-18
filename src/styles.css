@@ -49,3 +49,17 @@
   border-width: thick;
   border-color: black;
 }
+
+.charSheetButtonCenter {
+  margin: auto;
+  width: 250px;
+}
+
+.charSheetDescription {
+  font-size: 75%;
+}
+
+.createCharButton {
+  transform: translate(7.5%, 0);
+  margin-top: 20px;
+}
