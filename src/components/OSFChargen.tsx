@@ -111,7 +111,7 @@ const OSFChargen: React.FC = () => {
             <div className="padded">
                 <img src={wcg} alt="Wicked Cool Games logo" className="imgCenter"/>
                 <p>This is a character generator for the OSF (Old School Fantasy) RPG system to be published by Wicked Cool Games.</p>
-                <p>Before creating a character, consult with your GM for guidance about what settings to use.</p>
+                <p>Before creating a character, consult with your Game Master (GM), the person running your game.  Some of the choices required when creating a character can only be made with the input of your GM.  If you don't do this, your GM may reject your character.</p>
                 <p>Choose one of the options below to get started.</p>
                 <Row justify="center">
                     <Col span={12}>

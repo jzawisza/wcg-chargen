@@ -110,7 +110,7 @@ const CharacterClass: React.FC = () => {
     return (
         <div>
             <p>Select the character class you want to play as, and then click Next to proceed.</p>
-            <p>Each class has a particular set of skills which they use during an adventure.  It is advisable for a party to have a diverse set of classes, but any and all classes can be invaluable.</p>
+            <p>Each class has a particular set of abilities which they use during an adventure.  It is advisable for a party to have a diverse set of classes, but any and all classes can be invaluable.</p>
             <p>Hover over or click the information icons for more details on the features of each class.</p>
             <div  className="quickGearCheckboxCenter">
                 <Checkbox>Use Quick Gear</Checkbox>

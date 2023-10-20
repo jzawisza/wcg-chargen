@@ -22,7 +22,7 @@ const CreateCharacter: React.FC = () => {
             <Result
                 status="success"
                 title="Character Created Successfully!"
-                subTitle="Click on the Create Another button if you would like to create another character sheet."
+                subTitle="Click on the Create Another button if you would like to create another character sheet.  For Wicked Hard Mode, you must create three characters."
                 extra={[
                     // TODO: replace window.location.reload with a smarter state update
                     <Button type="primary" key="newCharacter" onClick={() => window.location.reload()}>
