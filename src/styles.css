@@ -34,13 +34,11 @@
   float: right
 }
 
-.speciesCardWrapper {
+.selectableCardWrapper {
   padding: 2%;
 }
 
 .selectableCard {
-  width: 20em;
-  height: 15em;
   cursor: pointer;
 }
 
@@ -48,6 +46,16 @@
   border-style: solid;
   border-width: thick;
   border-color: black;
+}
+
+.speciesCard {
+  width: 20em;
+  height: 15em;
+}
+
+.charClassCard {
+  width: 20em;
+  height: 12em;
 }
 
 .charSheetButtonCenter {
@@ -67,4 +75,9 @@
 .professionCenter {
   margin: auto;
   width: 30%;
+}
+
+.quickGearCheckboxCenter {
+  margin: auto;
+  width: 20%;
 }

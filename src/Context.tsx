@@ -11,5 +11,7 @@ export const CharacterContext = createContext({
     species: '',
     setSpecies: (newSpecies: string) => {},
     profession: '',
-    setProfession: (newProfession: string) => {}
+    setProfession: (newProfession: string) => {},
+    charClass: '',
+    setCharClass: (newCharClass: string) => {}
 });

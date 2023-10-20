@@ -12,9 +12,10 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [nextEnabled, setNextEnabled] = useState(false);
     const [species, setSpecies] = useState('');
     const [profession, setProfession] = useState('');
+    const [charClass, setCharClass] = useState('');
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
-    const characterInfoValue = {species, setSpecies, profession, setProfession};
+    const characterInfoValue = {species, setSpecies, profession, setProfession, charClass, setCharClass};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

@@ -24,9 +24,7 @@ test.each([
 ])('selecting species %s highlights correct card', async (speciesStr) => {
     const charInfoContext = {
         species: speciesStr.toLowerCase(),
-        setSpecies: (newSpecies: string) => {},
-        profession: '',
-        setProfession: (newProfession: string) => {}
+        setSpecies: (newSpecies: string) => {}
     };
 
     render(

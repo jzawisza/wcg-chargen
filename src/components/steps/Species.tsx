@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Col, Row } from "antd";
 import SelectableCard from "../cards/SelectableCard";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
@@ -47,6 +47,10 @@ const Species: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
     const { species, setSpecies } = useContext(CharacterContext);
 
+    useEffect(() => {
+        setNextEnabled(species !== '');
+    }, []);
+
     const onSpeciesCardClick = (speciesName: string) => {
         setSpecies(speciesName);
         setNextEnabled(true);
@@ -55,20 +59,22 @@ const Species: React.FC = () => {
     return (
         <div>
             <p>Select the species you want to play as, and then click Next to proceed.</p>
-            <p>Hover over or click the information icons for more details on the traits of each species.</p>
+            <p>Hover over or click the information icons for more details on the features of each species.</p>
             <Row justify="center">
-                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('dwarf')}>
+                <div className="selectableCardWrapper" onClick={() => onSpeciesCardClick('dwarf')}>
                     <Col span={8}>
                         <SelectableCard title="Dwarf"
+                            className="speciesCard"
                             description="Dwarves are tough, stocky, bearded, gruff, naturally magic resistant creatures just under five feet tall."
                             features={dwarfTraits}
                             selected={species === 'dwarf'}
                         />
                     </Col>
                 </div>
-                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('elf')}>
+                <div className="selectableCardWrapper" onClick={() => onSpeciesCardClick('elf')}>
                     <Col span={8}>
                         <SelectableCard title="Elf"
+                            className="speciesCard"
                             description="Slender, patient, graceful, sylvan-dwelling artisans with an affinity for magic, elves sometimes live for two centuries."
                             features={elfTraits}
                             selected={species === 'elf'}
@@ -77,18 +83,20 @@ const Species: React.FC = () => {
                 </div>
             </Row>
             <Row justify="center">
-                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('halfling')}>
+                <div className="selectableCardWrapper" onClick={() => onSpeciesCardClick('halfling')}>
                     <Col span={8}>
                         <SelectableCard title="Halfling"
+                            className="speciesCard"
                             description="Halflings are short, lighthearted, stealthy, comfort loving, nimble folk.   Sporting a slight build, they rarely reach four feet."
                             features={halflingTraits}
                             selected={species === 'halfling'}
                         />
                     </Col>
                 </div>
-                <div className="speciesCardWrapper" onClick={() => onSpeciesCardClick('human')}>
+                <div className="selectableCardWrapper" onClick={() => onSpeciesCardClick('human')}>
                     <Col span={8}>
                         <SelectableCard title="Human"
+                            className="speciesCard"
                             description="The most common character species, humans are adaptable, ambitious, resilient folk."
                             features={humanTraits}
                             selected={species === 'human'}

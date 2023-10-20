@@ -6,12 +6,13 @@ type SelectableCardProps = {
     title: string,
     description: string,
     features: ReactNode,
-    selected: boolean
+    selected: boolean,
+    className: string
 };
 
 // Card that will highlight when selected.
 const SelectableCard = (props: SelectableCardProps) => {
-    const classNameStr = "selectableCard" + (props.selected ? " selectableCard-selected" : "");
+    const classNameStr = "selectableCard " + props.className + (props.selected ? " selectableCard-selected" : "");
 
     return (
         <Card title={props.title}           
