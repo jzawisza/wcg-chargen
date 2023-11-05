@@ -13,9 +13,15 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [species, setSpecies] = useState('');
     const [profession, setProfession] = useState('');
     const [charClass, setCharClass] = useState('');
+    const [speciesSkill, setSpeciesSkill] = useState('');
+    const [bonusSkills, setBonusSkills] = useState<string[]>([]);
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
-    const characterInfoValue = {species, setSpecies, profession, setProfession, charClass, setCharClass};
+    const characterInfoValue = {species, setSpecies,
+        profession, setProfession,
+        charClass, setCharClass,
+        speciesSkill, setSpeciesSkill,
+        bonusSkills, setBonusSkills};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

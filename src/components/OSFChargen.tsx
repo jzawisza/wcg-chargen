@@ -9,6 +9,7 @@ import Species from "./steps/Species";
 import CreateCharacter from "./steps/CreateCharacter";
 import Profession from "./steps/Profession";
 import CharacterClass from "./steps/CharacterClass";
+import Skills from "./steps/Skills";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -73,7 +74,7 @@ const traditionalSteps = [
     },
     {
         title: 'Skills',
-        content: <div />
+        content: <Skills />
     },
     {
         title: 'Attributes',

@@ -6,12 +6,19 @@ export const NextButtonEnabledContext = createContext({
     setNextEnabled: (nextEnabled: boolean) => {}
 });
 
+
 // Information about the character being created
+let defaultBonusSkills: string[] = [];
+
 export const CharacterContext = createContext({
     species: '',
     setSpecies: (newSpecies: string) => {},
     profession: '',
     setProfession: (newProfession: string) => {},
     charClass: '',
-    setCharClass: (newCharClass: string) => {}
+    setCharClass: (newCharClass: string) => {},
+    speciesSkill: '',
+    setSpeciesSkill: (newSpeciesSkill: string) => {},
+    bonusSkills: defaultBonusSkills,
+    setBonusSkills: (newBonusSkills: string[]) => {}
 });
