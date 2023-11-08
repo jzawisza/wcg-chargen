@@ -46,8 +46,14 @@ function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, 
     }
     
     // For other species, they need one bonus skill plus one of their designated species skills
-    // For some odd reason, if bonusSkills is a single-element array, it gets treated as a string...
-    return (typeof(bonusSkills) === "string" && bonusSkills !== '' && speciesSkill !== '');
+    // Ant Design does something weird where bonusSkills is handled as a string instead of a singleton array,
+    // so this method includes an implementation specific to that quirk plus a normal implementation
+    if (typeof(bonusSkills) === "string") {
+        return bonusSkills !== '' && speciesSkill !== '';
+    }
+    else {
+        return bonusSkills.length == 1 &&  speciesSkill !== '';
+    }
 }
 
 const Skills: React.FC = () => {

@@ -26,7 +26,7 @@ test.each([
     ["dwarf"],
     ["elf"],
     ["halfling"]
-])('expected elements displayed for non-human species', (speciesStr) => {
+])('expected elements displayed for non-human species %s', (speciesStr) => {
     const speciesContext = {
         species: speciesStr
     };
