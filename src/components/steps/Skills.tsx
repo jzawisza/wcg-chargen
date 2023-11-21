@@ -52,7 +52,7 @@ function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, 
         return bonusSkills !== '' && speciesSkill !== '';
     }
     else {
-        return bonusSkills.length == 1 &&  speciesSkill !== '';
+        return bonusSkills.length === 1 &&  speciesSkill !== '';
     }
 }
 
