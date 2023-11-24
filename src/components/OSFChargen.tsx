@@ -10,6 +10,7 @@ import CreateCharacter from "./steps/CreateCharacter";
 import Profession from "./steps/Profession";
 import CharacterClass from "./steps/CharacterClass";
 import Skills from "./steps/Skills";
+import Features from "./steps/Features";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -82,7 +83,7 @@ const traditionalSteps = [
     },
     {
         title: FEATURES_STEP_TITLE,
-        content: <div />
+        content: <Features />
     },
     {
         title: 'Create Character',
@@ -142,14 +143,14 @@ const OSFChargen: React.FC = () => {
     // Wicked Hard Mode stepper
     else if (level === 0) {
         return (
-            <ChargenStepper steps={wickedHardSteps} />
+            <ChargenStepper steps={wickedHardSteps} level={level} />
         );
     }
     // Traditional Mode stepper
     else
     {
         return (
-            <ChargenStepper steps={traditionalStepsForLevel} />
+            <ChargenStepper steps={traditionalStepsForLevel} level={level} />
         );
     }
 }

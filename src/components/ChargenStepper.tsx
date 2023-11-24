@@ -5,9 +5,11 @@ import { NextButtonEnabledContext, CharacterContext } from "../Context";
 
 type ChargenStepperProps = {
     steps: {title: string, content: ReactNode | undefined}[];
+    level: number;
 };
 
 const ChargenStepper = (props: ChargenStepperProps) => {
+    const level = props.level;
     const [current, setCurrent] = useState(0);
     const [nextEnabled, setNextEnabled] = useState(false);
     const [species, setSpecies] = useState('');
@@ -15,13 +17,18 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [charClass, setCharClass] = useState('');
     const [speciesSkill, setSpeciesSkill] = useState('');
     const [bonusSkills, setBonusSkills] = useState<string[]>([]);
+    const [tier1Features, setTier1Features] = useState<string[]>([]);
+    const [tier2Features, setTier2Features] = useState<string[]>([]);
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
-    const characterInfoValue = {species, setSpecies,
+    const characterInfoValue = {level,
+        species, setSpecies,
         profession, setProfession,
         charClass, setCharClass,
         speciesSkill, setSpeciesSkill,
-        bonusSkills, setBonusSkills};
+        bonusSkills, setBonusSkills,
+        tier1Features, setTier1Features,
+        tier2Features, setTier2Features};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

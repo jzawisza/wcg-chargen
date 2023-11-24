@@ -8,9 +8,10 @@ export const NextButtonEnabledContext = createContext({
 
 
 // Information about the character being created
-let defaultBonusSkills: string[] = [];
+let emptyStringArray: string[] = [];
 
 export const CharacterContext = createContext({
+    level: 0,
     species: '',
     setSpecies: (newSpecies: string) => {},
     profession: '',
@@ -19,6 +20,10 @@ export const CharacterContext = createContext({
     setCharClass: (newCharClass: string) => {},
     speciesSkill: '',
     setSpeciesSkill: (newSpeciesSkill: string) => {},
-    bonusSkills: defaultBonusSkills,
-    setBonusSkills: (newBonusSkills: string[]) => {}
+    bonusSkills: emptyStringArray,
+    setBonusSkills: (newBonusSkills: string[]) => {},
+    tier1Features: emptyStringArray,
+    setTier1Features: (newTier1Features: string[]) => {},
+    tier2Features: emptyStringArray,
+    setTier2Features: (newTier2Features: string[]) => {}
 });
