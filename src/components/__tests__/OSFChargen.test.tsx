@@ -91,7 +91,7 @@ test('level selector has values 1-7', () => {
 });
 
 test('selecting Wicked Hard Mode displays appropriate steps', async () => {
-    const expectedStepTitles = ["Species", "Profession", "Attributes", "Create Character"];
+    const expectedStepTitles = ["Species", "Profession", "Attributes", "Name", "Create"];
 
     const { container } = render(<OSFChargen />);
 
@@ -103,13 +103,12 @@ test('selecting Wicked Hard Mode displays appropriate steps', async () => {
     await waitFor(() =>{
         let actualStepTitles = getStepTitles(container);
 
-        expect(actualStepTitles.length).toEqual(4);
         expect(actualStepTitles).toEqual(expectedStepTitles);
     });
 });
 
 test('selecting Traditional Mode Level 1 displays appropriate steps', async () => {
-    const expectedStepTitles = ["Species", "Class", "Skills", "Attributes", "Create Character"];
+    const expectedStepTitles = ["Species", "Class", "Skills", "Attributes", "Name", "Create"];
 
     const { container } = render(<OSFChargen />);
 
@@ -122,7 +121,6 @@ test('selecting Traditional Mode Level 1 displays appropriate steps', async () =
     await waitFor(() => {
         let actualStepTitles = getStepTitles(container);
 
-        expect(actualStepTitles.length).toEqual(5);
         expect(actualStepTitles).toEqual(expectedStepTitles);
     })
 });
@@ -135,7 +133,7 @@ test.each([
     ["6"],
     ["7"]
 ])('selecting Traditional Mode Level %s displays appropriate steps', async (levelStr) => {
-    const expectedStepTitles = ["Species", "Class", "Skills", "Attributes", "Features", "Create Character"];
+    const expectedStepTitles = ["Species", "Class", "Skills", "Attributes", "Features", "Name", "Create"];
 
     const { container } = render(<OSFChargen />);
 
@@ -148,7 +146,6 @@ test.each([
     await waitFor(() => {
         let actualStepTitles = getStepTitles(container);
 
-        expect(actualStepTitles.length).toEqual(6);
         expect(actualStepTitles).toEqual(expectedStepTitles);
     })
 });

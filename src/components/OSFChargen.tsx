@@ -11,6 +11,7 @@ import Profession from "./steps/Profession";
 import CharacterClass from "./steps/CharacterClass";
 import Skills from "./steps/Skills";
 import Features from "./steps/Features";
+import CharacterName from "./steps/CharacterName";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -59,7 +60,11 @@ const wickedHardSteps = [
         content: <div />
     },
     {
-        title: 'Create Character',
+        title: 'Name',
+        content: <CharacterName />
+    },
+    {
+        title: 'Create',
         content: <CreateCharacter />
     }
 ];
@@ -86,7 +91,11 @@ const traditionalSteps = [
         content: <Features />
     },
     {
-        title: 'Create Character',
+        title: 'Name',
+        content: <CharacterName />
+    },
+    {
+        title: 'Create',
         content: <CreateCharacter />
     }
 ];

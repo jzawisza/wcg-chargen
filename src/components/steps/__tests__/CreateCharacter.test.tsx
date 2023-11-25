@@ -12,7 +12,7 @@ const PDF_BUTTON_TEXT = 'PDF';
 const GOOGLE_SHEET_BUTTON_TEXT = 'Google Sheet';
 const CREATE_CHARACTER_BUTTON_TEXT = 'Create Character';
 
-test('initial load displays buttons for choosing character sheet type, but in disabled state', () => {
+test('initial load displays buttons for choosing character sheet type', () => {
     render(<CreateCharacter />);
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
@@ -20,22 +20,6 @@ test('initial load displays buttons for choosing character sheet type, but in di
 
     expect(pdfButton).toBeTruthy();
     expect(googleSheetButton).toBeTruthy();
-
-    const pdfButtonParent = pdfButton.parentElement;
-    const googleSheetButtonParent = googleSheetButton.parentElement;
-
-    expect(pdfButtonParent).toHaveClass('ant-radio-button-wrapper-disabled');
-    expect(googleSheetButtonParent).toHaveClass('ant-radio-button-wrapper-disabled');
-});
-
-test('initial load displays character name input box and input box descriptive text', () => {
-    render(<CreateCharacter />);
-
-    const charNameText = screen.getByText('Character name:');
-    expect(charNameText).toBeTruthy();
-
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    expect(inputNode).toBeTruthy();
 });
 
 test('initial load does not display Create Character button', () => {
@@ -44,41 +28,8 @@ test('initial load does not display Create Character button', () => {
     expect(() => screen.getByText('CreateCharacter')).toThrow();
 })
 
-test('entering text in character name input box enables character sheet type buttons', () => {
-    render(<CreateCharacter />);
-
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
-
-    const pdfButtonParent = screen.getByText(PDF_BUTTON_TEXT).parentElement;
-    const googleSheetButtonParent = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT).parentElement;
-
-    expect(pdfButtonParent).not.toHaveClass('ant-radio-button-wrapper-disabled');
-    expect(googleSheetButtonParent).not.toHaveClass('ant-radio-button-wrapper-disabled');    
-});
-
-test('entering and then deleting text from character name input box disables character sheet type buttons', async () => {
-    render(<CreateCharacter />);
-
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
-    fireEvent.change(inputNode, {target: {value: ''}});
-
-    await waitFor(() => {
-        const pdfButtonParent = screen.getByText(PDF_BUTTON_TEXT).parentElement;
-        const googleSheetButtonParent = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT).parentElement;
-
-        expect(pdfButtonParent).toHaveClass('ant-radio-button-wrapper-disabled');
-        expect(googleSheetButtonParent).toHaveClass('ant-radio-button-wrapper-disabled');
-    });
-});
-
 test('clicking on PDF button displays appropriate text and Create Character button', () => {
     render(<CreateCharacter />);
-
-    // Enable PDF button
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);
@@ -93,10 +44,6 @@ test('clicking on PDF button displays appropriate text and Create Character butt
 test('clicking on Google Sheet button displays appropriate text and Create Character button', () => {
     render(<CreateCharacter />);
 
-    // Enable Google Sheet button
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
-
     const googleSheetButton = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT);
     fireEvent.click(googleSheetButton);
 
@@ -109,10 +56,6 @@ test('clicking on Google Sheet button displays appropriate text and Create Chara
 
 test('clicking Create Character button displays appropriate screen', async () => {
     render(<CreateCharacter />);
-
-    // Enable PDF button
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);
@@ -131,10 +74,6 @@ test('clicking Create Character button displays appropriate screen', async () =>
 
 test('clicking Create Another button reloads window', async () => {
     render(<CreateCharacter />);
-
-    // Enable PDF button
-    const inputNode = screen.getByRole('textbox', {name: ''});
-    fireEvent.change(inputNode, {target: {value: 'MyCharacter'}});
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);

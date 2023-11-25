@@ -25,5 +25,7 @@ export const CharacterContext = createContext({
     tier1Features: emptyStringArray,
     setTier1Features: (newTier1Features: string[]) => {},
     tier2Features: emptyStringArray,
-    setTier2Features: (newTier2Features: string[]) => {}
+    setTier2Features: (newTier2Features: string[]) => {},
+    charName: '',
+    setCharName: (newCharName: string) => {}
 });
