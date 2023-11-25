@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { Col, Row } from "antd";
-import SelectableCard from "../cards/SelectableCard";
+import SelectableCard from "../util/cards/SelectableCard";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
 import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, HUMAN_SPECIES_INFO } from "../../constants/SpeciesInfo";
 

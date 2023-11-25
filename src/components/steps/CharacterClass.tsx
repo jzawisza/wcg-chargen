@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
 import { Row, Col, Checkbox, Popover } from "antd";
 import { InfoCircleOutlined } from '@ant-design/icons';
-import SelectableCard from "../cards/SelectableCard";
+import SelectableCard from "../util/cards/SelectableCard";
 
 const berzerkerFeatures = (
     <ul>

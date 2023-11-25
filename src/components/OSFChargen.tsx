@@ -4,7 +4,7 @@ import { Col, Row, Dropdown, Space } from "antd";
 import type { MenuProps } from 'antd';
 import wcg from '../images/wcg_logo.png';
 import ChargenStepper from "./ChargenStepper";
-import ClickableCard from "./cards/ClickableCard";
+import ClickableCard from "./util/cards/ClickableCard";
 import Species from "./steps/Species";
 import CreateCharacter from "./steps/CreateCharacter";
 import Profession from "./steps/Profession";
