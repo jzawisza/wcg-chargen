@@ -5,13 +5,14 @@ import type { MenuProps } from 'antd';
 import wcg from '../images/wcg_logo.png';
 import ChargenStepper from "./ChargenStepper";
 import ClickableCard from "./util/cards/ClickableCard";
-import Species from "./steps/Species";
-import CreateCharacter from "./steps/CreateCharacter";
-import Profession from "./steps/Profession";
+import Attributes from "./steps/Attributes";
 import CharacterClass from "./steps/CharacterClass";
-import Skills from "./steps/Skills";
-import Features from "./steps/Features";
 import CharacterName from "./steps/CharacterName";
+import CreateCharacter from "./steps/CreateCharacter";
+import Features from "./steps/Features";
+import Profession from "./steps/Profession";
+import Skills from "./steps/Skills";
+import Species from "./steps/Species";
 
 const FEATURES_STEP_TITLE: string = "Features";
 
@@ -57,7 +58,7 @@ const wickedHardSteps = [
     },
     {
         title: 'Attributes',
-        content: <div />
+        content: <Attributes />
     },
     {
         title: 'Name',
@@ -84,7 +85,7 @@ const traditionalSteps = [
     },
     {
         title: 'Attributes',
-        content: <div />
+        content: <Attributes />
     },
     {
         title: FEATURES_STEP_TITLE,
@@ -127,7 +128,10 @@ const OSFChargen: React.FC = () => {
                 <Row justify="center">
                     <Col span={12}>
                         <div>
-                            <ClickableCard title="Traditional Start" description="Create a Level 1-7 character with a specific character class.">
+                            <ClickableCard title="Traditional Start"
+                                description="Create a Level 1-7 character with a specific character class."
+                                className="modeCard"
+                            >
                                 <Dropdown menu={{ items, onClick }}>
                                     <a onClick={(e) => e.preventDefault()}>
                                         <Space>
@@ -142,7 +146,9 @@ const OSFChargen: React.FC = () => {
                     <div onClick={() => setLevel(0)}>
                         <Col span={12}>
                             <ClickableCard title="Wicked Hard Mode"
-                                description="Make Level 0 unskilled commoner characters.  Those lucky enough to survive will be promoted to 1st level."></ClickableCard>                    
+                                description="Make Level 0 unskilled commoner characters.  Those lucky enough to survive will be promoted to 1st level."
+                                className="modeCard"
+                            />                    
                         </Col>
                     </div>
                 </Row>

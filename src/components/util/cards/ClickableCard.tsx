@@ -3,7 +3,8 @@ import { PropsWithChildren } from 'react';
 
 type ClickableCardProps = {
     title: string,
-    description: string
+    description: string,
+    className: string
 };
 
 // Card that can be directly clicked on to transition to a new screen.
@@ -11,7 +12,7 @@ type ClickableCardProps = {
 const ClickableCard = (props: PropsWithChildren<ClickableCardProps>) => (
     <Card title={props.title}
         hoverable
-        className="modeCard">
+        className={props.className}>
         <p>{props.description}</p>
         {props.children}
     </Card>

@@ -20,6 +20,7 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [tier1Features, setTier1Features] = useState<string[]>([]);
     const [tier2Features, setTier2Features] = useState<string[]>([]);
     const [charName, setCharName] = useState('');
+    const [attributeMethod, setAttributeMethod] = useState('');
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
     const characterInfoValue = {level,
@@ -30,7 +31,8 @@ const ChargenStepper = (props: ChargenStepperProps) => {
         bonusSkills, setBonusSkills,
         tier1Features, setTier1Features,
         tier2Features, setTier2Features,
-        charName, setCharName};
+        charName, setCharName,
+        attributeMethod, setAttributeMethod};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

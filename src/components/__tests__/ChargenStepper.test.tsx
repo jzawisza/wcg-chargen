@@ -21,7 +21,7 @@ const testSteps = [
 ];
 
 test('only next button and not previous button displayed on initial load', () => {
-    render(<ChargenStepper steps={testSteps} />);
+    render(<ChargenStepper level={1} steps={testSteps} />);
 
     const prevButton = screen.queryByText("Previous");
     const nextButton = screen.getByText("Next");
@@ -31,7 +31,7 @@ test('only next button and not previous button displayed on initial load', () =>
 });
 
 test('after clicking next button, both previous and next buttons display', async () => {
-    render(<ChargenStepper steps={testSteps} />);
+    render(<ChargenStepper level={1} steps={testSteps} />);
 
     // Trigger custom component to set context so that next button is enabled
     const enableNextButton = screen.getByRole("button", { name: "enableNext" });
@@ -51,7 +51,7 @@ test('after clicking next button, both previous and next buttons display', async
 });
 
 test('only previous button and not next button displayed on final step', async () => {
-    render(<ChargenStepper steps={testSteps} />);
+    render(<ChargenStepper level={1} steps={testSteps} />);
 
     const enableNextButton = screen.getByRole("button", { name: "enableNext" });
     const nextButton = screen.getByText("Next");

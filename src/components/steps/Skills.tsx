@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
 import { Row, Col, Radio, RadioChangeEvent, List } from "antd";
-import { HUMAN_SPECIES_INFO, SPECIES_INFO_LIST } from "../../constants/SpeciesInfo";
+import { HUMAN_SPECIES_INFO, getPluralSpeciesNameFromVariable, getIsHuman } from "../../constants/SpeciesInfo";
 import SelectMultiple from "../util/SelectMultiple";
 import { DefaultOptionType } from "antd/es/select";
 
@@ -19,19 +19,6 @@ const dummyBonusSkills: DefaultOptionType[] = [
     { value: 'Skill 11', label: 'Skill 11' },
     { value: 'Skill 12', label: 'Skill 12' },
 ];
-
-function getPluralSpeciesNameFromVariable(speciesInternalName: string) {
-    const speciesInfo = SPECIES_INFO_LIST.filter((si) => {
-        return si.internalName === speciesInternalName;
-    });
-
-    if (speciesInfo.length === 1) {
-        return speciesInfo[0].speciesNamePlural;
-    }
-
-    // Fall through; should never happen
-    return '';
-}
 
 function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, bonusSkills: string[]) {
     // If we deselect everything from the bonus skills list, this value is undefined
@@ -60,7 +47,7 @@ const Skills: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
     const { species, speciesSkill, setSpeciesSkill, bonusSkills, setBonusSkills } = useContext(CharacterContext);
 
-    const isHuman = (species === HUMAN_SPECIES_INFO.internalName);
+    const isHuman = getIsHuman(species);
 
     useEffect(() => {
         let shouldEnableNext = getShouldEnableNext(species, speciesSkill, bonusSkills);

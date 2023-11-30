@@ -90,3 +90,52 @@
   margin-left: 1em;
   margin-right: 1em;
 }
+
+.attributeMethodCard {
+  height: 15em;
+  margin-left: 1em;
+  margin-top: 1em;
+}
+
+.attributeTable {
+  width: 90%;
+  border-collapse: collapse;
+}
+
+.attributeTableHeaderCell {
+  font-style: italic;
+  font-weight: bolder;
+  padding-bottom: 2%;
+  background-color: gray;
+}
+
+.attributeTableAttributeCell {
+  padding-top: 3%;
+  padding-bottom: 3%;
+  font-weight: bold;
+  width: 11%;
+}
+
+.attributeTableDroppableCell {
+  font-weight: bold;
+  width: 10%;
+  border: 1px solid;
+}
+
+.attributeTableEmptyCell {
+  width: 10%;
+}
+
+.attributeTableScoreCell {
+  font-weight: bold;
+  width: 10%;
+}
+
+.attributeScore {
+  font-size: 125%;
+  text-align: center;
+  height: 2em;
+  padding: 0.3em 0.3em 0.3em 0.3em;
+  background-color:chocolate;
+  border: 1px solid;
+}
