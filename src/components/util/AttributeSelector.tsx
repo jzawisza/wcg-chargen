@@ -1,10 +1,11 @@
 import { useContext, useState } from "react";
-import { CharacterContext } from "../../Context";
-import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../constants/SpeciesInfo";
 import { Radio, RadioChangeEvent, Row, Col, Modal } from "antd";
 import { DefaultOptionType } from "antd/es/select";
+import { CharacterContext } from "../../Context";
+import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../constants/SpeciesInfo";
 import SelectMultiple from "./SelectMultiple";
 import AttributeScoreSelector from "./AttributeScoreSelector";
+import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../constants/AttributeArrayType";
 
 // Return a two-element array containing the strengths for a given non-human species
 function getStrengths(species: string) {
@@ -45,15 +46,16 @@ const attributeNames: DefaultOptionType[] = [
 ];
 
 type AttributeSelectorProps = {
-    method: string
+    arrayType?: string
 };
 
 const AttributeSelector = (props: AttributeSelectorProps) => {
     const [ humanStrength, setHumanStrength ] = useState<string[]>([]);
     const [ showHelpModal, setShowHelpModal ] = useState(false);
-    const {species} = useContext(CharacterContext);
+    const {species, level} = useContext(CharacterContext);
 
     const isHuman = getIsHuman(species);
+    const isTraditionalMode = (level > 0);
 
     const hideHelpModal = () => {
         setShowHelpModal(false);
@@ -81,18 +83,42 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
         nonHumanWeaknessDesc = `${weaknesses[0]} or ${weaknesses[1]}`;
     }
 
+    let attributeValues: number[] = [];
+    // Look up standard attribute arrays for Traditional Mode
+    if (isTraditionalMode && props.arrayType) {
+        let attributeArray = getArrayByName(props.arrayType)?.array;
+        attributeValues = (attributeArray ? attributeArray : []);
+    }
+    // Generate random values for Wicked Hard Mode
+    else {
+        for (let i = 0; i < ATTRIBUTE_ARRAY_SIZE; i++) {
+            // Generate random numbers between -3 and 3 by generating two random numbers between 1 and 4,
+            // and subtracting the first from the second.
+            // This makes the distribution into a bell curve.
+            attributeValues.push(Math.ceil(Math.random() * 3) - Math.ceil(Math.random() * 3));
+        }
+    }
+
     return (
         <div>
             <Modal title="Selecting Attribute Values" open={showHelpModal} onOk={hideHelpModal} onCancel={hideHelpModal}>
                 TODO: text goes here
             </Modal>
 
-            <p>Drag and drop the values below into the Scores column to assign scores for the seven attributes used in this system.</p>
-            <p>Once you've finished that, you'll be able to choose species-specific strengths and weaknesses related to your attributes.</p>
-            <p><a href="#" onClick={() => setShowHelpModal(true)}>What attribute values should I choose?</a></p>
+            {isTraditionalMode ?
+                <>
+                <p>Drag and drop the values below into the Scores column to assign scores for the seven attributes used in this system.</p>
+                <p>Once you've finished that, you'll be able to choose species-specific strengths and weaknesses related to your attributes.</p>
+                <p><a href="#" onClick={() => setShowHelpModal(true)}>What attribute values should I choose?</a></p>
+                </>
+                : <>
+                <p>In Wicked Hard mode, attribute scores are randomly generated over a normal distribution, i.e a bell curve.</p>
+                <p>The scores below have been generated for you.  To continue, select your species-specfic strength {!isHuman && "and weakness"} below.</p>
+                </>
+            }
             <Row>
                 <Col span={12}>
-                    <AttributeScoreSelector method={props.method} />
+                    <AttributeScoreSelector values={attributeValues} canSelectValues={isTraditionalMode} />
                 </Col>
                 <Col span={12}>
                     {!isHuman &&

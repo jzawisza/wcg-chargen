@@ -3,73 +3,40 @@ import { Row, Col, Modal, Radio, RadioChangeEvent } from "antd";
 import ClickableCard from "../util/cards/ClickableCard";
 import AttributeSelector from "../util/AttributeSelector";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
+import AttributeArrayType from "../../constants/AttributeArrayType";
 
 const Attributes: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
-    const { attributeMethod, setAttributeMethod } = useContext(CharacterContext);
-    const [ showNotImplementedModal, setShowNotImplementedModal ] = useState(false);
+    const { level, attributeArrayType, setAttributeArrayType } = useContext(CharacterContext);
 
     useEffect(() => {
         setNextEnabled(false);
     }, [setNextEnabled]);
 
-    const hideModal = () => {
-        setShowNotImplementedModal(false);
+    if (level === 0) {
+        return (<AttributeSelector />);
     }
-
-    const onMethodASelect = (e: RadioChangeEvent) => {
-        setAttributeMethod(e.target.value);
-    };
-
-    if (attributeMethod !== "") {
-        return (<AttributeSelector method={attributeMethod} />);
+    else if (level > 0 && attributeArrayType !== "") {
+        return (<AttributeSelector arrayType={attributeArrayType} />); 
     }
 
     return (
         <div>
-            <p>Choose the appropriate method for attribute selection, based on the input of your GM.</p>
-
-            <Modal title="Not Implemented" open={showNotImplementedModal} onOk={hideModal} onCancel={hideModal} >
-                <p>This option has not been implemented yet.  Please choose a different one.</p>
-            </Modal>
-
+            <p>Attribute score selection is done via standard attribute arrays.  Based on the input of your GM, select which type of attribute array to use.</p>
             <Row justify="center">
                 <Col span={8}>
-                    <ClickableCard title="Method A"
-                        description="Use a standard attribute array for scores.  Choose Challenging or Heroic."
-                        className="attributeMethodCard"
-                    >
-                        <Radio.Group buttonStyle="solid" onChange={onMethodASelect}>
-                            <Radio.Button value="a_challenging">Challenging</Radio.Button>
-                            <Radio.Button value="a_heroic">Heroic</Radio.Button>
-                        </Radio.Group>
-                    </ClickableCard>
-                </Col>
-                <Col span={8}>
-                    <div onClick={() => setShowNotImplementedModal(true)}>
-                        <ClickableCard title="Method B"
-                            description="Scores are generated randomly with no opportunity to make any changes.  Suggested for Wicked Hard Mode."
-                            className="attributeMethodCard"
-                        />
-                    </div>
-                </Col>
-            </Row>
-            <Row justify="center">
-                <Col span={8}>
-                    <div onClick={() => setShowNotImplementedModal(true)}>
-                        <ClickableCard
-                            title="Method C"
-                            description="Like Method B, but players may re-roll one attribute and swap two scores."
-                            className="attributeMethodCard"
+                    <div onClick={() => setAttributeArrayType(AttributeArrayType.CHALLENGING.toString())}>
+                        <ClickableCard title="Challenging"
+                            description="Values: +2, +1, +1, 0, 0, -1, -2"
+                            className="attributeTypeCard"
                         />
                     </div>
                 </Col>
                 <Col span={8}>
-                    <div onClick={() => setShowNotImplementedModal(true)}>
-                        <ClickableCard
-                            title="Method D"
-                            description="Use attribute array provided by GM."
-                            className="attributeMethodCard"
+                    <div onClick={() => setAttributeArrayType(AttributeArrayType.HEROIC.toString())}>
+                        <ClickableCard title="Heroic"
+                            description="Values: +2, +2, +1, 0, 0, 0, -1"
+                            className="attributeTypeCard"
                         />
                     </div>
                 </Col>

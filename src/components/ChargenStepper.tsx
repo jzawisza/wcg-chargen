@@ -20,7 +20,7 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [tier1Features, setTier1Features] = useState<string[]>([]);
     const [tier2Features, setTier2Features] = useState<string[]>([]);
     const [charName, setCharName] = useState('');
-    const [attributeMethod, setAttributeMethod] = useState('');
+    const [attributeArrayType, setAttributeArrayType] = useState('');
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
     const characterInfoValue = {level,
@@ -32,7 +32,7 @@ const ChargenStepper = (props: ChargenStepperProps) => {
         tier1Features, setTier1Features,
         tier2Features, setTier2Features,
         charName, setCharName,
-        attributeMethod, setAttributeMethod};
+        attributeArrayType, setAttributeArrayType};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

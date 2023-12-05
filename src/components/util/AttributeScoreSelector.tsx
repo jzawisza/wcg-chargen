@@ -1,13 +1,9 @@
-const challengingAttributeArray = [2, 1, 1, 0, 0, -1, -2];
-const heroicAttributeArray = [2, 2, 1, 0, 0, 0, -1];
-
 type AttributeScoreSelectorProps = {
-    method: string
+    values: number[];
+    canSelectValues: boolean;
 };
 
 const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
-    // TODO: remove hardcoded value, support other methods
-    const attributeArray = (props.method === "a_heroic") ? heroicAttributeArray : challengingAttributeArray;
 
     // Use a HTML table to represent the attributes, the draggable score values,
     // and the places where those scores can be dropped
@@ -25,7 +21,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[0]}
+                        {props.values[0]}
                     </div>
                 </td>
             </tr>
@@ -35,7 +31,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[1]}
+                        {props.values[1]}
                     </div>
                 </td>
             </tr>
@@ -45,7 +41,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[2]}
+                        {props.values[2]}
                     </div>
                 </td>
             </tr>
@@ -55,7 +51,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[3]}
+                        {props.values[3]}
                     </div>
                 </td>
             </tr>
@@ -65,7 +61,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[4]}
+                        {props.values[4]}
                     </div>
                 </td>
             </tr>
@@ -75,7 +71,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[5]}
+                        {props.values[5]}
                     </div>
                 </td>
             </tr>
@@ -85,7 +81,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                 <td className="attributeTableEmptyCell"></td>
                 <td className="attributeTableScoreCell">
                     <div className="attributeScore">
-                        {attributeArray[6]}
+                        {props.values[6]}
                     </div>
                 </td>
             </tr>
