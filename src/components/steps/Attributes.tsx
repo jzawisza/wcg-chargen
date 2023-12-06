@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Row, Col, Modal, Radio, RadioChangeEvent } from "antd";
+import React, { useContext, useEffect } from "react";
+import { Row, Col } from "antd";
 import ClickableCard from "../util/cards/ClickableCard";
 import AttributeSelector from "../util/AttributeSelector";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
