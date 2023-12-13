@@ -1,11 +1,11 @@
 import { useContext, useState } from "react";
 import { Radio, RadioChangeEvent, Row, Col, Modal } from "antd";
 import { DefaultOptionType } from "antd/es/select";
-import { CharacterContext } from "../../Context";
-import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../constants/SpeciesInfo";
-import SelectMultiple from "./SelectMultiple";
+import { CharacterContext } from "../../../Context";
+import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../../constants/SpeciesInfo";
+import SelectMultiple from "../SelectMultiple";
 import AttributeScoreSelector from "./AttributeScoreSelector";
-import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../constants/AttributeArrayType";
+import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../../constants/AttributeArrayType";
 
 // Return a two-element array containing the strengths for a given non-human species
 function getStrengths(species: string) {
@@ -129,13 +129,13 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                                 <Col>
                                     <h3>Strength (+1)</h3>
                                     <Radio.Group buttonStyle="solid" onChange={onNonHumanStrengthChange}>
-                                        {getStrengths(species).map(x => (<Radio.Button value={x}>{x}</Radio.Button>))}
+                                        {getStrengths(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
                                 <Col>
                                     <h3>Weakness (-1)</h3>
                                     <Radio.Group buttonStyle="solid" onChange={onNonHumanWeaknessChange}>
-                                        {getWeaknesses(species).map(x => (<Radio.Button value={x}>{x}</Radio.Button>))}
+                                        {getWeaknesses(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
                             </Row>

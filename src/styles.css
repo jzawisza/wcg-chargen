@@ -116,8 +116,7 @@
   width: 15%;
 }
 
-.attributeTableDroppableCell {
-  font-weight: bold;
+.attributeTableScoreCell {
   width: 10%;
   border: 1px solid;
 }
@@ -126,7 +125,7 @@
   width: 10%;
 }
 
-.attributeTableScoreCell {
+.attributeTableValueCell {
   font-weight: bold;
   width: 10%;
 }
@@ -137,5 +136,9 @@
   height: 2em;
   padding: 0.3em 0.3em 0.3em 0.3em;
   background-color:chocolate;
+  border: 1px solid;
+}
+
+.dndScoreCell {
   border: 1px solid;
 }

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { Row, Col } from "antd";
 import ClickableCard from "../util/cards/ClickableCard";
-import AttributeSelector from "../util/AttributeSelector";
+import AttributeSelector from "../util/attributes/AttributeSelector";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
 import AttributeArrayType from "../../constants/AttributeArrayType";
 
