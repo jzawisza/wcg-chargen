@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import AttributeDndScoreCell from "./AttributeDndScoreCell";
 import AttributeDndValueCell from "./AttributeDndValueCell";
+import { ScoreStyle } from "../../../constants/AttributeScoreStyle";
 
 type AttributeScoreSelectorProps = {
     values: (number | null)[];
@@ -22,8 +23,8 @@ interface AttributeScoreObject {
 // Generate a table cell containing an attribute score that is not changeable
 function generateStaticTableRow(score: number | null) {
     return (
-            <td className="attributeTableValueCell">
-                <div className="attributeScore">
+            <td className="attributeTableGeneralCell">
+                <div style={ScoreStyle}>
                     {score}
                 </div>
             </td>
@@ -45,7 +46,7 @@ function generateDndTableRow(attributeScores: AttributeScoreObject,
 
         return (<>
                 <AttributeDndScoreCell attributeShortName={attributeShortName} score={attributeScore} />
-                <td className="attributeTableEmptyCell" />
+                <td className="attributeTableGeneralCell" />
                 <AttributeDndValueCell index={index} score={valueScore} />
             </>);
 }

@@ -1,15 +1,13 @@
 import { useDraggable } from "@dnd-kit/core";
+import { ScoreStyle } from "../../../constants/AttributeScoreStyle";
 
 type AttributeDndValueCellProps = {
     index: number;
     score: number | null;
 };
 
-// Table cell containing an attribute score value.
-// If the value is still present, i.e. it hasn't been dragged onto a score,
-// the element will be draggable.
-// Otherwise, the value is droppable, so scores that have alreadty been set
-// can be dragged back here.
+// Table cell containing a draggable attribute score value,
+// or empty if the value has already been dragged to an attribute score element.
 const AttributeDndValueCell = (props: AttributeDndValueCellProps) => {
     const {attributes, listeners, setNodeRef, transform} = useDraggable({
         id: `draggable${props.index}`,
@@ -19,9 +17,9 @@ const AttributeDndValueCell = (props: AttributeDndValueCellProps) => {
     } : undefined;
 
     return (
-        <td className="attributeTableValueCell">
+        <td className="attributeTableGeneralCell">
             {props.score !== null &&
-                <div className="attributeScore" ref={setNodeRef} style={style} {...listeners} {...attributes}>
+                <div ref={setNodeRef} style={{...style, ...ScoreStyle}} {...listeners} {...attributes}>
                     {props.score}
                 </div>
             }
