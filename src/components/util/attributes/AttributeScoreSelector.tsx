@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Button } from "antd";
+import { ReloadOutlined } from '@ant-design/icons';
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import AttributeDndScoreCell from "./AttributeDndScoreCell";
 import AttributeDndValueCell from "./AttributeDndValueCell";
@@ -94,6 +96,11 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
         }
     };
 
+    const resetValues = () => {
+        setAttributeScoreObj(emptyAtributeScoreObj);
+        setValueArray(props.values);
+    }
+
     // Use a HTML table to represent the attributes, the draggable score values,
     // and the places where those scores can be dropped
     return (
@@ -163,6 +170,12 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                     </tr>
                 </tbody>
             </table>
+            {props.canSelectValues &&
+                <div className="resetValuesButtonCenter">
+                    <Button onClick={() => resetValues()} icon={<ReloadOutlined />}>Reset values</Button>
+                </div>
+            }
+
         </DndContext>
     );
 };

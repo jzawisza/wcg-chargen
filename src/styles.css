@@ -124,3 +124,9 @@
 .attributeTableGeneralCell {
   width: 10%;
 }
+
+.resetValuesButtonCenter {
+  display: flex;
+  justify-content: center;
+  margin-top: 3%; 
+}
