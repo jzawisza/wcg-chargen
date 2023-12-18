@@ -118,7 +118,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
             }
             <Row>
                 <Col span={12}>
-                    <AttributeScoreSelector values={attributeValues} canSelectValues={isTraditionalMode} />
+                    <AttributeScoreSelector initialValues={attributeValues} canSelectValues={isTraditionalMode} />
                 </Col>
                 <Col span={12}>
                     {!isHuman &&

@@ -2,6 +2,7 @@ import { Button, Steps } from "antd";
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { ReactNode, useState } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../Context";
+import { emptyAtributeScoreObj } from "../constants/AttributeScoreObject";
 
 type ChargenStepperProps = {
     steps: {title: string, content: ReactNode | undefined}[];
@@ -21,6 +22,8 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [tier2Features, setTier2Features] = useState<string[]>([]);
     const [charName, setCharName] = useState('');
     const [attributeArrayType, setAttributeArrayType] = useState('');
+    const [attributeScoreObj, setAttributeScoreObj] = useState(emptyAtributeScoreObj);
+    const [attributeValues, setAttributeValues] = useState<(number | null)[]>([]);
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
     const characterInfoValue = {level,
@@ -32,7 +35,9 @@ const ChargenStepper = (props: ChargenStepperProps) => {
         tier1Features, setTier1Features,
         tier2Features, setTier2Features,
         charName, setCharName,
-        attributeArrayType, setAttributeArrayType};
+        attributeArrayType, setAttributeArrayType,
+        attributeScoreObj, setAttributeScoreObj,
+        attributeValues, setAttributeValues};
 
     const numSteps = props.steps ? props.steps.length : 0;
 

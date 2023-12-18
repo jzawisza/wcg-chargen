@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import { AttributeScoreObject, emptyAtributeScoreObj } from "./constants/AttributeScoreObject";
 
 // Whether the Next button in ChargenStepper is enabled
 export const NextButtonEnabledContext = createContext({
@@ -9,6 +10,7 @@ export const NextButtonEnabledContext = createContext({
 
 // Information about the character being created
 let emptyStringArray: string[] = [];
+let emptyNumberOrNullArray: (number | null)[] = [];
 
 export const CharacterContext = createContext({
     level: 0,
@@ -29,5 +31,9 @@ export const CharacterContext = createContext({
     charName: '',
     setCharName: (newCharName: string) => {},
     attributeArrayType: '',
-    setAttributeArrayType: (newAttributeArrayType: string) => {}
+    setAttributeArrayType: (newAttributeArrayType: string) => {},
+    attributeScoreObj: emptyAtributeScoreObj,
+    setAttributeScoreObj: (newAttributeScoreObj: AttributeScoreObject) => {},
+    attributeValues: emptyNumberOrNullArray,
+    setAttributeValues: (newAttributeValues: (number | null)[]) => {}
 });
