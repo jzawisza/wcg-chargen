@@ -52,10 +52,11 @@ type AttributeSelectorProps = {
 const AttributeSelector = (props: AttributeSelectorProps) => {
     const [ humanStrength, setHumanStrength ] = useState<string[]>([]);
     const [ showHelpModal, setShowHelpModal ] = useState(false);
-    const {species, level} = useContext(CharacterContext);
+    const { species, level, attributeScoreObj } = useContext(CharacterContext);
 
     const isHuman = getIsHuman(species);
     const isTraditionalMode = (level > 0);
+    const hasAllAttributeScores = Object.values(attributeScoreObj).every(x => x !== null);
 
     const hideHelpModal = () => {
         setShowHelpModal(false);
@@ -128,13 +129,19 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                             <Row>
                                 <Col>
                                     <h3>Strength (+1)</h3>
-                                    <Radio.Group buttonStyle="solid" onChange={onNonHumanStrengthChange}>
+                                    <Radio.Group
+                                        buttonStyle="solid"
+                                        disabled={!hasAllAttributeScores}
+                                        onChange={onNonHumanStrengthChange}>
                                         {getStrengths(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
                                 <Col>
                                     <h3>Weakness (-1)</h3>
-                                    <Radio.Group buttonStyle="solid" onChange={onNonHumanWeaknessChange}>
+                                    <Radio.Group
+                                        buttonStyle="solid"
+                                        disabled={!hasAllAttributeScores}
+                                        onChange={onNonHumanWeaknessChange}>
                                         {getWeaknesses(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
@@ -147,6 +154,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                             <p>Humans get a +1 to any attribute which is not the character's highest.</p>
                             <SelectMultiple
                                 defaultValue={humanStrength}
+                                disabled={!hasAllAttributeScores}
                                 numElementsAllowed={1}
                                 onChange={onHumanStrengthChange}
                                 options={attributeNames}

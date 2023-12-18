@@ -14,14 +14,19 @@ type AttributeScoreSelectorProps = {
 };
 
 // Generate a table cell containing an attribute score that is not changeable
-function generateStaticTableRow(score: number | null) {
-    return (
-            <td className="attributeTableGeneralCell">
-                <div style={ScoreStyle}>
-                    {score}
-                </div>
-            </td>
-    );
+function generateStaticTableRow(attributeScores: AttributeScoreObject,
+    attributeShortName: keyof AttributeScoreObject,
+    score: number | null) {
+        // Populate attributeScores object with static data
+        attributeScores[attributeShortName] = score;
+
+        return (
+                <td className="attributeTableGeneralCell">
+                    <div style={ScoreStyle}>
+                        {score}
+                    </div>
+                </td>
+        );
 }
 
 // Generate a table row with all data for a given attribute.
@@ -110,49 +115,49 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                         <td className="attributeTableAttributeCell">Strength (STR)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "STR", 0) :
-                            generateStaticTableRow(attributeValues[0])
+                            generateStaticTableRow(attributeScoreObj, "STR", attributeValues[0])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Coordination (COR)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "COR", 1) :
-                            generateStaticTableRow(attributeValues[1])
+                            generateStaticTableRow(attributeScoreObj, "COR", attributeValues[1])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Stamina (STA)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "STA", 2) :
-                            generateStaticTableRow(attributeValues[2])
+                            generateStaticTableRow(attributeScoreObj, "STA", attributeValues[2])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Perception (PER)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "PER", 3) :
-                            generateStaticTableRow(attributeValues[3])
+                            generateStaticTableRow(attributeScoreObj, "PER", attributeValues[3])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Intellect (INT)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "INT", 4) :
-                            generateStaticTableRow(attributeValues[4])
+                            generateStaticTableRow(attributeScoreObj, "INT", attributeValues[4])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Presence (PRS)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "PRS", 5) :
-                            generateStaticTableRow(attributeValues[5])
+                            generateStaticTableRow(attributeScoreObj, "PRS", attributeValues[5])
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Luck (LUC)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "LUC", 6) :
-                            generateStaticTableRow(attributeValues[6])
+                            generateStaticTableRow(attributeScoreObj, "LUC", attributeValues[6])
                         }
                     </tr>
                 </tbody>
