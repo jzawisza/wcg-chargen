@@ -1,11 +1,12 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Radio, RadioChangeEvent, Row, Col, Modal } from "antd";
 import { DefaultOptionType } from "antd/es/select";
-import { CharacterContext } from "../../../Context";
+import { CharacterContext, NextButtonEnabledContext } from "../../../Context";
 import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../../constants/SpeciesInfo";
 import SelectMultiple from "../SelectMultiple";
 import AttributeScoreSelector from "./AttributeScoreSelector";
 import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../../constants/AttributeArrayType";
+import { AttributeScoreObject } from "../../../constants/AttributeScoreObject";
 
 // Return a two-element array containing the strengths for a given non-human species
 function getStrengths(species: string) {
@@ -35,6 +36,28 @@ function getWeaknesses(species: string) {
     }
 }
 
+function allAttributeScoresSet(attributeScoreObj: AttributeScoreObject) {
+    return Object.values(attributeScoreObj).every(x => x !== null);
+}
+
+function getShouldEnableNext(attributeScoreObj: AttributeScoreObject, species: string, strength: string, weakness: string) {
+    // Don't enable the Next button unless all attribute scores have been set
+    if (!allAttributeScoresSet(attributeScoreObj)) {
+        return false;
+    }
+
+    const isHuman = getIsHuman(species);
+    if (isHuman) {
+        // For humans, we only set the species strength
+        return strength !== "";
+    }
+    else {
+        // For other species, we need both the strength and the weakness
+        return strength !== "" && weakness !== "";
+    }
+
+}
+
 const attributeNames: DefaultOptionType[] = [
     { value: 'STR', label: 'STR' },
     { value: 'COR', label: 'COR' },
@@ -50,28 +73,60 @@ type AttributeSelectorProps = {
 };
 
 const AttributeSelector = (props: AttributeSelectorProps) => {
-    const [ humanStrength, setHumanStrength ] = useState<string[]>([]);
     const [ showHelpModal, setShowHelpModal ] = useState(false);
-    const { species, level, attributeScoreObj } = useContext(CharacterContext);
+    const { setNextEnabled } = useContext(NextButtonEnabledContext);
+    const { species,
+            level,
+            attributeScoreObj,
+            speciesStrengthAttribute,
+            setSpeciesStrengthAttribute,
+            speciesWeaknessAttribute,
+            setSpeciesWeaknessAttribute } = useContext(CharacterContext);
 
     const isHuman = getIsHuman(species);
     const isTraditionalMode = (level > 0);
-    const hasAllAttributeScores = Object.values(attributeScoreObj).every(x => x !== null);
+    const hasAllAttributeScores = allAttributeScoresSet(attributeScoreObj);
+
+    useEffect(() => {
+        const shouldEnableNext = getShouldEnableNext(attributeScoreObj, species,
+                                    speciesStrengthAttribute, speciesWeaknessAttribute);
+        setNextEnabled(shouldEnableNext);
+
+    }, [attributeScoreObj, species, speciesStrengthAttribute, speciesWeaknessAttribute, setNextEnabled]);
 
     const hideHelpModal = () => {
         setShowHelpModal(false);
     };
 
     const onNonHumanStrengthChange = (e: RadioChangeEvent) => {
+        const newStrength = e.target.value;
+        const shouldEnableNext = getShouldEnableNext(attributeScoreObj, species, newStrength, speciesWeaknessAttribute);
 
+        setSpeciesStrengthAttribute(newStrength);
+        setNextEnabled(shouldEnableNext);
     };
 
     const onNonHumanWeaknessChange = (e: RadioChangeEvent) => {
+        const newWeakness = e.target.value;
+        const shouldEnableNext = getShouldEnableNext(attributeScoreObj, species, speciesStrengthAttribute, newWeakness);
 
+        setSpeciesWeaknessAttribute(newWeakness);
+        setNextEnabled(shouldEnableNext);
     };
 
-    const onHumanStrengthChange = (value: string[]) => {
-        setHumanStrength(value);
+    const onHumanStrengthChange = (value: string|string[]) => {
+        if (value) {
+            const newStrength = (typeof(value) === 'string') ? value : value[0];
+
+            const shouldEnableNext = getShouldEnableNext(attributeScoreObj, species, newStrength, speciesWeaknessAttribute);
+
+            setSpeciesStrengthAttribute(newStrength);
+            setNextEnabled(shouldEnableNext);
+        }
+        else {
+            setSpeciesStrengthAttribute('');
+            setNextEnabled(false);
+        }
     };
 
     let nonHumanStrengthDesc = "";
@@ -132,7 +187,8 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                                     <Radio.Group
                                         buttonStyle="solid"
                                         disabled={!hasAllAttributeScores}
-                                        onChange={onNonHumanStrengthChange}>
+                                        onChange={onNonHumanStrengthChange}
+                                        value={speciesStrengthAttribute}>
                                         {getStrengths(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
@@ -141,7 +197,8 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                                     <Radio.Group
                                         buttonStyle="solid"
                                         disabled={!hasAllAttributeScores}
-                                        onChange={onNonHumanWeaknessChange}>
+                                        onChange={onNonHumanWeaknessChange}
+                                        value={speciesWeaknessAttribute}>
                                         {getWeaknesses(species).map(x => (<Radio.Button key={x} value={x}>{x}</Radio.Button>))}
                                     </Radio.Group>
                                 </Col>
@@ -153,7 +210,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
                             <p>Select which attribute you want to boost.</p>
                             <p>Humans get a +1 to any attribute which is not the character's highest.</p>
                             <SelectMultiple
-                                defaultValue={humanStrength}
+                                defaultValue={[speciesStrengthAttribute]}
                                 disabled={!hasAllAttributeScores}
                                 numElementsAllowed={1}
                                 onChange={onHumanStrengthChange}

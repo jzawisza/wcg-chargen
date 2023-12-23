@@ -7,10 +7,8 @@ const Profession: React.FC = () => {
     const { profession, setProfession } = useContext(CharacterContext);
 
     useEffect(() => {
-        if (profession === '') {
-            setNextEnabled(false);
-        }
-    }, []);
+        setNextEnabled(profession !== '');
+    }, [profession, setNextEnabled]);
 
     const onRadioGroupChange = (e: RadioChangeEvent) => {
         setProfession(e.target.value);

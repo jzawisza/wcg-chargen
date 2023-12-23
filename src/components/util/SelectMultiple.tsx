@@ -14,7 +14,7 @@ type SelectMultipleProps = {
 // Wrapper around the Ant Design Select component to support selecting a finite number of elements.
 // If numElementsAllowed is 1, this defaults to a standard Select invocation with no multiple selection.
 const SelectMultiple = (props: SelectMultipleProps) => {
-    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<string[]>(props.defaultValue);
 
     const selectMode = (props.numElementsAllowed > 1 ? 'multiple' : undefined);
     const isDisabled = (props.disabled ? props.disabled : false);

@@ -35,5 +35,9 @@ export const CharacterContext = createContext({
     attributeScoreObj: emptyAtributeScoreObj,
     setAttributeScoreObj: (newAttributeScoreObj: AttributeScoreObject) => {},
     attributeValues: emptyNumberOrNullArray,
-    setAttributeValues: (newAttributeValues: (number | null)[]) => {}
+    setAttributeValues: (newAttributeValues: (number | null)[]) => {},
+    speciesStrengthAttribute: '',
+    setSpeciesStrengthAttribute: (newSpeciesStrength: string) => {},
+    speciesWeaknessAttribute: '',
+    setSpeciesWeaknessAttribute: (newSpeciesWeakness: string) => {}
 });

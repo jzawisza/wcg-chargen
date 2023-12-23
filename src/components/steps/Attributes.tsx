@@ -10,8 +10,12 @@ const Attributes: React.FC = () => {
     const { level, attributeArrayType, setAttributeArrayType } = useContext(CharacterContext);
 
     useEffect(() => {
-        setNextEnabled(false);
-    }, [setNextEnabled]);
+        // This should NOT be optimized to setNextEnabled(level > 0 && attributeArrayType === "")
+        // The desired behavior is to not call setNextEnabled at all if the condition is false
+        if (level > 0 && attributeArrayType === "") {
+            setNextEnabled(false);
+        }
+    }, [level, attributeArrayType, setNextEnabled]);
 
     if (level === 0) {
         return (<AttributeSelector />);

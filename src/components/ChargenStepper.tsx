@@ -24,6 +24,8 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [attributeArrayType, setAttributeArrayType] = useState('');
     const [attributeScoreObj, setAttributeScoreObj] = useState(emptyAtributeScoreObj);
     const [attributeValues, setAttributeValues] = useState<(number | null)[]>([]);
+    const [speciesStrengthAttribute, setSpeciesStrengthAttribute] = useState('');
+    const [speciesWeaknessAttribute, setSpeciesWeaknessAttribute] = useState('');
 
     const nextEnabledValue = {nextEnabled, setNextEnabled};
     const characterInfoValue = {level,
@@ -37,7 +39,9 @@ const ChargenStepper = (props: ChargenStepperProps) => {
         charName, setCharName,
         attributeArrayType, setAttributeArrayType,
         attributeScoreObj, setAttributeScoreObj,
-        attributeValues, setAttributeValues};
+        attributeValues, setAttributeValues,
+        speciesStrengthAttribute, setSpeciesStrengthAttribute,
+        speciesWeaknessAttribute, setSpeciesWeaknessAttribute};
 
     const numSteps = props.steps ? props.steps.length : 0;
 
