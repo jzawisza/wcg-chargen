@@ -28,24 +28,40 @@ function generateStaticTableRow(score: number | null) {
 // For Traditional Mode, show four columns:
 //   1) Attribute name
 //   2) Attribute scores: empty initially, populated by dragging from #4
-//   3) Empty column for spacing
+//   3) Initially empty column for spacing which will be populated if the species strength/weakeness
+//      selected is for the current attribute
 //   4) Attribute score values which can be dragged to #2
 function generateDndTableRow(attributeScores: AttributeScoreObject,
     attributeValueArray: (number | null)[],
     attributeShortName: keyof AttributeScoreObject,
-    index: number) {
+    index: number,
+    strength: string,
+    weakness: string) {
         const attributeScore = attributeScores[attributeShortName];
         const valueScore = attributeValueArray[index];
 
+        let strengthWeaknessInfo = null;
+        if (attributeShortName === strength && attributeScore !== null) {
+            strengthWeaknessInfo = ` + 1 = ${attributeScore + 1}`;
+        }
+        else if (attributeShortName === weakness && attributeScore !== null) {
+            strengthWeaknessInfo = ` - 1 = ${attributeScore - 1}`;
+        }
+
         return (<>
                 <AttributeDndScoreCell attributeShortName={attributeShortName} score={attributeScore} />
-                <td className="attributeTableGeneralCell" />
+                {strengthWeaknessInfo ?
+                    <td className="attributeTableStrengthWeaknessCell">{strengthWeaknessInfo}</td> :
+                    <td className="attributeTableStrengthWeaknessCell" />}
                 <AttributeDndValueCell index={index} score={valueScore} />
             </>);
 }
 
 const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
-    const { attributeScoreObj, setAttributeScoreObj, attributeValues, setAttributeValues } = useContext(CharacterContext);
+    const { attributeScoreObj, setAttributeScoreObj,
+            attributeValues, setAttributeValues,
+            speciesStrengthAttribute, setSpeciesStrengthAttribute,
+            speciesWeaknessAttribute, setSpeciesWeaknessAttribute } = useContext(CharacterContext);
     
     useEffect(() => {
         // Initialize attributeValues in character context iff it's not already initialized
@@ -101,6 +117,8 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
     const resetValues = () => {
         setAttributeScoreObj(emptyAttributeScoreObj);
         setAttributeValues(props.initialValues);
+        setSpeciesStrengthAttribute('');
+        setSpeciesWeaknessAttribute('');
     }
 
     // Use a HTML table to represent the attributes, the draggable score values,
@@ -124,49 +142,56 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                     <tr>
                         <td className="attributeTableAttributeCell">Strength (STR)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "STR", 0) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "STR", 0,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.STR)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Coordination (COR)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "COR", 1) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "COR", 1,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.COR)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Stamina (STA)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "STA", 2) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "STA", 2,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.STA)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Perception (PER)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "PER", 3) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "PER", 3,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.PER)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Intellect (INT)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "INT", 4) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "INT", 4,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.INT)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Presence (PRS)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "PRS", 5) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "PRS", 5,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.PRS)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Luck (LUC)</td>
                         {props.canSelectValues ?
-                            generateDndTableRow(attributeScoreObj, attributeValues, "LUC", 6) :
+                            generateDndTableRow(attributeScoreObj, attributeValues, "LUC", 6,
+                                speciesStrengthAttribute, speciesWeaknessAttribute) :
                             generateStaticTableRow(attributeScoreObj.LUC)
                         }
                     </tr>

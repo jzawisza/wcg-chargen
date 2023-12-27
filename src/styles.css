@@ -121,7 +121,14 @@
   border: 1px solid;
 }
 
-.attributeTableGeneralCell {
+.attributeTableStrengthWeaknessCell {
+  width: 10%;
+  font-weight: bold;
+  font-size: 125%;
+  padding-left: 2%;
+}
+
+.attributeTableValueCell {
   width: 10%;
 }
 

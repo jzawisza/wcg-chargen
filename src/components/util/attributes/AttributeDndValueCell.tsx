@@ -17,7 +17,7 @@ const AttributeDndValueCell = (props: AttributeDndValueCellProps) => {
     } : undefined;
 
     return (
-        <td className="attributeTableGeneralCell">
+        <td className="attributeTableValueCell">
             {props.score !== null &&
                 <div ref={setNodeRef} style={{...style, ...ScoreStyle}} {...listeners} {...attributes}>
                     {props.score}
