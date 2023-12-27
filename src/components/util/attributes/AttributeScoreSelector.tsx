@@ -5,7 +5,7 @@ import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import AttributeDndScoreCell from "./AttributeDndScoreCell";
 import AttributeDndValueCell from "./AttributeDndValueCell";
 import { ScoreStyle } from "../../../constants/AttributeScoreStyle";
-import { AttributeScoreObject, emptyAtributeScoreObj } from "../../../constants/AttributeScoreObject";
+import { AttributeScoreObject, emptyAttributeScoreObj } from "../../../constants/AttributeScoreObject";
 import { CharacterContext } from "../../../Context";
 
 type AttributeScoreSelectorProps = {
@@ -14,12 +14,7 @@ type AttributeScoreSelectorProps = {
 };
 
 // Generate a table cell containing an attribute score that is not changeable
-function generateStaticTableRow(attributeScores: AttributeScoreObject,
-    attributeShortName: keyof AttributeScoreObject,
-    score: number | null) {
-        // Populate attributeScores object with static data
-        attributeScores[attributeShortName] = score;
-
+function generateStaticTableRow(score: number | null) {
         return (
                 <td className="attributeTableGeneralCell">
                     <div style={ScoreStyle}>
@@ -57,7 +52,22 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
         if (attributeValues.length === 0) {
             setAttributeValues(props.initialValues);
         }
-    }, [attributeValues, setAttributeValues, props.initialValues]);
+        // Construct AttributeScoreObj if we're using Wicked Hard mode and scores are static,
+        // and if we haven't already initialized it
+        if (!props.canSelectValues && Object.values(attributeScoreObj).every(x => x === null)) {
+            const wickedHardAttributeScoreObj = {
+                STR: props.initialValues[0],
+                COR: props.initialValues[1],
+                STA: props.initialValues[2],
+                PER: props.initialValues[3],
+                INT: props.initialValues[4],
+                PRS: props.initialValues[5],
+                LUC: props.initialValues[6]
+            };
+            setAttributeScoreObj(wickedHardAttributeScoreObj);
+        }
+    }, [attributeValues, setAttributeValues, attributeScoreObj, setAttributeScoreObj,
+        props.initialValues, props.canSelectValues]);
 
     const handleDragEnd = (e: DragEndEvent) => {
         const {active, over} = e;
@@ -89,7 +99,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
     };
 
     const resetValues = () => {
-        setAttributeScoreObj(emptyAtributeScoreObj);
+        setAttributeScoreObj(emptyAttributeScoreObj);
         setAttributeValues(props.initialValues);
     }
 
@@ -115,49 +125,49 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
                         <td className="attributeTableAttributeCell">Strength (STR)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "STR", 0) :
-                            generateStaticTableRow(attributeScoreObj, "STR", attributeValues[0])
+                            generateStaticTableRow(attributeScoreObj.STR)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Coordination (COR)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "COR", 1) :
-                            generateStaticTableRow(attributeScoreObj, "COR", attributeValues[1])
+                            generateStaticTableRow(attributeScoreObj.COR)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Stamina (STA)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "STA", 2) :
-                            generateStaticTableRow(attributeScoreObj, "STA", attributeValues[2])
+                            generateStaticTableRow(attributeScoreObj.STA)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Perception (PER)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "PER", 3) :
-                            generateStaticTableRow(attributeScoreObj, "PER", attributeValues[3])
+                            generateStaticTableRow(attributeScoreObj.PER)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Intellect (INT)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "INT", 4) :
-                            generateStaticTableRow(attributeScoreObj, "INT", attributeValues[4])
+                            generateStaticTableRow(attributeScoreObj.INT)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Presence (PRS)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "PRS", 5) :
-                            generateStaticTableRow(attributeScoreObj, "PRS", attributeValues[5])
+                            generateStaticTableRow(attributeScoreObj.PRS)
                         }
                     </tr>
                     <tr>
                         <td className="attributeTableAttributeCell">Luck (LUC)</td>
                         {props.canSelectValues ?
                             generateDndTableRow(attributeScoreObj, attributeValues, "LUC", 6) :
-                            generateStaticTableRow(attributeScoreObj, "LUC", attributeValues[6])
+                            generateStaticTableRow(attributeScoreObj.LUC)
                         }
                     </tr>
                 </tbody>

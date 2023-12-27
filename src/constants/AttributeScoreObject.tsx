@@ -9,7 +9,7 @@ export interface AttributeScoreObject {
     LUC: number | null;
 };
 
-export const emptyAtributeScoreObj: AttributeScoreObject = {
+export const emptyAttributeScoreObj: AttributeScoreObject = {
     STR: null,
     COR: null,
     STA: null,

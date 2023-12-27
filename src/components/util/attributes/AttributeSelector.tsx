@@ -1,12 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { Radio, RadioChangeEvent, Row, Col, Modal } from "antd";
-import { DefaultOptionType } from "antd/es/select";
 import { CharacterContext, NextButtonEnabledContext } from "../../../Context";
 import { DWARF_SPECIES_INFO, ELF_SPECIES_INFO, HALFLING_SPECIES_INFO, getIsHuman, getPluralSpeciesNameFromVariable } from "../../../constants/SpeciesInfo";
 import SelectMultiple from "../SelectMultiple";
 import AttributeScoreSelector from "./AttributeScoreSelector";
 import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../../constants/AttributeArrayType";
 import { AttributeScoreObject } from "../../../constants/AttributeScoreObject";
+import { DEFAULT_ATTRIBUTE_NAMES, getNameListWithHighestScoringAttributesRemoved } from "../../../constants/AttributeNameList";
 
 // Return a two-element array containing the strengths for a given non-human species
 function getStrengths(species: string) {
@@ -36,6 +36,15 @@ function getWeaknesses(species: string) {
     }
 }
 
+/**
+ * Simulate rolling a d4 to calculate attribute scores for Wicked Hard mode.
+ * 
+ * @returns A random number between 1 and 4
+ */
+function getD4Roll() {
+    return (Math.floor(Math.random() * 4)) + 1;
+}
+
 function allAttributeScoresSet(attributeScoreObj: AttributeScoreObject) {
     return Object.values(attributeScoreObj).every(x => x !== null);
 }
@@ -58,22 +67,14 @@ function getShouldEnableNext(attributeScoreObj: AttributeScoreObject, species: s
 
 }
 
-const attributeNames: DefaultOptionType[] = [
-    { value: 'STR', label: 'STR' },
-    { value: 'COR', label: 'COR' },
-    { value: 'STA', label: 'STA' },
-    { value: 'PER', label: 'PER' },
-    { value: 'INT', label: 'INT' },
-    { value: 'PRS', label: 'PRS' },
-    { value: 'LUC', label: 'LUC' },
-];
-
 type AttributeSelectorProps = {
     arrayType?: string
 };
 
 const AttributeSelector = (props: AttributeSelectorProps) => {
     const [ showHelpModal, setShowHelpModal ] = useState(false);
+    const [ attributeNames, setAttributeNames ] = useState(DEFAULT_ATTRIBUTE_NAMES);
+
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
     const { species,
             level,
@@ -88,11 +89,17 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
     const hasAllAttributeScores = allAttributeScoresSet(attributeScoreObj);
 
     useEffect(() => {
+        if (getIsHuman(species)) {
+            // Remove the highest scoring attributes from the list of species strength choices
+            const filteredAttributeNames = getNameListWithHighestScoringAttributesRemoved(attributeScoreObj);
+            setAttributeNames(filteredAttributeNames);
+        }
+
         const shouldEnableNext = getShouldEnableNext(attributeScoreObj, species,
                                     speciesStrengthAttribute, speciesWeaknessAttribute);
         setNextEnabled(shouldEnableNext);
 
-    }, [attributeScoreObj, species, speciesStrengthAttribute, speciesWeaknessAttribute, setNextEnabled]);
+    }, [attributeScoreObj, species, speciesStrengthAttribute, speciesWeaknessAttribute, setNextEnabled, setAttributeNames]);
 
     const hideHelpModal = () => {
         setShowHelpModal(false);
@@ -151,7 +158,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
             // Generate random numbers between -3 and 3 by generating two random numbers between 1 and 4,
             // and subtracting the first from the second.
             // This makes the distribution into a bell curve.
-            attributeValues.push(Math.ceil(Math.random() * 3) - Math.ceil(Math.random() * 3));
+            attributeValues.push(getD4Roll() - getD4Roll());
         }
     }
 

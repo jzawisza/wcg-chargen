@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { AttributeScoreObject, emptyAtributeScoreObj } from "./constants/AttributeScoreObject";
+import { AttributeScoreObject, emptyAttributeScoreObj } from "./constants/AttributeScoreObject";
 
 // Whether the Next button in ChargenStepper is enabled
 export const NextButtonEnabledContext = createContext({
@@ -32,7 +32,7 @@ export const CharacterContext = createContext({
     setCharName: (newCharName: string) => {},
     attributeArrayType: '',
     setAttributeArrayType: (newAttributeArrayType: string) => {},
-    attributeScoreObj: emptyAtributeScoreObj,
+    attributeScoreObj: emptyAttributeScoreObj,
     setAttributeScoreObj: (newAttributeScoreObj: AttributeScoreObject) => {},
     attributeValues: emptyNumberOrNullArray,
     setAttributeValues: (newAttributeValues: (number | null)[]) => {},
