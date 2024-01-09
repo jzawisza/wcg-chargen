@@ -7,6 +7,7 @@ import AttributeScoreSelector from "./AttributeScoreSelector";
 import { ATTRIBUTE_ARRAY_SIZE, getArrayByName } from "../../../constants/AttributeArrayType";
 import { AttributeScoreObject } from "../../../constants/AttributeScoreObject";
 import { DEFAULT_ATTRIBUTE_NAMES, getNameListWithHighestScoringAttributesRemoved } from "../../../constants/AttributeNameList";
+import { getAttributeValueRecommendations } from "../../../constants/AttributeValueRecommendations";
 
 // Return a two-element array containing the strengths for a given non-human species
 function getStrengths(species: string) {
@@ -77,6 +78,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
 
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
     const { species,
+            charClass,
             level,
             attributeScoreObj,
             speciesStrengthAttribute,
@@ -165,7 +167,7 @@ const AttributeSelector = (props: AttributeSelectorProps) => {
     return (
         <div>
             <Modal title="Selecting Attribute Values" open={showHelpModal} onOk={hideHelpModal} onCancel={hideHelpModal}>
-                TODO: text goes here
+                {getAttributeValueRecommendations(charClass)}
             </Modal>
 
             {isTraditionalMode ?

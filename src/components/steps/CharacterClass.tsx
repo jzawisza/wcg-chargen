@@ -3,6 +3,8 @@ import { NextButtonEnabledContext, CharacterContext } from "../../Context";
 import { Row, Col, Checkbox, Popover } from "antd";
 import { InfoCircleOutlined } from '@ant-design/icons';
 import SelectableCard from "../util/cards/SelectableCard";
+import { BERZERKER_CHARCLASS, MAGE_CHARCLASS, MYSTIC_CHARCLASS, RANGER_CHARCLASS,
+        ROGUE_CHARCLASS, SHAMAN_CHARCLASS, SKALD_CHARCLASS, WARRIOR_CHARCLASS } from "../../constants/CharClassInfo";
 
 const berzerkerFeatures = (
     <ul>
@@ -100,7 +102,7 @@ const CharacterClass: React.FC = () => {
 
     useEffect(() => {
         setNextEnabled(charClass !== '');
-    }, []);
+    }, [charClass, setNextEnabled]);
 
     const onCharClassCardClick = (charClassName: string) => {
         setCharClass(charClassName);
@@ -119,19 +121,19 @@ const CharacterClass: React.FC = () => {
                 </Popover>
             </div>
             <Row justify="center">
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('berzerker')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(BERZERKER_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Berzerker"
+                        <SelectableCard title={BERZERKER_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Fearless fighters longing to taste the blood rapture of battle fury."
                             features={berzerkerFeatures}
-                            selected={charClass === 'berzerker'}
+                            selected={charClass === BERZERKER_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('mage')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(MAGE_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Mage"
+                        <SelectableCard title={MAGE_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Studious, sorcerous spell-casters risking essence to probe ancient secrets and acquire hidden lore."
                             features={mageFeatures}
@@ -141,67 +143,67 @@ const CharacterClass: React.FC = () => {
                 </div>
             </Row>
             <Row justify="center">
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('mystic')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(MYSTIC_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Mystic"
+                        <SelectableCard title={MYSTIC_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Disciplined, spiritual martial artists excelling in unarmed combat & preternatural athletic prowess."
                             features={mysticFeatures}
-                            selected={charClass === 'mystic'}
+                            selected={charClass === MYSTIC_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('ranger')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(RANGER_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Ranger"
+                        <SelectableCard title={RANGER_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Woodland fighters sworn to protect forest and field."
                             features={rangerFeatures}
-                            selected={charClass === 'ranger'}
+                            selected={charClass === RANGER_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
             </Row>
             <Row justify="center">
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('rogue')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(ROGUE_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Rogue"
+                        <SelectableCard title={ROGUE_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Stealthy criminals and rascals living by their wits, often fighting dirty when cornered."
                             features={rogueFeatures}
-                            selected={charClass === 'rogue'}
+                            selected={charClass === ROGUE_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('shaman')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(SHAMAN_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Shaman"
+                        <SelectableCard title={SHAMAN_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Spell users, healers, hexers, and religious leaders who interact with nature and the animal spirit world."
                             features={shamanFeatures}
-                            selected={charClass === 'shaman'}
+                            selected={charClass === SHAMAN_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
             </Row>
             <Row justify="center">
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('skald')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(SKALD_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Skald"
+                        <SelectableCard title={SKALD_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Traveling storytellers, poets, and performers dabbling in all manner of knowledge."
                             features={skaldFeatures}
-                            selected={charClass === 'skald'}
+                            selected={charClass === SKALD_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
-                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick('warrior')}>
+                <div className="selectableCardWrapper" onClick={() => onCharClassCardClick(WARRIOR_CHARCLASS.charClass)}>
                     <Col span={8}>
-                        <SelectableCard title="Warrior"
+                        <SelectableCard title={WARRIOR_CHARCLASS.capitalizedClassName}
                             className="charClassCard"
                             description="Highly skilled combatants on the ground and on horseback."
                             features={warriorFeatures}
-                            selected={charClass === 'warrior'}
+                            selected={charClass === WARRIOR_CHARCLASS.charClass}
                         />
                     </Col>
                 </div>
