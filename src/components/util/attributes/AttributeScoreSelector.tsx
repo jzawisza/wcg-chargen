@@ -16,7 +16,7 @@ type AttributeScoreSelectorProps = {
 // Generate a table cell containing an attribute score that is not changeable
 function generateStaticTableRow(score: number | null) {
         return (
-                <td className="attributeTableGeneralCell">
+                <td className="attributeTableValueCell">
                     <div style={ScoreStyle}>
                         {score}
                     </div>
