@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import AttributeSelector from "../AttributeSelector";
 import { CharacterContext, NextButtonEnabledContext } from "../../../../Context";
-import { AttributeScoreObject, emptyAttributeScoreObj } from "../../../../constants/AttributeScoreObject";
+import { AttributeScoreObject, EMPTY_ATTRIBUTE_SCORE_OBJ } from "../../../../constants/AttributeScoreObject";
 import { getArrayByName } from "../../../../constants/AttributeArrayType";
 import { DefaultOptionType } from "antd/es/select";
 import userEvent from "@testing-library/user-event";
@@ -80,7 +80,7 @@ function getNumSpanElementsWithText(spanEltList: HTMLCollectionOf<HTMLSpanElemen
 test('link to attribute value recommendation modal not displayed for Wicked Hard Mode', () => {
     const charInfoContext = {
         level: 0,
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: [0, 0, 0, 0, 0, 0, 0],
         setAttributeScoreObj: jest.fn()
     };
@@ -99,7 +99,7 @@ test.each([
 ])('link to attribute value recommendation modal displayed for Traditional Mode with attribute array type %s', (arrayTypeStr: string) => {
     const charInfoContext = {
         level: 1,
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: getArrayByName(arrayTypeStr)?.array
     };
 
@@ -127,7 +127,7 @@ test.each([
 
     const charInfoContext = {
         level: 1,
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: getArrayByName(arrayTypeStr)?.array,
         charClass: charClass
     };
@@ -158,7 +158,7 @@ test.each([
     (speciesStr: string, strength1: string, strength2: string, weakness1: string, weakness2: string) => {
         const charInfoContext = {
             level: 0,
-            attributeScoreObj: emptyAttributeScoreObj,
+            attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
             attributeValues: [0, 0, 0, 0, 0, 0, 0],
             setAttributeScoreObj: jest.fn(),
             species: speciesStr
@@ -220,7 +220,7 @@ test.each([
 });
 
 test.each([
-    [emptyAttributeScoreObj, true],
+    [EMPTY_ATTRIBUTE_SCORE_OBJ, true],
     [COMPLETE_ATTRIBUTE_SCORE_OBJ, false]
 ])('select strength dropdown for humans with attribute score object %s has disabled = %s',
     (initialAttributeScoreObj: AttributeScoreObject, isDisabled: boolean) => {
@@ -248,13 +248,13 @@ test.each([
 });
 
 test.each([
-    ["dwarf", emptyAttributeScoreObj],
+    ["dwarf", EMPTY_ATTRIBUTE_SCORE_OBJ],
     ["dwarf", COMPLETE_ATTRIBUTE_SCORE_OBJ],
-    ["elf", emptyAttributeScoreObj],
+    ["elf", EMPTY_ATTRIBUTE_SCORE_OBJ],
     ["elf", COMPLETE_ATTRIBUTE_SCORE_OBJ],
-    ["halfling", emptyAttributeScoreObj],
+    ["halfling", EMPTY_ATTRIBUTE_SCORE_OBJ],
     ["halfling", COMPLETE_ATTRIBUTE_SCORE_OBJ],
-    ["human", emptyAttributeScoreObj],
+    ["human", EMPTY_ATTRIBUTE_SCORE_OBJ],
     ["human", COMPLETE_ATTRIBUTE_SCORE_OBJ],
 ])('next button is disabled for species %s with attribute score object %s',
     (speciesStr: string, initialAttributeScoreObj: AttributeScoreObject) => {

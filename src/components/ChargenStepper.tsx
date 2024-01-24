@@ -2,7 +2,7 @@ import { Button, Steps } from "antd";
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { ReactNode, useState } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../Context";
-import { emptyAttributeScoreObj } from "../constants/AttributeScoreObject";
+import { EMPTY_ATTRIBUTE_SCORE_OBJ } from "../constants/AttributeScoreObject";
 
 type ChargenStepperProps = {
     steps: {title: string, content: ReactNode | undefined}[];
@@ -22,7 +22,7 @@ const ChargenStepper = (props: ChargenStepperProps) => {
     const [tier2Features, setTier2Features] = useState<string[]>([]);
     const [charName, setCharName] = useState('');
     const [attributeArrayType, setAttributeArrayType] = useState('');
-    const [attributeScoreObj, setAttributeScoreObj] = useState(emptyAttributeScoreObj);
+    const [attributeScoreObj, setAttributeScoreObj] = useState(EMPTY_ATTRIBUTE_SCORE_OBJ);
     const [attributeValues, setAttributeValues] = useState<(number | null)[]>([]);
     const [speciesStrengthAttribute, setSpeciesStrengthAttribute] = useState('');
     const [speciesWeaknessAttribute, setSpeciesWeaknessAttribute] = useState('');

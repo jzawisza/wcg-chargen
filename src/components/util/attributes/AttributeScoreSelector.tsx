@@ -5,7 +5,7 @@ import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import AttributeDndScoreCell from "./AttributeDndScoreCell";
 import AttributeDndValueCell from "./AttributeDndValueCell";
 import { ScoreStyle } from "../../../constants/AttributeScoreStyle";
-import { AttributeScoreObject, emptyAttributeScoreObj } from "../../../constants/AttributeScoreObject";
+import { AttributeScoreObject, EMPTY_ATTRIBUTE_SCORE_OBJ } from "../../../constants/AttributeScoreObject";
 import { CharacterContext } from "../../../Context";
 
 type AttributeScoreSelectorProps = {
@@ -115,7 +115,7 @@ const AttributeScoreSelector = (props: AttributeScoreSelectorProps) => {
     };
 
     const resetValues = () => {
-        setAttributeScoreObj(emptyAttributeScoreObj);
+        setAttributeScoreObj(EMPTY_ATTRIBUTE_SCORE_OBJ);
         setAttributeValues(props.initialValues);
         setSpeciesStrengthAttribute('');
         setSpeciesWeaknessAttribute('');

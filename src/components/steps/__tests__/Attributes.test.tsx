@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { CharacterContext } from "../../../Context";
 import Attributes from "../Attributes";
-import { emptyAttributeScoreObj } from "../../../constants/AttributeScoreObject";
+import { EMPTY_ATTRIBUTE_SCORE_OBJ } from "../../../constants/AttributeScoreObject";
 
 test('initial render for Wicked Hard mode does not display clickable cards', () => {
     const attributeProvider = {
         level: 0,
         attributeArrayType: "",
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: [0, 0, 0, 0, 0, 0, 0],
         setAttributeScoreObj: jest.fn()
     };
@@ -27,7 +27,7 @@ test('initial render for Traditional mode displays clickable cards', () => {
     const attributeProvider = {
         level: 1,
         attributeArrayType: "",
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: [0, 0, 0, 0, 0, 0, 0],
         setAttributeScoreObj: jest.fn()
     };
@@ -56,7 +56,7 @@ test.each([
     const attributeProvider = {
         level: 1,
         attributeArrayType: "",
-        attributeScoreObj: emptyAttributeScoreObj,
+        attributeScoreObj: EMPTY_ATTRIBUTE_SCORE_OBJ,
         attributeValues: [],
         setAttributeScoreObj: jest.fn(),
         setAttributeArrayType: mockSetAttributeArrayType
