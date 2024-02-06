@@ -1,0 +1,115 @@
+professions:
+  - name: "Armorer"
+    rangeStart: 1
+    rangeEnd: 1
+  - name: "Baker/Cook"
+    rangeStart: 2
+    rangeEnd: 6
+  - name: "Blacksmith"
+    rangeStart: 7
+    rangeEnd: 8
+  - name: "Bowyer"
+    rangeStart: 9
+    rangeEnd: 10
+  - name: "Butcher"
+    rangeStart: 11
+    rangeEnd: 14
+  - name: "Carpenter"
+    rangeStart: 15
+    rangeEnd: 18
+  - name: "Cartwright"
+    rangeStart: 19
+    rangeEnd: 21
+  - name: "Chandler"
+    rangeStart: 22
+    rangeEnd: 25
+  - name: "Entertainer"
+    rangeStart: 26
+    rangeEnd: 29
+  - name: "Farmer"
+    rangeStart: 30
+    rangeEnd: 36
+  - name: "Fisherman"
+    rangeStart: 37
+    rangeEnd: 41
+  - name: "Forester"
+    rangeStart: 42
+    rangeEnd: 43
+  - name: "Fortune Teller"
+    rangeStart: 44
+    rangeEnd: 44
+  - name: "Glazier"
+    rangeStart: 45
+    rangeEnd: 45
+  - name: "Guard"
+    rangeStart: 46
+    rangeEnd: 49
+  - name: "Healer/Herbalist"
+    rangeStart: 50
+    rangeEnd: 51
+  - name: "Hunter"
+    rangeStart: 52
+    rangeEnd: 55
+  - name: "Jeweler"
+    rangeStart: 56
+    rangeEnd: 56
+  - name: "Leatherworker"
+    rangeStart: 57
+    rangeEnd: 58
+  - name: "Locksmith"
+    rangeStart: 59
+    rangeEnd: 59
+  - name: "Mason"
+    rangeStart: 60
+    rangeEnd: 62
+  - name: "Miller"
+    rangeStart: 63
+    rangeEnd: 65
+  - name: "Miner"
+    rangeStart: 66
+    rangeEnd: 69
+  - name: "Potter"
+    rangeStart: 70
+    rangeEnd: 71
+  - name: "Rat Catcher"
+    rangeStart: 72
+    rangeEnd: 73
+  - name: "Sailor"
+    rangeStart: 74
+    rangeEnd: 75
+  - name: "Scholar"
+    rangeStart: 76
+    rangeEnd: 76
+  - name: "Scribe"
+    rangeStart: 77
+    rangeEnd: 77
+  - name: "Shepherd"
+    rangeStart: 78
+    rangeEnd: 81
+  - name: "Shipwright"
+    rangeStart: 82
+    rangeEnd: 82
+  - name: "Smuggler"
+    rangeStart: 83
+    rangeEnd: 83
+  - name: "Stablehand"
+    rangeStart: 84
+    rangeEnd: 87
+  - name: "Tailor"
+    rangeStart: 88
+    rangeEnd: 89
+  - name: "Teamster"
+    rangeStart: 90
+    rangeEnd: 91
+  - name: "Trapper/Furrier"
+    rangeStart: 92
+    rangeEnd: 93
+  - name: "Vagrant"
+    rangeStart: 94
+    rangeEnd: 95
+  - name: "Watchman"
+    rangeStart: 96
+    rangeEnd: 97
+  - name: "Weaver"
+    rangeStart: 98
+    rangeEnd: 99
