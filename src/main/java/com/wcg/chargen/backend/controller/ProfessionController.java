@@ -26,4 +26,16 @@ public class ProfessionController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("generate")
+    public ResponseEntity<Professions> generateRandomProfessions() {
+        try {
+            var professionList = professionService.generateRandomProfessions();
+
+            return new ResponseEntity<>(professionList, HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

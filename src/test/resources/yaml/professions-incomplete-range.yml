@@ -1,0 +1,7 @@
+professions:
+  - name: "Test1"
+    rangeStart: 1
+    rangeEnd: 7
+  - name: "Test2"
+    rangeStart: 11
+    rangeEnd: 15

@@ -1,0 +1,28 @@
+professions:
+  - name: "Test1"
+    rangeStart: 1
+    rangeEnd: 8
+  - name: "Test2"
+    rangeStart: 9
+    rangeEnd: 27
+  - name: "Test3"
+    rangeStart: 28
+    rangeEnd: 39
+  - name: "Test4"
+    rangeStart: 40
+    rangeEnd: 75
+  - name: "Test5"
+    rangeStart: 76
+    rangeEnd: 76
+  - name: "Test6"
+    rangeStart: 77
+    rangeEnd: 77
+  - name: "Test7"
+    rangeStart: 78
+    rangeEnd: 78
+  - name: "Test8"
+    rangeStart: 79
+    rangeEnd: 89
+  - name: "Test9"
+    rangeStart: 90
+    rangeEnd: 99
