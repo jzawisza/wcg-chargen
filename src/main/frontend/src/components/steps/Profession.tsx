@@ -1,19 +1,8 @@
 import React, { useEffect, useContext } from "react";
 import { Radio, RadioChangeEvent, Spin } from "antd";
-import useSWRImmutable from 'swr/immutable';
-import { preload } from "swr";
 import { CharacterContext, NextButtonEnabledContext } from "../../Context";
-import fetcher from "../../Fetcher";
-
-interface ProfessionType {
-    name: string,
-    rangeStart: number,
-    rangeEnd: number
-}
-
-interface ProfessionsType {
-    professions: ProfessionType[]
-}
+import { useProfessionsData, preloadProfessionsData } from "../../server/ServerData";
+import { ProfessionsType } from "../../server/ProfessionsType";
 
 /**
  * Take profession data from the backend and parse it into radio buttons
@@ -34,12 +23,12 @@ function generateRadioButtons(data: ProfessionsType | undefined) {
     return radioButtons;
 }
 
-preload('api/v1/professions/generate', fetcher);
+preloadProfessionsData();
 
 const Profession: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
     const { profession, setProfession } = useContext(CharacterContext);
-    const { data, error, isLoading } = useSWRImmutable<ProfessionsType>('api/v1/professions/generate', fetcher);
+    const { data, error, isLoading } = useProfessionsData();
  
     useEffect(() => {
         setNextEnabled(profession !== '');
