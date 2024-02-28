@@ -1,0 +1,39 @@
+skills:
+  - name: Alchemy
+    attributes: ['INT']
+  - name: Animal Expertise
+    attributes: ['COR', 'PRS']
+  - name: Appraisal
+    attributes: ['INT']
+  - name: Arcana
+    attributes: ['INT']
+  - name: Athletics
+    attributes: ['STR', 'COR', 'STA']
+  - name: Culture
+    attributes: ['INT']
+  - name: Deceit
+    attributes: ['PRS']
+  - name: Gather Information
+    attributes: ['PRS']
+  - name: Healing
+    attributes: ['INT']
+  - name: History
+    attributes: ['INT']
+  - name: Intimidation
+    attributes: ['STR', 'PRS']
+  - name: Languages
+    attributes: ['INT']
+  - name: Nature
+    attributes: ['INT']
+  - name: Negotiation
+    attributes: ['PRS']
+  - name: Perform
+    attributes: ['PRS']
+  - name: Precise Tasks
+    attributes: ['COR']
+  - name: Religion
+    attributes: ['INT']
+  - name: Stealth
+    attributes: ['COR']
+  - name: Survival
+    attributes: ['INT']
