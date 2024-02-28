@@ -1,7 +1,7 @@
 package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.model.Professions;
-import com.wcg.chargen.backend.service.impl.DefaultProfessionService;
+import com.wcg.chargen.backend.service.impl.DefaultProfessionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/professions")
-public class ProfessionController {
+public class ProfessionsController {
     @Autowired
-    DefaultProfessionService professionService;
+    DefaultProfessionsService professionService;
 
     @GetMapping("")
     public ResponseEntity<Professions> getProfessions() {

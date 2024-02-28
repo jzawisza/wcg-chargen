@@ -9,18 +9,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DefaultProfessionServiceTest {
+public class DefaultProfessionsServiceTest {
     @Mock
     RandomNumberService randomNumberServiceMock;
 
@@ -80,11 +78,11 @@ public class DefaultProfessionServiceTest {
                                                            String expectedMsg) {
         var expectedTargetException = IllegalStateException.class;
 
-        var defaultProfessionService = new DefaultProfessionService(yamlLoaderService, randomNumberServiceMock);
+        var defaultProfessionService = new DefaultProfessionsService(yamlLoaderService, randomNumberServiceMock);
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
             // Use reflection to invoke @PostConstruct annotated method directly rather than via Spring framework
-            var postConstructMethod = DefaultProfessionService.class.getDeclaredMethod("postConstruct");
+            var postConstructMethod = DefaultProfessionsService.class.getDeclaredMethod("postConstruct");
             postConstructMethod.setAccessible(true);
             postConstructMethod.invoke(defaultProfessionService);
         });
@@ -151,13 +149,13 @@ public class DefaultProfessionServiceTest {
         assertEquals("Test8", professionList.get(1).name());
     }
 
-    private DefaultProfessionService getValidDefaultProfessionService() {
-        var defaultProfessionService = new DefaultProfessionService(new ValidDataYamlLoaderService(),
+    private DefaultProfessionsService getValidDefaultProfessionService() {
+        var defaultProfessionService = new DefaultProfessionsService(new ValidDataYamlLoaderService(),
                 randomNumberServiceMock);
 
         // Invoke PostConstruct method to populate professions data
         try {
-            var postConstructMethod = DefaultProfessionService.class.getDeclaredMethod("postConstruct");
+            var postConstructMethod = DefaultProfessionsService.class.getDeclaredMethod("postConstruct");
             postConstructMethod.setAccessible(true);
             postConstructMethod.invoke(defaultProfessionService);
         }

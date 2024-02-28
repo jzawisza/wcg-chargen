@@ -2,7 +2,7 @@ package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.model.Profession;
 import com.wcg.chargen.backend.model.Professions;
-import com.wcg.chargen.backend.service.ProfessionService;
+import com.wcg.chargen.backend.service.ProfessionsService;
 import com.wcg.chargen.backend.service.RandomNumberService;
 import com.wcg.chargen.backend.service.YamlLoaderService;
 
@@ -17,15 +17,15 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Service
-public class DefaultProfessionService implements ProfessionService {
-    Logger logger = LoggerFactory.getLogger(DefaultProfessionService.class);
+public class DefaultProfessionsService implements ProfessionsService {
+    Logger logger = LoggerFactory.getLogger(DefaultProfessionsService.class);
 
     private final YamlLoaderService<Professions> yamlLoaderService;
     private final RandomNumberService randomNumberService;
 
     @Autowired
-    public DefaultProfessionService(YamlLoaderService<Professions> yamlLoaderService,
-                                    RandomNumberService randomNumberService) {
+    public DefaultProfessionsService(YamlLoaderService<Professions> yamlLoaderService,
+                                     RandomNumberService randomNumberService) {
         this.yamlLoaderService = yamlLoaderService;
         this.randomNumberService = randomNumberService;
     }

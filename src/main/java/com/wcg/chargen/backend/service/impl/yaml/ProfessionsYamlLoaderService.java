@@ -1,11 +1,11 @@
-package com.wcg.chargen.backend.service.impl;
+package com.wcg.chargen.backend.service.impl.yaml;
 
 import com.wcg.chargen.backend.model.Professions;
 import com.wcg.chargen.backend.service.YamlLoaderService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProfessionYamlLoaderService implements YamlLoaderService<Professions> {
+public class ProfessionsYamlLoaderService implements YamlLoaderService<Professions> {
     @Override
     public String getYamlFile() {
         return "professions.yml";

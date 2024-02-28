@@ -1,4 +1,4 @@
-package com.wcg.chargen.backend.service.impl;
+package com.wcg.chargen.backend.service.impl.yaml;
 
 import com.wcg.chargen.backend.model.Skills;
 import com.wcg.chargen.backend.service.YamlLoaderService;
