@@ -12,7 +12,7 @@ public interface YamlLoaderService<T> {
 
     default public T loadFromYaml() {
         var objectMapper = new ObjectMapper(new YAMLFactory());
-        var yamlFilePath = YAML_PATH + getYamlFile();
+        var yamlFilePath = getYamlPath() + getYamlFile();
         try {
             return objectMapper.readValue(
                     getClass().getResourceAsStream(yamlFilePath),
@@ -25,6 +25,10 @@ public interface YamlLoaderService<T> {
                     e);
             return null;
         }
+    }
+
+    default public String getYamlPath() {
+        return YAML_PATH;
     }
 
     public String getYamlFile();
