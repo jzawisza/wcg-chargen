@@ -15,7 +15,7 @@ import java.util.List;
 public class DefaultCharClassesService implements CharClassesService {
     private final List<CharClassYamlLoaderService> charClassYamlLoaderServiceList;
 
-    private final HashMap<String, CharClass> charClassTypeMap = new HashMap<String, CharClass>();
+    private final HashMap<CharType, CharClass> charClassTypeMap = new HashMap<CharType, CharClass>();
 
     @Autowired
     public DefaultCharClassesService(List<CharClassYamlLoaderService> charClassYamlLoaderServiceList) {
@@ -26,23 +26,31 @@ public class DefaultCharClassesService implements CharClassesService {
     private void postConstruct() {
         for (var yamlLoaderService : charClassYamlLoaderServiceList) {
             var charClass = yamlLoaderService.loadFromYaml();
+            var yamlFile = yamlLoaderService.getYamlFile();
+
             if (charClass == null) {
-                throw new IllegalStateException("Error loading character class YAML file " + yamlLoaderService.getYamlFile());
+                throw new IllegalStateException("Error loading character class YAML file " + yamlFile);
             }
 
-            charClassTypeMap.put(charClass.type(), charClass);
+            try {
+                var charType = CharType.valueOf(charClass.type().toUpperCase());
+                charClassTypeMap.put(charType, charClass);
+            }
+            catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Character class type " + charClass.type() + " found in YAML file " + yamlFile + " is not valid");
+            }
         }
 
         // Ensure that we have one character class for each character type
         for (var charType : CharType.values()) {
-            if (charClassTypeMap.get(charType.toString()) == null) {
+            if (charClassTypeMap.get(charType) == null) {
                 throw new IllegalStateException("No entry for character type " + charType.toString() + " in character class type map");
             }
         }
     }
 
     @Override
-    public CharClass getCharClassByType(String type) {
-        return charClassTypeMap.get(type);
+    public CharClass getCharClassByType(CharType charType) {
+        return charClassTypeMap.get(charType);
     }
 }

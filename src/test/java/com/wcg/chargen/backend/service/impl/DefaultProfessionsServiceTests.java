@@ -3,6 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.model.Professions;
 import com.wcg.chargen.backend.service.RandomNumberService;
 import com.wcg.chargen.backend.service.YamlLoaderService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DefaultProfessionsServiceTest {
+public class DefaultProfessionsServiceTests {
     @Mock
     RandomNumberService randomNumberServiceMock;
 
@@ -30,7 +31,7 @@ public class DefaultProfessionsServiceTest {
 
         @Override
         public String getYamlFile() {
-            return "professions-invalid-data.yml";
+            return "invalid-data.yml";
         }
 
         @Override
@@ -76,8 +77,6 @@ public class DefaultProfessionsServiceTest {
     @MethodSource("yamlServicesWithBadDataProvider")
     void test_yamlFile_Without_Valid_Profession_Data_Throws_Exception(YamlLoaderService<Professions> yamlLoaderService,
                                                            String expectedMsg) {
-        var expectedTargetException = IllegalStateException.class;
-
         var defaultProfessionService = new DefaultProfessionsService(yamlLoaderService, randomNumberServiceMock);
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
@@ -88,7 +87,7 @@ public class DefaultProfessionsServiceTest {
         });
 
         var targetException = exception.getTargetException();
-        assertEquals(expectedTargetException, targetException.getClass());
+        assertEquals(IllegalStateException.class, targetException.getClass());
         assertEquals(expectedMsg, targetException.getMessage());
     }
 
