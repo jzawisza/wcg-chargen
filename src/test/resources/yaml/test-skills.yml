@@ -1,0 +1,11 @@
+skills:
+  - name: Alchemy
+    attributes: ['INT']
+  - name: Animal Expertise
+    attributes: ['COR', 'PRS']
+  - name: Appraisal
+    attributes: ['INT']
+  - name: Arcana
+    attributes: ['INT']
+  - name: Athletics
+    attributes: ['STR', 'COR', 'STA']

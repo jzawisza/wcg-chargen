@@ -1,8 +1,8 @@
 package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.enums.CharType;
-import com.wcg.chargen.backend.model.Skills;
 import com.wcg.chargen.backend.service.impl.DefaultSkillsService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class SkillsController {
     @Autowired
     private DefaultSkillsService skillsService;
 
-    Logger logger = LoggerFactory.getLogger(SkillsController.class);
+    private final Logger logger = LoggerFactory.getLogger(SkillsController.class);
 
     @GetMapping("")
     public ResponseEntity getSkills(@RequestParam String charClass) {
@@ -27,9 +27,9 @@ public class SkillsController {
             // Normalize input string to uppercase to match enum definition
             var charType = CharType.valueOf(charClass.toUpperCase());
 
-            var skillsList = skillsService.getSkills(charType);
+            var skillsResponse = skillsService.getSkills(charType);
 
-            return new ResponseEntity<>(skillsList, HttpStatus.OK);
+            return new ResponseEntity<>(skillsResponse, HttpStatus.OK);
         }
         catch (IllegalArgumentException e) {
             logger.error("Invalid charClass argument {} passed in to endpoint", charClass);
