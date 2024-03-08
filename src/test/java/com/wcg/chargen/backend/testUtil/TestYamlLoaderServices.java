@@ -1,10 +1,11 @@
 package com.wcg.chargen.backend.testUtil;
 
 import com.wcg.chargen.backend.service.impl.yaml.CharClassYamlLoaderService;
+import com.wcg.chargen.backend.service.impl.yaml.SpeciesYamlLoaderService;
 
 import java.util.*;
 
-public class TestCharClassYamlLoaderServices {
+public class TestYamlLoaderServices {
     public static class TestBerzerkerYamlLoaderService extends CharClassYamlLoaderService {
         public TestBerzerkerYamlLoaderService() {}
 
@@ -77,8 +78,41 @@ public class TestCharClassYamlLoaderServices {
         }
     }
 
-    public static List<CharClassYamlLoaderService> getAllTestClassesList() {
-        return new ArrayList<CharClassYamlLoaderService>(List.of(
+    public static class TestDwarfYamlLoaderService extends SpeciesYamlLoaderService {
+        public TestDwarfYamlLoaderService() {
+        }
+
+        @Override
+        public String getYamlFile() { return "dwarf.yml"; }
+    }
+
+    public static class TestElfYamlLoaderService extends SpeciesYamlLoaderService {
+        public TestElfYamlLoaderService() {
+        }
+
+        @Override
+        public String getYamlFile() { return "elf.yml"; }
+    }
+
+    public static class TestHalflingYamlLoaderService extends SpeciesYamlLoaderService {
+        public TestHalflingYamlLoaderService() {
+        }
+
+        @Override
+        public String getYamlFile() { return "halfling.yml"; }
+    }
+
+    public static class TestHumanYamlLoaderService extends SpeciesYamlLoaderService {
+        public TestHumanYamlLoaderService() {
+
+        }
+
+        @Override
+        public String getYamlFile() { return "human.yml"; }
+    }
+
+    public static List<CharClassYamlLoaderService> getAllTestCharClassesList() {
+        return new ArrayList<>(List.of(
            new TestBerzerkerYamlLoaderService(),
            new TestMageYamlLoaderService(),
            new TestMysticYamlLoaderService(),
@@ -87,6 +121,15 @@ public class TestCharClassYamlLoaderServices {
            new TestShamanYamlLoaderService(),
            new TestSkaldYamlLoaderService(),
            new TestWarriorYamlLoaderService()
+        ));
+    }
+
+    public static List<SpeciesYamlLoaderService> getAllTestSpeciesList() {
+        return new ArrayList<>(List.of(
+                new TestDwarfYamlLoaderService(),
+                new TestElfYamlLoaderService(),
+                new TestHalflingYamlLoaderService(),
+                new TestHumanYamlLoaderService()
         ));
     }
 }

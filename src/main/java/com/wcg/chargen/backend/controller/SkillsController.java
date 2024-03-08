@@ -1,6 +1,7 @@
 package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.service.impl.DefaultSkillsService;
 
 import org.slf4j.Logger;
@@ -22,18 +23,21 @@ public class SkillsController {
     private final Logger logger = LoggerFactory.getLogger(SkillsController.class);
 
     @GetMapping("")
-    public ResponseEntity getSkills(@RequestParam String charClass) {
+    public ResponseEntity getSkills(@RequestParam String charClass, @RequestParam String species) {
         try {
             // Normalize input string to uppercase to match enum definition
             var charType = CharType.valueOf(charClass.toUpperCase());
+            var speciesEnum = SpeciesType.valueOf(species.toUpperCase());
 
-            var skillsResponse = skillsService.getSkills(charType);
+            var skillsResponse = skillsService.getSkills(charType, speciesEnum);
 
             return new ResponseEntity<>(skillsResponse, HttpStatus.OK);
         }
         catch (IllegalArgumentException e) {
-            logger.error("Invalid charClass argument {} passed in to endpoint", charClass);
-            return new ResponseEntity<>("Invalid charClass argument " + charClass, HttpStatus.BAD_REQUEST);
+            logger.error("Invalid arguments passed in to endpoint (charClass = {}, species = {})",
+                    charClass,
+                    species);
+            return new ResponseEntity<>("Invalid query parameters specified", HttpStatus.BAD_REQUEST);
         }
         catch (Exception e) {
             logger.error("Exception thrown when retrieving skills information", e);

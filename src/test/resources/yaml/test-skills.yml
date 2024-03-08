@@ -9,3 +9,7 @@ skills:
     attributes: ['INT']
   - name: Athletics
     attributes: ['STR', 'COR', 'STA']
+  - name: Culture
+    attributes: [ 'INT' ]
+  - name: Deceit
+    attributes: [ 'PRS' ]

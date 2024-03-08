@@ -2,9 +2,9 @@ package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.service.impl.yaml.CharClassYamlLoaderService;
-import com.wcg.chargen.backend.testUtil.TestCharClassYamlLoaderServices;
+import com.wcg.chargen.backend.testUtil.PostConstructUtil;
+import com.wcg.chargen.backend.testUtil.TestYamlLoaderServices;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -44,10 +44,7 @@ public class DefaultCharClassesServiceTests {
 
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
-            // Use reflection to invoke @PostConstruct annotated method directly rather than via Spring framework
-            var postConstructMethod = DefaultCharClassesService.class.getDeclaredMethod("postConstruct");
-            postConstructMethod.setAccessible(true);
-            postConstructMethod.invoke(defaultCharClassesService);
+            PostConstructUtil.invokeMethod(DefaultCharClassesService.class, defaultCharClassesService);
         });
 
         var targetException = exception.getTargetException();
@@ -58,12 +55,10 @@ public class DefaultCharClassesServiceTests {
     @ParameterizedTest
     @EnumSource(CharType.class)
     void test_yamlFiles_Representing_All_Classes_Loads_Successfully(CharType charType) {
-        var defaultCharClassesService = new DefaultCharClassesService(TestCharClassYamlLoaderServices.getAllTestClassesList());
+        var defaultCharClassesService = new DefaultCharClassesService(TestYamlLoaderServices.getAllTestCharClassesList());
 
         try {
-            var postConstructMethod = DefaultCharClassesService.class.getDeclaredMethod("postConstruct");
-            postConstructMethod.setAccessible(true);
-            postConstructMethod.invoke(defaultCharClassesService);
+            PostConstructUtil.invokeMethod(DefaultCharClassesService.class, defaultCharClassesService);
         }
         catch (Exception e) {
             fail();
@@ -84,9 +79,9 @@ public class DefaultCharClassesServiceTests {
             Arguments.arguments(
                     new ArrayList<CharClassYamlLoaderService>(
                             // Randomly chosen selection of character classes
-                            List.of(new TestCharClassYamlLoaderServices.TestBerzerkerYamlLoaderService(),
-                                    new TestCharClassYamlLoaderServices.TestRangerYamlLoaderService(),
-                                    new TestCharClassYamlLoaderServices.TestSkaldYamlLoaderService())),
+                            List.of(new TestYamlLoaderServices.TestBerzerkerYamlLoaderService(),
+                                    new TestYamlLoaderServices.TestRangerYamlLoaderService(),
+                                    new TestYamlLoaderServices.TestSkaldYamlLoaderService())),
                     "No entry for character type mage in character class type map"
             )
         );

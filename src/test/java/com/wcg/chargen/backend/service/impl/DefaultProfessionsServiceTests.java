@@ -4,6 +4,7 @@ import com.wcg.chargen.backend.model.Professions;
 import com.wcg.chargen.backend.service.RandomNumberService;
 import com.wcg.chargen.backend.service.YamlLoaderService;
 
+import com.wcg.chargen.backend.testUtil.PostConstructUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -80,10 +81,7 @@ public class DefaultProfessionsServiceTests {
         var defaultProfessionService = new DefaultProfessionsService(yamlLoaderService, randomNumberServiceMock);
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
-            // Use reflection to invoke @PostConstruct annotated method directly rather than via Spring framework
-            var postConstructMethod = DefaultProfessionsService.class.getDeclaredMethod("postConstruct");
-            postConstructMethod.setAccessible(true);
-            postConstructMethod.invoke(defaultProfessionService);
+            PostConstructUtil.invokeMethod(DefaultProfessionsService.class, defaultProfessionService);
         });
 
         var targetException = exception.getTargetException();
@@ -154,9 +152,7 @@ public class DefaultProfessionsServiceTests {
 
         // Invoke PostConstruct method to populate professions data
         try {
-            var postConstructMethod = DefaultProfessionsService.class.getDeclaredMethod("postConstruct");
-            postConstructMethod.setAccessible(true);
-            postConstructMethod.invoke(defaultProfessionService);
+            PostConstructUtil.invokeMethod(DefaultProfessionsService.class, defaultProfessionService);
         }
         catch (Exception e)
         {

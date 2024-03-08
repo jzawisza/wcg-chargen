@@ -1,6 +1,7 @@
 package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.SkillsResponse;
 import com.wcg.chargen.backend.service.impl.DefaultSkillsService;
 
@@ -26,7 +27,7 @@ public class SkillsControllerTests {
     private MockMvc mockMvc;
 
     @Test
-    void test_Missing_Character_Class_Query_Parameter_Returns_Bad_Request() {
+    void test_Missing_Query_Parameters_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills"))
                     .andExpect(status().isBadRequest());
@@ -37,9 +38,42 @@ public class SkillsControllerTests {
     }
 
     @Test
+    void test_Missing_Character_Class_Query_Parameter_Returns_Bad_Request() {
+        try {
+            mockMvc.perform(get("/api/v1/skills?species=halfling"))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
+    void test_Missing_Species_Query_Parameter_Returns_Bad_Request() {
+        try {
+            mockMvc.perform(get("/api/v1/skills?charClass=mystic"))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
     void test_Invalid_Character_Class_Query_Parameter_Returns_Bad_Request() {
         try {
-            mockMvc.perform(get("/api/v1/skills?charClass=foo"))
+            mockMvc.perform(get("/api/v1/skills?charClass=invalid&species=halfling"))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            fail();
+        }
+    }
+
+    @Test
+    void test_Invalid_Species_Query_Parameter_Returns_Bad_Request() {
+        try {
+            mockMvc.perform(get("/api/v1/skills?charClass=mystic&species=invalid"))
                     .andExpect(status().isBadRequest());
         }
         catch (Exception e) {
@@ -50,10 +84,28 @@ public class SkillsControllerTests {
     @ParameterizedTest
     @EnumSource(CharType.class)
     void test_Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(CharType charType) {
-        when(skillsService.getSkills(any(CharType.class))).thenReturn(new SkillsResponse());
+        when(skillsService.getSkills(any(CharType.class), any(SpeciesType.class)))
+                .thenReturn(new SkillsResponse());
 
         try {
-            mockMvc.perform(get("/api/v1/skills?charClass=" + charType.name().toLowerCase()))
+            mockMvc.perform(get(
+                    "/api/v1/skills?species=dwarf&charClass=" + charType.name().toLowerCase()))
+                    .andExpect(status().isOk());
+        }
+        catch (Exception e) {
+            fail();
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(SpeciesType.class)
+    void test_Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(SpeciesType speciesType) {
+        when(skillsService.getSkills(any(CharType.class), any(SpeciesType.class)))
+                .thenReturn(new SkillsResponse());
+
+        try {
+            mockMvc.perform(get(
+                    "/api/v1/skills?charClass=warrior&species=" + speciesType.name().toLowerCase()))
                     .andExpect(status().isOk());
         }
         catch (Exception e) {
