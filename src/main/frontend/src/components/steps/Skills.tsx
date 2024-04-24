@@ -1,24 +1,38 @@
 import React, { useContext, useEffect } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
-import { Row, Col, Radio, RadioChangeEvent, List } from "antd";
+import { Row, Col, Radio, RadioChangeEvent, List, Spin } from "antd";
 import { HUMAN_SPECIES_INFO, getPluralSpeciesNameFromVariable, getIsHuman } from "../../constants/SpeciesInfo";
 import SelectMultiple from "../util/SelectMultiple";
-import { DefaultOptionType } from "antd/es/select";
+import { useSkillsData } from "../../server/ServerData";
+import { SkillType } from "../../server/SkillsType";
 
-const dummyClassSkills = [
-    "Skill 1",
-    "Skill 2",
-    "Skill 3",
-    "Skill 4",
-    "Skill 5"
-];
+function skillEltToString(skillElt: SkillType) {
+    return `${skillElt.name} (${skillElt.attributes.join(',')})`
+}
 
-const dummyBonusSkills: DefaultOptionType[] = [
-    { value: 'Skill 9', label: 'Skill 9' },
-    { value: 'Skill 10', label: 'Skill 10' },
-    { value: 'Skill 11', label: 'Skill 11' },
-    { value: 'Skill 12', label: 'Skill 12' },
-];
+function toClassSkillList(classSkills: SkillType[] | undefined) {
+    if (!classSkills) {
+        return [];
+    }
+
+    return classSkills.map(x => skillEltToString(x));
+}
+
+function toSpeciesSkillRadioGroup(speciesSkills: SkillType[] | undefined) {
+    if (!speciesSkills) {
+        return [];
+    }
+
+    return speciesSkills.map(x => (<Radio.Button value={x.name}>{skillEltToString(x)}</Radio.Button>));
+}
+
+function toBonusSkillsOptionList(bonusSkills : SkillType[] | undefined) {
+    if (!bonusSkills) {
+        return [];
+    }
+
+    return bonusSkills.map(x => ({value: x.name, label: skillEltToString(x)}));
+}
 
 function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, bonusSkills: string[]) {
     // If we deselect everything from the bonus skills list, this value is undefined
@@ -45,7 +59,9 @@ function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, 
 
 const Skills: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
-    const { species, speciesSkill, setSpeciesSkill, bonusSkills, setBonusSkills } = useContext(CharacterContext);
+    const { charClass, species, speciesSkill, setSpeciesSkill,
+                bonusSkills, setBonusSkills } = useContext(CharacterContext);
+    const { data, error, isLoading } = useSkillsData(charClass, species);
 
     const isHuman = getIsHuman(species);
 
@@ -73,6 +89,17 @@ const Skills: React.FC = () => {
     const classSkillColSpan = isHuman ? 8 : 6;
     const otherSkillColSpan = isHuman ? 12 : 6;
 
+    if (error) {
+        return (
+            <p>Error loading skills data from server.</p>
+        );
+    }
+    if (isLoading) {
+        return (
+            <Spin size="large" />
+        );
+    }
+
     return (
         <div>
             <p>Each class gets certain skills for free, but you may select any one bonus skill, plus another bonus skill based on your species.</p>
@@ -80,7 +107,7 @@ const Skills: React.FC = () => {
                 <Col span={classSkillColSpan} className="skillsCol">
                     <h3>Class Skills</h3>
                     <List
-                        dataSource={dummyClassSkills}
+                        dataSource={toClassSkillList(data?.classSkills)}
                         renderItem={(item) => (
                             <List.Item>
                                 {item}
@@ -94,9 +121,7 @@ const Skills: React.FC = () => {
                             <h3>Species Skill</h3>
                             <p>{getPluralSpeciesNameFromVariable(species)} get one of the following skills for free.</p>
                             <Radio.Group buttonStyle="solid" onChange={onSpeciesSkillRadioGroupChange} value={speciesSkill}>
-                                <Radio.Button value='Skill 6'>Skill 6</Radio.Button>
-                                <Radio.Button value='Skill 7'>Skill 7</Radio.Button>
-                                <Radio.Button value='Skill 8'>Skill 8</Radio.Button>
+                                {toSpeciesSkillRadioGroup(data?.speciesSkills)}
                             </Radio.Group>
                         </div>
                     )}
@@ -108,7 +133,7 @@ const Skills: React.FC = () => {
                                 defaultValue={bonusSkills}
                                 numElementsAllowed={2}
                                 onChange={onBonusSkillsChange}
-                                options={dummyBonusSkills}
+                                options={toBonusSkillsOptionList(data?.bonusSkills)}
                                 placeholder="Select 2 skills"
                             />
                         </div>
@@ -123,7 +148,7 @@ const Skills: React.FC = () => {
                                 defaultValue={bonusSkills}
                                 numElementsAllowed={1}
                                 onChange={onBonusSkillsChange}
-                                options={dummyBonusSkills}
+                                options={toBonusSkillsOptionList(data?.bonusSkills)}
                                 placeholder="Select 1 skill"
                             />
                         </div>

@@ -66,7 +66,11 @@ public class DefaultSkillsService implements SkillsService {
 
         // Use TreeSets in this method to sort the values
         var charClassSkillSet = new TreeSet<>(charClass.skills());
-        var speciesSkillSet = new TreeSet<>(species.skills());
+        // The species-specific skills are null for humans, since they can take any skill
+        // as a bonus skill
+        var speciesSkillSet = (species.skills() != null) ?
+                new TreeSet<>(species.skills()) :
+                new TreeSet<>();
 
         // Set containing the names of all skills
         var allSkillSet = new TreeSet<>(skillsMap.keySet());

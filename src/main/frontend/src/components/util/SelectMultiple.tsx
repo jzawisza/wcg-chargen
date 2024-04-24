@@ -35,7 +35,7 @@ const SelectMultiple = (props: SelectMultipleProps) => {
             open={selectedOptions === undefined || selectedOptions.length < props.numElementsAllowed}
             options={props.options}
             placeholder={props.placeholder}
-            style={{ width: 150}}
+            style={{ width: 200}}
         />
     );
 }

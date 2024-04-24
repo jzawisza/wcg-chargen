@@ -37,10 +37,26 @@ public class DefaultSkillsServiceTests {
             "Alchemy",
             "Arcana"));
 
-    private final List<String> DEFAULT_SPECIES_SKILL_NAME_LIST = new ArrayList<>(List.of(
+    private static final List<String> DEFAULT_SPECIES_SKILL_NAME_LIST = new ArrayList<>(List.of(
             "Appraisal",
             "Arcana"
     ));
+
+    private static final List<String> INVALID_SKILL_NAME_LIST = Collections.singletonList("Invalid Skill");
+
+    private enum SpeciesSkillsStatus {
+        VALID(DEFAULT_SPECIES_SKILL_NAME_LIST),
+        INVALID(INVALID_SKILL_NAME_LIST),
+        NULL(null);
+
+        private final List<String> skillsList;
+
+        SpeciesSkillsStatus(List<String> skillsList) {
+            this.skillsList = skillsList;
+        }
+
+        public List<String> getSkillsList() { return skillsList; }
+    }
 
     static class InvalidSkillsDataYamlLoaderService implements YamlLoaderService<Skills> {
         public InvalidSkillsDataYamlLoaderService() {}
@@ -70,7 +86,7 @@ public class DefaultSkillsServiceTests {
     }
 
     @Test
-    void test_yamlFile_Without_Valid_Skills_Data_Throws_Exception() {
+    void yamlFile_Without_Valid_Skills_Data_Throws_Exception() {
         var defaultSkillsService = new DefaultSkillsService(new InvalidSkillsDataYamlLoaderService(), null, null);
         var exception = assertThrows(InvocationTargetException.class, () -> {
             PostConstructUtil.invokeMethod(DefaultSkillsService.class, defaultSkillsService);
@@ -82,8 +98,9 @@ public class DefaultSkillsServiceTests {
     }
 
     @Test
-    void test_getSkills_Correctly_Sets_Class_Skills_And_Bonus_Skills() {
-        var defaultSkillsService = getConfiguredDefaultSkillsService(true, true);
+    void getSkills_Correctly_Sets_Class_Skills_And_Bonus_Skills() {
+        var defaultSkillsService = getConfiguredDefaultSkillsService(true,
+                SpeciesSkillsStatus.VALID);
         if (defaultSkillsService == null) {
             fail();
         }
@@ -103,9 +120,9 @@ public class DefaultSkillsServiceTests {
         var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.ELF);
 
         // Get names of skills returned
-        var actualClassSkillNameList = skillsResponse.getClassSkills().stream().map(Skill::name).toList();
-        var actualSpeciesSkillNameList = skillsResponse.getSpeciesSkills().stream().map(Skill::name).toList();
-        var actualBonusSkillNameList = skillsResponse.getBonusSkills().stream().map(Skill::name).toList();
+        var actualClassSkillNameList = getSkillNameList(skillsResponse.getClassSkills());
+        var actualSpeciesSkillNameList = getSkillNameList(skillsResponse.getSpeciesSkills());
+        var actualBonusSkillNameList = getSkillNameList(skillsResponse.getBonusSkills());
 
         assertEquals(DEFAULT_CLASS_SKILL_NAME_LIST, actualClassSkillNameList);
         assertEquals(expectedSpeciesSkillNameList, actualSpeciesSkillNameList);
@@ -113,8 +130,9 @@ public class DefaultSkillsServiceTests {
     }
 
     @Test
-    void test_getSkills_Returns_Empty_Response_If_Class_Skill_Is_Missing_From_Master_Skill_List() {
-        var defaultSkillsService = getConfiguredDefaultSkillsService(false, true);
+    void getSkills_Returns_Empty_Response_If_Class_Skill_Is_Missing_From_Master_Skill_List() {
+        var defaultSkillsService = getConfiguredDefaultSkillsService(false,
+                SpeciesSkillsStatus.VALID);
         if (defaultSkillsService == null) {
             fail();
         }
@@ -130,8 +148,9 @@ public class DefaultSkillsServiceTests {
     }
 
     @Test
-    void test_getSkills_Returns_Empty_Response_If_Species_Skill_Is_Missing_From_Master_Skill_List() {
-        var defaultSkillsService = getConfiguredDefaultSkillsService(true, false);
+    void getSkills_Returns_Empty_Response_If_Species_Skill_Is_Missing_From_Master_Skill_List() {
+        var defaultSkillsService = getConfiguredDefaultSkillsService(true,
+                SpeciesSkillsStatus.INVALID);
         if (defaultSkillsService == null) {
             fail();
         }
@@ -146,17 +165,38 @@ public class DefaultSkillsServiceTests {
         assertTrue(skillsResponse.getBonusSkills().isEmpty());
     }
 
+    @Test
+    void getSkills_Returns_Expected_Results_For_Human_Species() {
+        var defaultSkillsService = getConfiguredDefaultSkillsService(true,
+                SpeciesSkillsStatus.NULL);
+        if (defaultSkillsService == null) {
+            fail();
+        }
+
+        // All non-class skills should appear as bonus skills for a human
+        var expectedBonusSkillNameList = new ArrayList<>(List.of("Animal Expertise",
+                "Appraisal",
+                "Athletics",
+                "Culture",
+                "Deceit"));
+
+        var skillsResponse = defaultSkillsService.getSkills(CharType.SKALD, SpeciesType.HUMAN);
+
+        assertNotNull(skillsResponse);
+        assertNotNull(skillsResponse.getClassSkills());
+        assertNotNull(skillsResponse.getBonusSkills());
+        assertTrue(skillsResponse.getSpeciesSkills().isEmpty());
+
+        assertEquals(expectedBonusSkillNameList, getSkillNameList(skillsResponse.getBonusSkills()));
+    }
+
     private DefaultSkillsService getConfiguredDefaultSkillsService(boolean hasValidClassSkills,
-                                                                   boolean hasValidSpeciesSkills) {
-        final var invalidSkillsList = Collections.singletonList("Invalid Skill");
+                                                                   SpeciesSkillsStatus speciesSkillsStatus) {
         var classSkillList = hasValidClassSkills ?
                 DEFAULT_CLASS_SKILL_NAME_LIST :
-                invalidSkillsList;
-        var speciesSkillList = hasValidSpeciesSkills ?
-                DEFAULT_SPECIES_SKILL_NAME_LIST :
-                invalidSkillsList;
+                INVALID_SKILL_NAME_LIST;
         var charClass = new CharClass("test", classSkillList);
-        var species = new Species("test", speciesSkillList);
+        var species = new Species("test", speciesSkillsStatus.getSkillsList());
 
         when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);
         when(speciesServiceMock.getSpeciesByType(any(SpeciesType.class))).thenReturn(species);
@@ -173,5 +213,13 @@ public class DefaultSkillsServiceTests {
         }
 
         return skillsService;
+    }
+
+    private List<String> getSkillNameList(List<Skill> skillList) {
+        if (skillList == null) {
+            return new ArrayList<>();
+        }
+
+        return skillList.stream().map(Skill::name).toList();
     }
 }
