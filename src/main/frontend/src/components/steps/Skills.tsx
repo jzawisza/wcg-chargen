@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
 import { Row, Col, Radio, RadioChangeEvent, List, Spin } from "antd";
 import { HUMAN_SPECIES_INFO, getPluralSpeciesNameFromVariable, getIsHuman } from "../../constants/SpeciesInfo";
@@ -23,7 +23,7 @@ function toSpeciesSkillRadioGroup(speciesSkills: SkillType[] | undefined) {
         return [];
     }
 
-    return speciesSkills.map(x => (<Radio.Button value={x.name}>{skillEltToString(x)}</Radio.Button>));
+    return speciesSkills.map(x => (<Radio.Button key={x.name} value={x.name}>{skillEltToString(x)}</Radio.Button>));
 }
 
 function toBonusSkillsOptionList(bonusSkills : SkillType[] | undefined) {
@@ -32,6 +32,39 @@ function toBonusSkillsOptionList(bonusSkills : SkillType[] | undefined) {
     }
 
     return bonusSkills.map(x => ({value: x.name, label: skillEltToString(x)}));
+}
+
+function updateBonusSkillList(newSpeciesSkill: string,
+        masterSpeciesSkillList: SkillType[] | undefined,
+        masterBonusSkillList: SkillType[] | undefined) {
+    if(!masterBonusSkillList || !masterSpeciesSkillList) {
+        return;
+    }
+
+    let bonusSkillList = [...masterBonusSkillList];
+
+    // If a species skill is selected, it shouldn't be selectable as a bonus skill,
+    // so remove it from the list
+    let bonusSkillToRemove = bonusSkillList.find(x => x.name === newSpeciesSkill);
+    if (bonusSkillToRemove) {
+        let skillToRemoveIndex = bonusSkillList.indexOf(bonusSkillToRemove);
+        bonusSkillList.splice(skillToRemoveIndex, 1);   
+    }
+
+    // Re-add the other species skills if they aren't already there, since they may
+    // have been removed from the list before if the user switched species skills
+    masterSpeciesSkillList.forEach((speciesSkill) => {
+        // Don't re-add the species skill we just selected
+        if (speciesSkill.name !== newSpeciesSkill) {
+            let speciesSkillIndex = bonusSkillList.map(x => x.name).indexOf(speciesSkill.name);
+            if (speciesSkillIndex === -1) {
+                bonusSkillList.push(speciesSkill);
+            }
+        }
+    })
+
+    // Sort final list by skill name
+    return bonusSkillList.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function getShouldEnableNext(speciesInternalName: string, speciesSkill: string, bonusSkills: string[]) {
@@ -62,18 +95,33 @@ const Skills: React.FC = () => {
     const { charClass, species, speciesSkill, setSpeciesSkill,
                 bonusSkills, setBonusSkills } = useContext(CharacterContext);
     const { data, error, isLoading } = useSkillsData(charClass, species);
+    const [masterBonusSkillList, setMasterBonusSkillList] = useState(data?.bonusSkills);
+    const [masterSpeciesSkillList, setMasterSpeciesSkillList] = useState(data?.speciesSkills);
 
     const isHuman = getIsHuman(species);
 
     useEffect(() => {
+        // Call the useState methods here to show server data immediately without having to wait for re-render.
+        // For the bonus skill list, use the server data if we haven't populated the client-side list yet:
+        // otherwise, use the client-side list.
+        // This allows it to properly update when we select/update the species skill.
+        let bonusSkillList = masterBonusSkillList ? masterBonusSkillList : data?.bonusSkills;
+        setMasterBonusSkillList(bonusSkillList);
+        setMasterSpeciesSkillList(data?.speciesSkills);
+
         let shouldEnableNext = getShouldEnableNext(species, speciesSkill, bonusSkills);
         setNextEnabled(shouldEnableNext);
-    }, [species, speciesSkill, bonusSkills, setNextEnabled]);
+    }, [species, speciesSkill, bonusSkills, setNextEnabled,
+        data?.bonusSkills, data?.speciesSkills, setMasterBonusSkillList, setMasterSpeciesSkillList]);
 
     const onSpeciesSkillRadioGroupChange = (e: RadioChangeEvent) => {
         let newSpeciesSkill = e.target.value;
 
         setSpeciesSkill(newSpeciesSkill);
+
+        // Update bonus skill list based on what species skill was selected
+        let newBonusSkillList = updateBonusSkillList(newSpeciesSkill, masterSpeciesSkillList, masterBonusSkillList);
+        setMasterBonusSkillList(newBonusSkillList);
 
         let shouldEnableNext = getShouldEnableNext(species, newSpeciesSkill, bonusSkills);
         setNextEnabled(shouldEnableNext);
@@ -121,7 +169,7 @@ const Skills: React.FC = () => {
                             <h3>Species Skill</h3>
                             <p>{getPluralSpeciesNameFromVariable(species)} get one of the following skills for free.</p>
                             <Radio.Group buttonStyle="solid" onChange={onSpeciesSkillRadioGroupChange} value={speciesSkill}>
-                                {toSpeciesSkillRadioGroup(data?.speciesSkills)}
+                                {toSpeciesSkillRadioGroup(masterSpeciesSkillList)}
                             </Radio.Group>
                         </div>
                     )}
@@ -133,7 +181,7 @@ const Skills: React.FC = () => {
                                 defaultValue={bonusSkills}
                                 numElementsAllowed={2}
                                 onChange={onBonusSkillsChange}
-                                options={toBonusSkillsOptionList(data?.bonusSkills)}
+                                options={toBonusSkillsOptionList(masterBonusSkillList)}
                                 placeholder="Select 2 skills"
                             />
                         </div>
@@ -148,7 +196,7 @@ const Skills: React.FC = () => {
                                 defaultValue={bonusSkills}
                                 numElementsAllowed={1}
                                 onChange={onBonusSkillsChange}
-                                options={toBonusSkillsOptionList(data?.bonusSkills)}
+                                options={toBonusSkillsOptionList(masterBonusSkillList)}
                                 placeholder="Select 1 skill"
                             />
                         </div>
