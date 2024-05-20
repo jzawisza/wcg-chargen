@@ -1,4 +1,4 @@
-import useSWR, { preload } from "swr";
+import { preload } from "swr";
 import useSWRImmutable from 'swr/immutable';
 import { ProfessionsType } from "./ProfessionsType";
 import { SkillsType } from "./SkillsType";
@@ -26,7 +26,8 @@ export function useProfessionsData() {
 }
 
 export function useSkillsData(charClass: string, species: string) {
-  const { data, error, isLoading } = useSWR<SkillsType>(`${SKILLS_ENDPOINT}?charClass=${charClass}&species=${species}`, fetcher);
+  const skillsUri = `${SKILLS_ENDPOINT}?charClass=${charClass}&species=${species}`;
+  const { data, error, isLoading } = useSWRImmutable<SkillsType>(skillsUri, fetcher);
 
   return { data, error, isLoading };
 }
