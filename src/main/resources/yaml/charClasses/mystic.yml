@@ -3,3 +3,38 @@ skills:
   - Athletics
   - Religion
   - Stealth
+features:
+  tier1:
+    - description: "Butterfly Whirl: Far zone fall dmg 0, thereafter half"
+      attributes: []
+    - description: "Flowing Cloud: Transfer half of own HP to another creature once/day"
+      attributes: [ ]
+    - description: "Cloud Hands: May heal self for d4+level in HP once/day"
+      attributes: [ ]
+    - description: "Dragon Breath: Unarmed attack damages creatures hurt only by magic or silver"
+      attributes: [ ]
+    - description: "Dragon Force: Unarmed damage dice roll with ADV"
+      attributes: [ { type: 'ADV', modifier: 'Unarmed Damage'} ]
+    - description: "Ninety Nine Steps: Advantage on Athletics checks"
+      attributes: [ { type: 'ADV', modifier: 'Athletics'} ]
+    - description: "Iron Body: Natural DA +1. Cumulative with armor."
+      attributes: [ { type: 'DA_PLUS_1', modifier: 'WITH_ARMOR' } ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+  tier2:
+    - description: "Swift Wind: Double Running Speed & +1 EV"
+      attributes: [ { type: 'EV_PLUS_1', modifier: '' } ]
+    - description: "Light as Wind: Leap Close range without damage & Run on water without breaking surface"
+      attributes: [ ]
+    - description: "Peaceful Breath: No suffering physical aging effects"
+      attributes: [ ]
+    - description: "Dragon Strikes: 2 unarmed attacks or 1 unarmed & 1 weapon attack/round"
+      attributes: [ ]
+    - description: "Dragon Might: Unarmed strike 1d8 dmg instead of 1d6"
+      attributes: [ ]
+    - description: "Circle of the Dragon: Attack each Close zone foe once/day"
+      attributes: [ ]
+    - description: "Stone Body: Natural DA +1. Cumulative with all DA"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]

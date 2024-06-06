@@ -3,3 +3,40 @@ skills:
   - Athletics
   - Intimidation
   - Survival
+features:
+  tier1:
+    - description: "Fear & Horrify immunity (magical & non-magical)"
+      attributes: []
+    - description: "Move not slowed by climbing & difficult terrain"
+      attributes: []
+    - description: "Natural DA +1 bonus when not wearing heavy armor"
+      attributes: [ { type: 'DA_PLUS_1', modifier: 'NO_HEAVY_ARMOR' } ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "May Rage thrice per day"
+      attributes: []
+    - description: "Advantage on Athletics checks"
+      attributes: [ { type: 'ADV', modifier: 'Athletics' } ]
+    - description: "Very Alert: Avoid surprise & bonus backstab damage"
+      attributes: []
+    - description: "Advantage on Survival checks"
+      attributes: [ { type: 'ADV', modifier: 'Survival' } ]
+    - description: "Double running speed when not wearing heavy armor"
+      attributes: []
+  tier2:
+    - description: "Two melee strikes per round"
+      attributes: []
+    - description: "Tough: +4 Extra HP & Double ADV with STA checks"
+      attributes: [{type: 'BONUS_HP', modifier: '4'}, {type: 'DADV', modifier: 'STA' }]
+    - description: "Natural DA +1. Cumulative with any other bonuses"
+      attributes: [ { type: 'DA_PLUS_1', modifier: 'ANY' } ]
+    - description: "Critical Hit on Natural 19 or 20"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "No Fatigue penalty when rage is over"
+      attributes: [ ]
+    - description: "Rage at will, no limit, but must still quick rest recover"
+      attributes: [ ]
+    - description: "Frenzy: Advantage to Attack & dmg rolls for remainder of combat if hit"
+      attributes: [ ]

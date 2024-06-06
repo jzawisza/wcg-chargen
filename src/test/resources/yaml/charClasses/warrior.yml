@@ -2,3 +2,38 @@ type: "warrior"
 skills:
   - Animal Expertise
   - Athletics
+features:
+  tier1:
+    - description: "Specialize in a melee weapon type: +1 to hit & damage"
+      attributes: []
+    - description: "Specialize in a ranged weapon type: +1 to hit & damage"
+      attributes: [ ]
+    - description: "Advantage on attribute/skill checks when riding mount"
+      attributes: [ ]
+    - description: "Make moderate repairs to damaged weapons & armor"
+      attributes: [ ]
+    - description: "Use second light weapon offhand: +1 to Evasion and/or as an additional thrown attack"
+      attributes: [ ]
+    - description: "Advantage with Athletics checks"
+      attributes: [ { type: 'ADV', modifier: 'Athletics' } ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Shield Mastery: +1 to Evasion when using shield, +1 to damage on shield bash attack strike"
+      attributes: [ ]
+  tier2:
+    - description: "Damage dice rolled at advantage for any specialized weapons (see Tier I)"
+      attributes: [ ]
+    - description: "Critical Hit: natural 19-20 for any specialized weapon (See Tier I)"
+      attributes: [ ]
+    - description: "May make two melee strikes per round"
+      attributes: [ ]
+    - description: "May make two ranged strikes per round"
+      attributes: [ ]
+    - description: "Action Attack - Describe a daring attack, GM assigns a T#. Get ADV to hit if succeed, DISADV if fail"
+      attributes: [ ]
+    - description: "Advantage on Initiative rolls"
+      attributes: [ { type: 'ADV', modifier: 'Initiative' } ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "Disarm Opponent: Declare first - on a successful melee hit, knock light weapon Point Blank from opponent"
+      attributes: [ ]

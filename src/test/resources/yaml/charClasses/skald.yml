@@ -6,3 +6,38 @@ skills:
   - History
   - Negotiation
   - Perform
+features:
+  tier1:
+    - description: "Healing Song: Heal Close allies 1d3 dmg or 1 AP"
+      attributes: []
+    - description: "Magic Seeking Song: Skald gains Aura Sense Close during the song"
+      attributes: [ ]
+    - description: "Gain another Trained Skill"
+      attributes: [ { type: 'SKILL', modifier: ''} ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Learn & cast two Cantrips"
+      attributes: [ ]
+    - description: "Learn & cast one level 1 mage or shaman spell"
+      attributes: [ ]
+    - description: "Gain proficiency in either Heavy Weapons or Bows"
+      attributes: [ ]
+    - description: "Advantage with Perform checks"
+      attributes: [ { type: 'ADV', modifier: 'Perform' } ]
+  tier2:
+    - description: "Break-Aura Song: Suspend magic effect during song"
+      attributes: [ ]
+    - description: "Charm Song: With success, Close beings are friendly to Skald for 1 hour"
+      attributes: [ ]
+    - description: "Lifting Song: Levitate slowly one Close <100 lb item"
+      attributes: [ ]
+    - description: "Use magic scroll: d20 + INT roll, T# 10 + spell level"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "Advantage with Forgotten Lore checks"
+      attributes: [ { type: 'ADV', modifier: 'Forgotten Lore' } ]
+    - description: "Immune to Sleep, Charm, & Mind Control effects"
+      attributes: [ ]
+    - description: "Adept at All Trades: Boost untrained skill checks to +4"
+      attributes: [ ]

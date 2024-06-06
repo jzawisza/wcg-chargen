@@ -195,7 +195,7 @@ public class DefaultSkillsServiceTests {
         var classSkillList = hasValidClassSkills ?
                 DEFAULT_CLASS_SKILL_NAME_LIST :
                 INVALID_SKILL_NAME_LIST;
-        var charClass = new CharClass("test", classSkillList);
+        var charClass = new CharClass("test", classSkillList, null);
         var species = new Species("test", speciesSkillsStatus.getSkillsList());
 
         when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);

@@ -5,3 +5,38 @@ skills:
   - Culture
   - History
   - Languages
+features:
+  tier1:
+    - description: "Learn 1 Cantrip & 1 Level 1 spell"
+      attributes: []
+    - description: "Call ethereal tiny animal familiar. Adds ADV to Arcana"
+      attributes: [ { type: 'ADV', modifier: 'Arcana' } ]
+    - description: "Learn 1 bonus spell of less than character level"
+      attributes: [ ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Can create scrolls for spells known"
+      attributes: [ ]
+    - description: "Gain another trained skill which uses the INT attribute"
+      attributes: [ { type: 'SKILL', modifier: 'INT' } ]
+    - description: "Resist Magic: +3 EV, DA & saves for unwanted spells"
+      attributes: [ ]
+    - description: "ADV on Alchemy & learn 1 potion formula"
+      attributes: [ { type: 'ADV', modifier: 'Alchemy' } ]
+  tier2:
+    - description: "Can craft magical items if have formula "
+      attributes: []
+    - description: "Magic Mastery: Aura Sense increases to Far range, spells may be cast at one range increment higher"
+      attributes: [ ]
+    - description: "Learn 1 bonus spell of character level or less"
+      attributes: [ ]
+    - description: "Learn 1 spell above level, but cast at Disadvantage"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "Additional +3 to EV, DA & saves for unwanted spells"
+      attributes: [ ]
+    - description: "1/day may get back one lost spell after a Quick Rest"
+      attributes: [ ]
+    - description: "For magical mishap, roll - choose result"
+      attributes: [ ]

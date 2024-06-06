@@ -4,3 +4,42 @@ skills:
   - Healing
   - Nature
   - Survival
+features:
+  tier1:
+    - description: "+1 to attack and damage with bows"
+      attributes: []
+    - description: "+1 to attack and damage with thrown weapons"
+      attributes: [ ]
+    - description: "Cannot become surprised or lost in the wilderness"
+      attributes: [ ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Advantage on Nature checks"
+      attributes: [ { type: 'ADV', modifier: 'Nature'} ]
+    - description: "Fire into melee, hitting ally just on 1 (instead of 1 or 2)"
+      attributes: [ ]
+    - description: "Advantage on Survival checks"
+      attributes: [ { type: 'ADV', modifier: 'Survival' } ]
+    - description: "Gain faithful animal ally; Can communicate with it"
+      attributes: [ ]
+    - description: "Gain full night sleep benefits in half the time"
+      attributes: [ ]
+  tier2:
+    - description: "Bow critical hit on natural 19 or 20"
+      attributes: [ ]
+    - description: "Thrown weapon critical hit on natural 19 or 20"
+      attributes: [ ]
+    - description: "Advantage to Initiative rolls when in the wilderness"
+      attributes: [ ]
+    - description: "Any ranged critical hits - roll 3 damage dice instead of 2"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "If surprise foe in nature, ADV to hit & dmg first round"
+      attributes: [ ]
+    - description: "Use ranged arms without penalty if engaged in melee"
+      attributes: [ ]
+    - description: "Advantage on PER checks in the wilderness"
+      attributes: [ ]
+    - description: "Leave no trail when traveling alone or in a small group"
+      attributes: [ ]

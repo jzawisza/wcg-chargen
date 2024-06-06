@@ -6,3 +6,38 @@ skills:
   - Nature
   - Religion
   - Survival
+features:
+  tier1:
+    - description: "Learn 1 additional spell of less than character level"
+      attributes: []
+    - description: "Understand & communicate basic ideas with animals"
+      attributes: [ ]
+    - description: "Advantage with Healing checks"
+      attributes: [ { type: 'ADV', modifier: 'Healing' } ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Mammal Form (no wings): once/day for 1 hr/level can morph to a medium or small mammal (non-humanoid)"
+      attributes: [ ]
+    - description: "Advantage to Religion checks & Learn 1 Level 1 spell"
+      attributes: [ { type: 'ADV', modifier: 'Religion' } ]
+    - description: "+3 EV, DA, & Saves vs spirits, undead, & outsiders"
+      attributes: [ ]
+    - description: "Gain faithful animal ally. Can communicate with it."
+      attributes: [ ]
+  tier2:
+    - description: "Double Advantage with Healing checks"
+      attributes: [ { type: 'DADV', modifier: 'Healing' } ]
+    - description: "Learn 1 additional spell of character level or less"
+      attributes: [ ]
+    - description: "At will take form of any normal animal she has seen"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "Spirit Guidance: 1x/day see seconds into the future to avoid a hit, a trap, or other harm to self or ally"
+      attributes: [ ]
+    - description: "Spirit Adept: Sense Spirits Far and ADV to hit spirits, undead, and outsiders"
+      attributes: [ ]
+    - description: "1x/day may get back one lost spell after a Quick Rest"
+      attributes: [ ]
+    - description: "Advantage on PER checks, non-skill related"
+      attributes: [ { type: 'ADV', modifier: 'PER' } ]

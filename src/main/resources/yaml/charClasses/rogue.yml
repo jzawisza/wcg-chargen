@@ -6,3 +6,38 @@ skills:
   - Gather Information
   - Precise Tasks
   - Stealth
+features:
+  tier1:
+    - description: "Accustomed to darkness: Little penalty in low/no light"
+      attributes: []
+    - description: "Advantage on Stealth checks"
+      attributes: [ { type: 'ADV', modifier: 'Stealth' } ]
+    - description: "Advantage on Precise Tasks checks"
+      attributes: [ { type: 'ADV', modifier: 'Precise Tasks' } ]
+    - description: "Read & use magic scroll"
+      attributes: [ ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "May Backstab even if a situation grants Disadvantage"
+      attributes: [ ]
+    - description: "No move speed penalty for Stealth and Climbing"
+      attributes: [ ]
+    - description: "Advantage on Gather Information checks"
+      attributes: [ { type: 'ADV', modifier: 'Gather Information' } ]
+  tier2:
+    - description: "Advantage on Initiative rolls"
+      attributes: [ { type: 'ADV', modifier: 'Initiative' } ]
+    - description: "Backstab damage - roll 3 damage dice instead of 2"
+      attributes: [ ]
+    - description: "After backstab make Stealth check to hide in same round"
+      attributes: [ ]
+    - description: "Roguish Luck: May reroll one failed Luck save or skill check per day at Advantage"
+      attributes: [ ]
+    - description: "+1 to any two different attributes"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
+    - description: "Double Advantage on any one trained skill"
+      attributes: [ { type: 'DADV', modifier: 'Any' } ]
+    - description: "Double Advantage on any second trained skill"
+      attributes: [ { type: 'DADV', modifier: 'Any' } ]
+    - description: "Advantage on PER checks"
+      attributes: [ { type: 'ADV', modifier: 'PER' } ]
