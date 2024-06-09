@@ -27,7 +27,7 @@ public class SkillsControllerTests {
     private MockMvc mockMvc;
 
     @Test
-    void test_Missing_Query_Parameters_Returns_Bad_Request() {
+    void Missing_Query_Parameters_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills"))
                     .andExpect(status().isBadRequest());
@@ -38,7 +38,7 @@ public class SkillsControllerTests {
     }
 
     @Test
-    void test_Missing_Character_Class_Query_Parameter_Returns_Bad_Request() {
+    void Missing_Character_Class_Query_Parameter_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills?species=halfling"))
                     .andExpect(status().isBadRequest());
@@ -49,7 +49,7 @@ public class SkillsControllerTests {
     }
 
     @Test
-    void test_Missing_Species_Query_Parameter_Returns_Bad_Request() {
+    void Missing_Species_Query_Parameter_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills?charClass=mystic"))
                     .andExpect(status().isBadRequest());
@@ -60,7 +60,7 @@ public class SkillsControllerTests {
     }
 
     @Test
-    void test_Invalid_Character_Class_Query_Parameter_Returns_Bad_Request() {
+    void Invalid_Character_Class_Query_Parameter_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills?charClass=invalid&species=halfling"))
                     .andExpect(status().isBadRequest());
@@ -71,7 +71,7 @@ public class SkillsControllerTests {
     }
 
     @Test
-    void test_Invalid_Species_Query_Parameter_Returns_Bad_Request() {
+    void Invalid_Species_Query_Parameter_Returns_Bad_Request() {
         try {
             mockMvc.perform(get("/api/v1/skills?charClass=mystic&species=invalid"))
                     .andExpect(status().isBadRequest());
@@ -83,7 +83,7 @@ public class SkillsControllerTests {
 
     @ParameterizedTest
     @EnumSource(CharType.class)
-    void test_Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(CharType charType) {
+    void Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(CharType charType) {
         when(skillsService.getSkills(any(CharType.class), any(SpeciesType.class)))
                 .thenReturn(new SkillsResponse());
 
@@ -99,7 +99,7 @@ public class SkillsControllerTests {
 
     @ParameterizedTest
     @EnumSource(SpeciesType.class)
-    void test_Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(SpeciesType speciesType) {
+    void Valid_Character_Class_Query_Parameter_And_Valid_Data_Returns_Success(SpeciesType speciesType) {
         when(skillsService.getSkills(any(CharType.class), any(SpeciesType.class)))
                 .thenReturn(new SkillsResponse());
 

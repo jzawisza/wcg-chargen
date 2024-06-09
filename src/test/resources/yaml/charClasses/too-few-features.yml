@@ -1,0 +1,12 @@
+type: "berzerker"
+skills:
+  - Athletics
+  - Intimidation
+  - Survival
+features:
+  tier1:
+    - description: "Fear & Horrify immunity (magical & non-magical)"
+      attributes: []
+    - description: "Move not slowed by climbing & difficult terrain"
+      attributes: []
+  tier2:

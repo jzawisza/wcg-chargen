@@ -1,0 +1,8 @@
+type: "berzerker"
+skills:
+  - Athletics
+  - Intimidation
+  - Survival
+features:
+  tier1:
+  tier2:

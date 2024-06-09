@@ -1,0 +1,25 @@
+type: "mage"
+skills:
+  - Alchemy
+  - Arcana
+  - Culture
+  - History
+  - Languages
+features:
+  tier1:
+    - description: "Learn 1 Cantrip & 1 Level 1 spell"
+      attributes: []
+    - description: "Call ethereal tiny animal familiar. Adds ADV to Arcana"
+      attributes: [ { type: 'ADV', modifier: 'Arcana' } ]
+    - description: "Learn 1 bonus spell of less than character level"
+      attributes: [ ]
+    - description: "+1 to one attribute which is not the character’s highest"
+      attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
+    - description: "Can create scrolls for spells known"
+      attributes: [ ]
+    - description: "Gain another trained skill which uses the INT attribute"
+      attributes: [ { type: 'SKILL', modifier: 'FOO' } ]
+    - description: "Resist Magic: +3 EV, DA & saves for unwanted spells"
+      attributes: [ ]
+    - description: "ADV on Alchemy & learn 1 potion formula"
+      attributes: [ { type: 'ADV', modifier: 'Alchemy' } ]

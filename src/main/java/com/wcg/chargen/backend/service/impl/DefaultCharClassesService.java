@@ -49,14 +49,14 @@ public class DefaultCharClassesService implements CharClassesService {
                     throw new IllegalStateException("Character class type " + charClass.type() + " has null feature data");
                 }
 
-                var tier1ErrMsg = checkForErrors(charClass.features().tier1(), charType);
+                var tier1ErrMsg = checkFeaturesForErrors(charClass.features().tier1(), charType);
                 if (tier1ErrMsg != null) {
-                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier I feature data");
+                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier I feature data: " + tier1ErrMsg);
                 }
 
-                var tier2ErrMsg = checkForErrors(charClass.features().tier2(), charType);
+                var tier2ErrMsg = checkFeaturesForErrors(charClass.features().tier2(), charType);
                 if (tier2ErrMsg != null) {
-                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier II feature data");
+                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier II feature data: " + tier2ErrMsg);
                 }
             }
             catch (IllegalArgumentException e) {
@@ -79,14 +79,14 @@ public class DefaultCharClassesService implements CharClassesService {
      * @param charType Character class
      * @return A descriptive error message if errors are found, null if there are no errors.
      */
-    private String checkForErrors(List<Feature> features, CharType charType) {
+    private String checkFeaturesForErrors(List<Feature> features, CharType charType) {
         if (features == null) {
             return "Null feature list";
         }
 
         // We should have a certain number of features for each class
         var numFeatures = features.size();
-        if (!(numFeatures >= FeatureConstants.NUM_FEATURES_MIN || numFeatures <= FeatureConstants.NUM_FEATURES_MAX)) {
+        if (numFeatures < FeatureConstants.NUM_FEATURES_MIN || numFeatures > FeatureConstants.NUM_FEATURES_MAX) {
             return String.format("Expected between %d and %d features in list, but got %d",
                     FeatureConstants.NUM_FEATURES_MIN,
                     FeatureConstants.NUM_FEATURES_MAX,
@@ -153,7 +153,7 @@ public class DefaultCharClassesService implements CharClassesService {
                                 }
                             }
                             catch (IllegalArgumentException e) {
-                                return String.format("Error reading modifier %s for SKILL value type: expected attribute",
+                                return String.format("Error reading modifier %s for SKILL value type for mage, expected INT",
                                         modifier);
                             }
                         }
