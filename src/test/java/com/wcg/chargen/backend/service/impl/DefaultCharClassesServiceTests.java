@@ -3,6 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.service.impl.yaml.CharClassYamlLoaderService;
 import com.wcg.chargen.backend.testUtil.PostConstructUtil;
+import com.wcg.chargen.backend.testUtil.SkillsProviderUtil;
 import com.wcg.chargen.backend.testUtil.TestInvalidYamlLoaderServices;
 import com.wcg.chargen.backend.testUtil.TestYamlLoaderServices;
 
@@ -23,7 +24,8 @@ public class DefaultCharClassesServiceTests {
     @ParameterizedTest
     @MethodSource("yamlServicesWithBadDataProvider")
     void test_yamlFiles_With_Invalid_Data_Throw_Exception(List<CharClassYamlLoaderService> yamlLoaderServiceList, String expectedMsg) {
-        var defaultCharClassesService = new DefaultCharClassesService(yamlLoaderServiceList);
+        var defaultCharClassesService = new DefaultCharClassesService(yamlLoaderServiceList,
+                SkillsProviderUtil.getObject());
 
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
@@ -38,7 +40,8 @@ public class DefaultCharClassesServiceTests {
     @ParameterizedTest
     @EnumSource(CharType.class)
     void test_yamlFiles_Representing_All_Classes_Loads_Successfully(CharType charType) {
-        var defaultCharClassesService = new DefaultCharClassesService(TestYamlLoaderServices.getAllTestCharClassesList());
+        var defaultCharClassesService = new DefaultCharClassesService(TestYamlLoaderServices.getAllTestCharClassesList(),
+                SkillsProviderUtil.getObject());
 
         try {
             PostConstructUtil.invokeMethod(DefaultCharClassesService.class, defaultCharClassesService);
@@ -118,6 +121,38 @@ public class DefaultCharClassesServiceTests {
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.NoTier2FeaturesYamlLoaderService()),
                     "Character class type berzerker has invalid Tier II feature data: Null feature list"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierSkill()),
+                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Not A Skill found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierSkill()),
+                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Not A Skill found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierForgottenLore()),
+                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Forgotten Lore found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierForgottenLore()),
+                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Forgotten Lore found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierUnarmedDamage()),
+                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Unarmed Damage found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierUnarmedDamage()),
+                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Unarmed Damage found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierAny()),
+                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Any found for ADV/DADV value type"
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierAny()),
+                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Any found for ADV/DADV value type"
             )
         );
     }

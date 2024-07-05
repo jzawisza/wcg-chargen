@@ -4,28 +4,26 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharClass;
 import com.wcg.chargen.backend.model.Skill;
-import com.wcg.chargen.backend.model.Skills;
 import com.wcg.chargen.backend.model.Species;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.SpeciesService;
-import com.wcg.chargen.backend.service.YamlLoaderService;
-import com.wcg.chargen.backend.testUtil.PostConstructUtil;
 
+import com.wcg.chargen.backend.testUtil.SkillsProviderUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultSkillsServiceTests {
     @Mock
     CharClassesService charClassesServiceMock;
@@ -33,19 +31,23 @@ public class DefaultSkillsServiceTests {
     @Mock
     SpeciesService speciesServiceMock;
 
-    private final List<String> DEFAULT_CLASS_SKILL_NAME_LIST = new ArrayList<>(List.of(
-            "Alchemy",
-            "Arcana"));
-
-    private static final List<String> DEFAULT_SPECIES_SKILL_NAME_LIST = new ArrayList<>(List.of(
+    private static final List<String> ROGUE_SKILL_NAME_LIST = new ArrayList<>(List.of(
             "Appraisal",
-            "Arcana"
-    ));
+            "Athletics",
+            "Deceit",
+            "Gather Information",
+            "Precise Tasks",
+            "Stealth"));
+
+    private static final List<String> DWARF_SKILL_NAME_LIST =  new ArrayList<>(List.of(
+            "Appraisal",
+            "Athletics",
+            "Intimidation"));
 
     private static final List<String> INVALID_SKILL_NAME_LIST = Collections.singletonList("Invalid Skill");
 
     private enum SpeciesSkillsStatus {
-        VALID(DEFAULT_SPECIES_SKILL_NAME_LIST),
+        VALID(DWARF_SKILL_NAME_LIST),
         INVALID(INVALID_SKILL_NAME_LIST),
         NULL(null);
 
@@ -58,73 +60,40 @@ public class DefaultSkillsServiceTests {
         public List<String> getSkillsList() { return skillsList; }
     }
 
-    static class InvalidSkillsDataYamlLoaderService implements YamlLoaderService<Skills> {
-        public InvalidSkillsDataYamlLoaderService() {}
-
-        @Override
-        public String getYamlFile() {
-            return "invalid-data.yml";
-        }
-
-        @Override
-        public Class<Skills> getObjClass() {
-            return Skills.class;
-        }
-    }
-    static class ValidSkillsDataYamlLoaderService implements YamlLoaderService<Skills> {
-        public ValidSkillsDataYamlLoaderService() {}
-
-        @Override
-        public String getYamlFile() {
-            return "test-skills.yml";
-        }
-
-        @Override
-        public Class<Skills> getObjClass() {
-            return Skills.class;
-        }
-    }
-
-    @Test
-    void yamlFile_Without_Valid_Skills_Data_Throws_Exception() {
-        var defaultSkillsService = new DefaultSkillsService(new InvalidSkillsDataYamlLoaderService(), null, null);
-        var exception = assertThrows(InvocationTargetException.class, () -> {
-            PostConstructUtil.invokeMethod(DefaultSkillsService.class, defaultSkillsService);
-        });
-
-        var targetException = exception.getTargetException();
-        assertEquals(IllegalStateException.class, targetException.getClass());
-        assertEquals("Error loading skills YAML file", targetException.getMessage());
-    }
-
     @Test
     void getSkills_Correctly_Sets_Class_Skills_And_Bonus_Skills() {
         var defaultSkillsService = getConfiguredDefaultSkillsService(true,
                 SpeciesSkillsStatus.VALID);
-        if (defaultSkillsService == null) {
-            fail();
-        }
 
-        // Arcana is excluded from the species skill list because it's a class skill:
-        // class skills need to be excluded from the species skill list
-        var expectedSpeciesSkillNameList = new ArrayList<>(List.of("Appraisal"));
+        // Appraisal and Athletics are excluded from the species skill list because they're class skills
+        var expectedSpeciesSkillNameList = new ArrayList<>(List.of("Intimidation"));
 
         // Any non-class skills, including species skills, should be in the bonus skill list
-        var expectedBonusSkillNameList = new ArrayList<>(List.of("Animal Expertise",
-                "Appraisal",
-                "Athletics",
+        var expectedBonusSkillNameList = new ArrayList<>(List.of(
+                "Alchemy",
+                "Animal Expertise",
+                "Arcana",
                 "Culture",
-                "Deceit"));
+                "Healing",
+                "History",
+                "Intimidation",
+                "Languages",
+                "Nature",
+                "Negotiation",
+                "Perform",
+                "Religion",
+                "Survival"));
 
         // Parameter values don't matter: mock controls logic
-        var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.ELF);
+        // Mock is set up for character class Rogue and species Dwarf
+        var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.DWARF);
 
         // Get names of skills returned
         var actualClassSkillNameList = getSkillNameList(skillsResponse.getClassSkills());
         var actualSpeciesSkillNameList = getSkillNameList(skillsResponse.getSpeciesSkills());
         var actualBonusSkillNameList = getSkillNameList(skillsResponse.getBonusSkills());
 
-        assertEquals(DEFAULT_CLASS_SKILL_NAME_LIST, actualClassSkillNameList);
+        assertEquals(ROGUE_SKILL_NAME_LIST, actualClassSkillNameList);
         assertEquals(expectedSpeciesSkillNameList, actualSpeciesSkillNameList);
         assertEquals(expectedBonusSkillNameList, actualBonusSkillNameList);
     }
@@ -133,12 +102,10 @@ public class DefaultSkillsServiceTests {
     void getSkills_Returns_Empty_Response_If_Class_Skill_Is_Missing_From_Master_Skill_List() {
         var defaultSkillsService = getConfiguredDefaultSkillsService(false,
                 SpeciesSkillsStatus.VALID);
-        if (defaultSkillsService == null) {
-            fail();
-        }
 
         // Parameter values don't matter: mock controls logic
-        var skillsResponse = defaultSkillsService.getSkills(CharType.SHAMAN, SpeciesType.DWARF);
+        // Mock is set up for character class Rogue and species Dwarf
+        var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.DWARF);
 
         assertNotNull(skillsResponse);
         assertNotNull(skillsResponse.getClassSkills());
@@ -151,12 +118,10 @@ public class DefaultSkillsServiceTests {
     void getSkills_Returns_Empty_Response_If_Species_Skill_Is_Missing_From_Master_Skill_List() {
         var defaultSkillsService = getConfiguredDefaultSkillsService(true,
                 SpeciesSkillsStatus.INVALID);
-        if (defaultSkillsService == null) {
-            fail();
-        }
 
         // Parameter values don't matter: mock controls logic
-        var skillsResponse = defaultSkillsService.getSkills(CharType.RANGER, SpeciesType.HALFLING);
+        // Mock is set up for character class Rogue and species Dwarf
+        var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.DWARF);
 
         assertNotNull(skillsResponse);
         assertNotNull(skillsResponse.getSpeciesSkills());
@@ -169,18 +134,26 @@ public class DefaultSkillsServiceTests {
     void getSkills_Returns_Expected_Results_For_Human_Species() {
         var defaultSkillsService = getConfiguredDefaultSkillsService(true,
                 SpeciesSkillsStatus.NULL);
-        if (defaultSkillsService == null) {
-            fail();
-        }
 
         // All non-class skills should appear as bonus skills for a human
-        var expectedBonusSkillNameList = new ArrayList<>(List.of("Animal Expertise",
-                "Appraisal",
-                "Athletics",
+        var expectedBonusSkillNameList = new ArrayList<>(List.of(
+                "Alchemy",
+                "Animal Expertise",
+                "Arcana",
                 "Culture",
-                "Deceit"));
+                "Healing",
+                "History",
+                "Intimidation",
+                "Languages",
+                "Nature",
+                "Negotiation",
+                "Perform",
+                "Religion",
+                "Survival"));
 
-        var skillsResponse = defaultSkillsService.getSkills(CharType.SKALD, SpeciesType.HUMAN);
+        // Parameter values don't matter: mock controls logic
+        // Mock is set up for character class Rogue
+        var skillsResponse = defaultSkillsService.getSkills(CharType.ROGUE, SpeciesType.HUMAN);
 
         assertNotNull(skillsResponse);
         assertNotNull(skillsResponse.getClassSkills());
@@ -193,26 +166,17 @@ public class DefaultSkillsServiceTests {
     private DefaultSkillsService getConfiguredDefaultSkillsService(boolean hasValidClassSkills,
                                                                    SpeciesSkillsStatus speciesSkillsStatus) {
         var classSkillList = hasValidClassSkills ?
-                DEFAULT_CLASS_SKILL_NAME_LIST :
+                ROGUE_SKILL_NAME_LIST :
                 INVALID_SKILL_NAME_LIST;
-        var charClass = new CharClass("test", classSkillList, null);
+        var charClass = new CharClass(CharType.SKALD.toString(), classSkillList, null);
         var species = new Species("test", speciesSkillsStatus.getSkillsList());
 
         when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);
         when(speciesServiceMock.getSpeciesByType(any(SpeciesType.class))).thenReturn(species);
 
-        var skillsService = new DefaultSkillsService(new ValidSkillsDataYamlLoaderService(),
-                charClassesServiceMock, speciesServiceMock);
-
-        // Call @PostConstruct method
-        try {
-            PostConstructUtil.invokeMethod(DefaultSkillsService.class, skillsService);
-        }
-        catch (Exception e) {
-            return null;
-        }
-
-        return skillsService;
+        return new DefaultSkillsService(SkillsProviderUtil.getObject(),
+                charClassesServiceMock,
+                speciesServiceMock);
     }
 
     private List<String> getSkillNameList(List<Skill> skillList) {

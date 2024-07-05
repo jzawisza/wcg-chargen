@@ -4,13 +4,11 @@ import com.wcg.chargen.backend.constants.FeatureConstants;
 import com.wcg.chargen.backend.enums.*;
 import com.wcg.chargen.backend.model.CharClass;
 import com.wcg.chargen.backend.model.Feature;
-import com.wcg.chargen.backend.model.Features;
 import com.wcg.chargen.backend.service.CharClassesService;
+import com.wcg.chargen.backend.service.SkillsProvider;
 import com.wcg.chargen.backend.service.impl.yaml.CharClassYamlLoaderService;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +19,23 @@ import java.util.List;
 public class DefaultCharClassesService implements CharClassesService {
     private final List<CharClassYamlLoaderService> charClassYamlLoaderServiceList;
 
+    private final SkillsProvider skillsProvider;
+
     private final HashMap<CharType, CharClass> charClassTypeMap = new HashMap<CharType, CharClass>();
 
-    private final Logger logger = LoggerFactory.getLogger(DefaultCharClassesService.class);
+    private static final String INITIATIVE = "Initiative";
+
+    private static final String SKALD_FORGOTTEN_LORE = "Forgotten Lore";
+
+    private static final String MYSTIC_UNARMED_DAMAGE = "Unarmed Damage";
+
+    private static final String ROGUE_ANY = "Any";
 
     @Autowired
-    public DefaultCharClassesService(List<CharClassYamlLoaderService> charClassYamlLoaderServiceList) {
+    public DefaultCharClassesService(List<CharClassYamlLoaderService> charClassYamlLoaderServiceList,
+                                     SkillsProvider skillsProvider) {
         this.charClassYamlLoaderServiceList = charClassYamlLoaderServiceList;
+        this.skillsProvider = skillsProvider;
     }
 
     @PostConstruct
@@ -104,11 +112,14 @@ public class DefaultCharClassesService implements CharClassesService {
 
                 switch (attr.type()) {
                     case ADV, DADV -> {
-                        // TODO: add check here (will require some refactoring for skills)
+                        var advDadvMessage = checkAdvDadvAttribute(modifier, charType);
+                        if (advDadvMessage != null) {
+                            return advDadvMessage;
+                        }
                     }
                     case ATTR_PLUS_1 -> {
                         try {
-                            AttrPlusOneModifier.valueOf(modifier);
+                            AttrPlusOneModifier.valueOf(modifier.toUpperCase());
                         }
                         catch (IllegalArgumentException e) {
                             return String.format("Error reading modifier %s for ATTR_PLUS_1 value type",
@@ -127,7 +138,7 @@ public class DefaultCharClassesService implements CharClassesService {
                     }
                     case DA_PLUS_1 -> {
                         try {
-                            DaPlusOneModifier.valueOf(modifier);
+                            DaPlusOneModifier.valueOf(modifier.toUpperCase());
                         }
                         catch (IllegalArgumentException e) {
                             return String.format("Error reading modifier %s for DA_PLUS_1 value type",
@@ -145,7 +156,7 @@ public class DefaultCharClassesService implements CharClassesService {
                         }
                         else if (charType == CharType.MAGE) {
                             try {
-                                var charAttribute = AttributeType.valueOf(modifier);
+                                var charAttribute = AttributeType.valueOf(modifier.toUpperCase());
                                 if (charAttribute != AttributeType.INT) {
                                     return String.format(
                                             "Expected INT for SKILL modifier for mage, but found %s",
@@ -168,6 +179,58 @@ public class DefaultCharClassesService implements CharClassesService {
         }
 
         return null;
+    }
+
+    /**
+     * Check that the modifier for the ADV or DADV attribute types is correct.
+     *
+     * @param modifier Modifier for ADV or DADV
+     * @param charType Character type
+     * @return Null if there are no errors, an error message otherwise
+     */
+    private String checkAdvDadvAttribute(String modifier, CharType charType) {
+        var hasAttribute = true;
+
+        // First check to see if modifier is a skill
+        var skill = skillsProvider.getByName(modifier);
+        if (skill != null) {
+            return null;
+        }
+
+        // Next, check to see if it's an attribute
+        try {
+            AttributeType.valueOf(modifier.toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+            hasAttribute = false;
+        }
+
+        if (hasAttribute) {
+            return null;
+        }
+
+        // "Initiative" is a valid modifier as well
+        if (modifier.equals(INITIATIVE)) {
+            return null;
+        }
+
+        // For skalds, "Forgotten Lore" is a valid modifier
+        if (charType == CharType.SKALD && modifier.equals(SKALD_FORGOTTEN_LORE)) {
+            return null;
+        }
+
+        // For mystics, "Unarmed Damage" is a valid modifier
+        if (charType == CharType.MYSTIC && modifier.equals(MYSTIC_UNARMED_DAMAGE)) {
+            return null;
+        }
+
+        // For rogues, "Any" is a valid modifier
+        if (charType == CharType.ROGUE && modifier.equals(ROGUE_ANY)) {
+            return null;
+        }
+
+        // If no valid arguments are found, return an error
+        return String.format("Unexpected modifier %s found for ADV/DADV value type", modifier);
     }
 
     @Override
