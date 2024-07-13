@@ -70,7 +70,9 @@ test.each([
 ])('selecting character class %s enables Next button', (charClassStr) => {
     const mockSetNextEnabled = jest.fn();
     const nextButtonEnabledContext = {
-        setNextEnabled: mockSetNextEnabled
+        setNextEnabled: mockSetNextEnabled,
+        setTier1Features: jest.fn(),
+        setTier2Features: jest.fn()
     };
 
     render(
@@ -103,7 +105,9 @@ test.each([
 ])('selecting character class %s sets context correctly', (charClassStr) => {
     const mockSetCharClass = jest.fn();
     const charInfoContext = {
-        setCharClass: mockSetCharClass
+        setCharClass: mockSetCharClass,
+        setTier1Features: jest.fn(),
+        setTier2Features: jest.fn()
     };
 
     render(
@@ -120,4 +124,63 @@ test.each([
     }
 
     expect(mockSetCharClass).toHaveBeenCalled();
+});
+
+test('changing character class clears Tier I and II feature information', () => {
+    const origCharClass = "Ranger";
+    const newCharClass = "Skald";
+
+    const mockSetTier1Features = jest.fn();
+    const mockSetTier2Features = jest.fn();
+    const charInfoContext = {
+        charClass: origCharClass,
+        setCharClass: jest.fn(),
+        setTier1Features: mockSetTier1Features,
+        setTier2Features: mockSetTier2Features
+    };
+
+    render(
+        <CharacterContext.Provider value={charInfoContext}>
+            <CharacterClass />
+        </CharacterContext.Provider>
+    );
+
+    const charClassCardTitleElt = screen.getByText(newCharClass);
+    const charClassCardElt = charClassCardTitleElt.parentElement?.parentElement?.parentElement;
+    
+    if(charClassCardElt) {
+        fireEvent.click(charClassCardElt);
+    }
+
+    expect(mockSetTier1Features).toBeCalledTimes(1);
+    expect(mockSetTier2Features).toBeCalledTimes(1);
+});
+
+test('reselecting same character class does not clear Tier I and II feature information', () => {
+    const charClass = "Mystic";
+
+    const mockSetTier1Features = jest.fn();
+    const mockSetTier2Features = jest.fn();
+    const charInfoContext = {
+        charClass: charClass,
+        setCharClass: jest.fn(),
+        setTier1Features: mockSetTier1Features,
+        setTier2Features: mockSetTier2Features
+    };
+
+    render(
+        <CharacterContext.Provider value={charInfoContext}>
+            <CharacterClass />
+        </CharacterContext.Provider>
+    );
+
+    const charClassCardTitleElt = screen.getByText(charClass);
+    const charClassCardElt = charClassCardTitleElt.parentElement?.parentElement?.parentElement;
+    
+    if(charClassCardElt) {
+        fireEvent.click(charClassCardElt);
+    }
+
+    expect(mockSetTier1Features).toBeCalledTimes(0);
+    expect(mockSetTier2Features).toBeCalledTimes(0);
 });

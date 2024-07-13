@@ -98,13 +98,19 @@ const quickGearExplanation = (
 
 const CharacterClass: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
-    const { charClass, setCharClass } = useContext(CharacterContext);
+    const { charClass, setCharClass, setTier1Features, setTier2Features } = useContext(CharacterContext);
 
     useEffect(() => {
         setNextEnabled(charClass !== '');
     }, [charClass, setNextEnabled]);
 
     const onCharClassCardClick = (charClassName: string) => {
+        // If the character class changes, clear all features data
+        if (charClassName?.toLowerCase() !== charClass?.toLowerCase()) {
+            setTier1Features([]);
+            setTier2Features([]);
+        }
+
         setCharClass(charClassName);
         setNextEnabled(true);
     };
