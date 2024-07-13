@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { DefaultOptionType } from "antd/es/select";
 import Features from "../Features";
 import { CharacterContext, NextButtonEnabledContext } from "../../../Context";
+import * as features from "../../../server/ServerData";
 
 /**
  * Tests for the Features component that validate setting of the React context.
@@ -69,19 +70,38 @@ function getFeatureList(isTier2: boolean, numFeatures: number) {
     return featureList;
 }
 
-test.each([
-    [2, 1, 0],
-    [3, 3, 0],
-    [4, 3, 1],
-    [5, 3, 2],
-    [6, 4, 3],
-    [7, 5, 4]
-])('selecting approrpriate tier I/II features for level %d sets context correctly and enables Next button', async (charLevel, numTier1Features, numTier2Features) => {
+const NUM_ALLOWED_TIER_1_FEATURES = 5;
+const NUM_ALLOWED_TIER_2_FEATURES = 3;
+const MOCK_FEATURES_DATA = {
+    numAllowedTier1Features: NUM_ALLOWED_TIER_1_FEATURES,
+    numAllowedTier2Features: NUM_ALLOWED_TIER_2_FEATURES,
+    features: {
+        tier1: [
+            { description: "Tier I Feature 1", attributes: [] },
+            { description: "Tier I Feature 2", attributes: [] },
+            { description: "Tier I Feature 3", attributes: [] },
+            { description: "Tier I Feature 4", attributes: [] },
+            { description: "Tier I Feature 5", attributes: [] }
+        ],
+        tier2: [
+            { description: "Tier II Feature 1", attributes: [] },
+            { description: "Tier II Feature 2", attributes: [] },
+            { description: "Tier II Feature 3", attributes: [] }
+        ]
+    }
+};
+
+test('selecting appropriate number of tier I/II features sets context correctly and enables Next button', async () => {
     const emptyStringArray: string[] = [];
-    const hasTier2Features = (numTier2Features > 0);
+
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: MOCK_FEATURES_DATA,
+        error: false,
+        isLoading: false
+    });
 
     const featuresContext = {
-        level: charLevel,
+        level: 6,
         tier1Features: emptyStringArray,
         setTier1Features: jest.fn(),
         tier2Features: emptyStringArray,
@@ -103,24 +123,22 @@ test.each([
         </CharacterContext.Provider>
     );
 
-    const tier1ElementsToSelect = getFeatureList(false, numTier1Features);
+    const tier1ElementsToSelect = getFeatureList(false, NUM_ALLOWED_TIER_1_FEATURES);
     const tier1SelectElt = screen.getByTestId(SELECT_TEST_ID_TIER_I);
+    const tier2ElementsToSelect = getFeatureList(true, NUM_ALLOWED_TIER_2_FEATURES);
+    const tier2SelectElt = screen.getByTestId(SELECT_TEST_ID_TIER_II);
 
     act(() => {
         userEvent.selectOptions(tier1SelectElt, tier1ElementsToSelect);
-        if (hasTier2Features) {
-            const tier2ElementsToSelect = getFeatureList(true, numTier2Features);
-            const tier2SelectElt = screen.getByTestId(SELECT_TEST_ID_TIER_II);
-            userEvent.selectOptions(tier2SelectElt, tier2ElementsToSelect);
-        }
+        userEvent.selectOptions(tier2SelectElt, tier2ElementsToSelect);
     });
 
     // The next button should be disabled on initial render, and only enabled
     // after selecting the appropriate number of elements from the select dropdown(s)
-    expect(mockSetNextEnabled).toHaveBeenCalledTimes(1 + numTier1Features + numTier2Features);
+    expect(mockSetNextEnabled).toHaveBeenCalledTimes(1 + NUM_ALLOWED_TIER_1_FEATURES + NUM_ALLOWED_TIER_2_FEATURES);
     expect(mockSetNextEnabled).toHaveBeenNthCalledWith(1, false);
     expect(mockSetNextEnabled).toHaveBeenLastCalledWith(true);
 
-    expect(featuresContext.setTier1Features).toHaveBeenCalledTimes(numTier1Features);
-    expect(featuresContext.setTier2Features).toHaveBeenCalledTimes(numTier2Features);
+    expect(featuresContext.setTier1Features).toHaveBeenCalledTimes(NUM_ALLOWED_TIER_1_FEATURES);
+    expect(featuresContext.setTier2Features).toHaveBeenCalledTimes(NUM_ALLOWED_TIER_2_FEATURES);
 });

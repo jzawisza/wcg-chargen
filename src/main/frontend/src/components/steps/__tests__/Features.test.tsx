@@ -1,7 +1,27 @@
 import { render, screen } from "@testing-library/react";
 import Features from "../Features";
 import { CharacterContext } from "../../../Context";
+import * as features from "../../../server/ServerData";
 
+const MOCK_EMPTY_SKILLS_DATA = {
+    numAllowedTier1Features: 0,
+    numAllowedTier2Features: 0,
+    features: {
+        tier1: [],
+        tier2: []
+    }
+};
+
+function getFeaturesData(tier1Features: number, tier2Features: number) {
+    return {
+        numAllowedTier1Features: tier1Features,
+        numAllowedTier2Features: tier2Features,
+        features: {
+            tier1: [],
+            tier2: []
+        }
+    };
+}
 function getExpectedSelectorText(numFeatures: number) {
     if (numFeatures === 0) {
         return "";
@@ -14,16 +34,17 @@ function getSelectorTextUnderHeading(headingName: string) {
     return screen.getByText(headingName).nextElementSibling?.firstChild?.firstChild?.nextSibling?.textContent;
 }
 
-test.each([
-    [2],
-    [3],
-    [4],
-    [5],
-    [6],
-    [7]
-])('tier I features displayed for level %d', (charLevel) => {
+
+test('tier I features displayed by default', () => {
+    var featuresData = getFeaturesData(1, 0);
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: featuresData,
+        error: false,
+        isLoading: false
+    });
+
     const levelContext = {
-        level: charLevel
+        level: 2
     };
 
     render(
@@ -37,15 +58,18 @@ test.each([
 });
 
 test.each([
-    [2, false],
-    [3, false],
-    [4, true],
-    [5, true],
-    [6, true],
-    [7,true]
-])('tier II features only displayed for levels 4 and above (level %d)', (charLevel, shouldDisplayTier2Features) => {
+    [0, false],
+    [1, true]
+])('tier II features only displayed if number of tier II features from server is greater than 0 (should display for %d features = %s)', (numTier2Features, shouldDisplayTier2Features) => {
+    var featuresData = getFeaturesData(1, numTier2Features);
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: featuresData,
+        error: false,
+        isLoading: false
+    });
+
     const levelContext = {
-        level: charLevel
+        level: 4
     };
 
     render(
@@ -63,20 +87,23 @@ test.each([
     }
 });
 
-test.each([
-    [2, 1, 0],
-    [3, 3, 0],
-    [4, 3, 1],
-    [5, 3, 2],
-    [6, 4, 3],
-    [7, 5, 4]
-])('correct number of tier I and tier II features selectable for level %d', (charLevel, numTier1Features, numTier2Features) => {
+test('correct number of tier I and tier II features selectable based on server information', () => {
+    const expectedNumTier1Features = 3;
+    const expectedNumTier2Features = 2;
+    var featuresData = getFeaturesData(expectedNumTier1Features, expectedNumTier2Features);
+
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: featuresData,
+        error: false,
+        isLoading: false
+    });
+
     const levelContext = {
-        level: charLevel
+        level: 5
     };
 
-    const expectedTier1Text = getExpectedSelectorText(numTier1Features);
-    const expectedTier2Text = getExpectedSelectorText(numTier2Features);
+    const expectedTier1Text = getExpectedSelectorText(expectedNumTier1Features);
+    const expectedTier2Text = getExpectedSelectorText(expectedNumTier2Features);
 
     render(
         <CharacterContext.Provider value={levelContext}>
@@ -87,8 +114,34 @@ test.each([
     const tier1FeatureSelectionText = getSelectorTextUnderHeading('Tier I Features');    
     expect(tier1FeatureSelectionText).toEqual(expectedTier1Text);
 
-    if (numTier2Features > 0) {
-        const tier2FeatureSelectionText = getSelectorTextUnderHeading('Tier II Features');    
-        expect(tier2FeatureSelectionText).toEqual(expectedTier2Text);
-    }
+    const tier2FeatureSelectionText = getSelectorTextUnderHeading('Tier II Features');    
+    expect(tier2FeatureSelectionText).toEqual(expectedTier2Text);
+});
+
+test('error from server displays expected output', () => {
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: MOCK_EMPTY_SKILLS_DATA,
+        error: true,
+        isLoading: false
+    });
+
+    render(<Features />);
+
+    const errorText = screen.getByText('Error loading features data from server.');
+
+    expect(errorText).toBeTruthy();
+});
+
+test('data loading from server displays expected output', () => {
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: MOCK_EMPTY_SKILLS_DATA,
+        error: false,
+        isLoading: true
+    });
+
+    const { container } = render(<Features />);
+
+    const spinner = container.querySelector('.ant-spin');
+
+    expect(spinner).toBeTruthy();
 });

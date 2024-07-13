@@ -5,6 +5,7 @@ import { DefaultOptionType } from "antd/es/select";
 type SelectMultipleProps = {
     defaultValue: string[]
     disabled? : boolean
+    extraWide?: boolean
     numElementsAllowed: number
     onChange: (value: string[]) => void
     options: (DefaultOptionType[] | undefined)
@@ -18,6 +19,8 @@ const SelectMultiple = (props: SelectMultipleProps) => {
 
     const selectMode = (props.numElementsAllowed > 1 ? 'multiple' : undefined);
     const isDisabled = (props.disabled ? props.disabled : false);
+    const useExtraWide = (props.extraWide ? props.extraWide : false);
+    const selectWidth = useExtraWide ? 400 : 200;
 
     const internalOnChange = (value: string[]) => {
         setSelectedOptions(value);
@@ -35,7 +38,7 @@ const SelectMultiple = (props: SelectMultipleProps) => {
             open={selectedOptions === undefined || selectedOptions.length < props.numElementsAllowed}
             options={props.options}
             placeholder={props.placeholder}
-            style={{ width: 200}}
+            style={{ width: selectWidth}}
         />
     );
 }

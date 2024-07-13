@@ -1,39 +1,17 @@
 import React, {useContext, useEffect} from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
-import { Row, Col } from "antd";
+import { Row, Col, Spin } from "antd";
 import SelectMultiple from "../util/SelectMultiple";
-import { DefaultOptionType } from "antd/es/select";
+import { useFeaturesData } from "../../server/ServerData";
+import { Feature } from "../../server/FeaturesType";
 
-// This list is cumulative, not per level.  For example, a Level 3 character would have
-// 3 Tier I features in total, 1 from Level 2 and 2 from Level 3.
-const totalTier1And2FeaturesPerLevel = [
-    [0, 0],
-    [0, 0],
-    [1, 0], // Level 2
-    [3, 0], // Level 3
-    [3, 1], // Level 4
-    [3, 2], // Level 5
-    [4, 3], // Level 6
-    [5, 4], // Level 7
-];
+function toDefaultOptionTypeList(featureList: Feature[] | undefined) {
+    if (!featureList) {
+        return [];
+    }
 
-const dummyTier1Features: DefaultOptionType[] = [
-    { value: 'Tier I Feature 1', label: 'Tier I Feature 1' },
-    { value: 'Tier I Feature 2', label: 'Tier I Feature 2' },
-    { value: 'Tier I Feature 3', label: 'Tier I Feature 3' },
-    { value: 'Tier I Feature 4', label: 'Tier I Feature 4' },
-    { value: 'Tier I Feature 5', label: 'Tier I Feature 5' },
-    { value: 'Tier I Feature 6', label: 'Tier I Feature 6' }
-];
-
-const dummyTier2Features: DefaultOptionType[] = [
-    { value: 'Tier II Feature 1', label: 'Tier II Feature 1' },
-    { value: 'Tier II Feature 2', label: 'Tier II Feature 2' },
-    { value: 'Tier II Feature 3', label: 'Tier II Feature 3' },
-    { value: 'Tier II Feature 4', label: 'Tier II Feature 4' },
-    { value: 'Tier II Feature 5', label: 'Tier II Feature 5' },
-    { value: 'Tier II Feature 6', label: 'Tier II Feature 6' }
-];
+    return featureList.map(f => ({ value: f.description, label: f.description }));
+}
 
 function getShouldEnableNext(tier1Features: string[], tier2Features: string[],
     numTier1Features: number, numTier2Features: number) {
@@ -46,13 +24,17 @@ function getShouldEnableNext(tier1Features: string[], tier2Features: string[],
 
 const Features: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
-    const { level, tier1Features, setTier1Features, tier2Features, setTier2Features } = useContext(CharacterContext);
+    const { level, tier1Features, setTier1Features,
+        tier2Features, setTier2Features, charClass } = useContext(CharacterContext);
+    const { data, error, isLoading } = useFeaturesData(charClass, level);
 
-    const hasTier2Features = (level >= 4);
-    const numTier1Features = totalTier1And2FeaturesPerLevel[level][0];
-    const numTier2Features = totalTier1And2FeaturesPerLevel[level][1];
+    const numTier1Features = data ? data.numAllowedTier1Features : 0;
+    const numTier2Features = data ? data.numAllowedTier2Features : 0;
+    const hasTier2Features = (numTier2Features > 0);
     const tier1FeaturesSelectDescriptor = `Select ${numTier1Features} feature${numTier1Features > 1 ? "s" : ""}`;
     const tier2FeaturesSelectDescriptor = `Select ${numTier2Features} feature${numTier2Features > 1 ? "s" : ""}`;
+    const tier1FeaturesList = toDefaultOptionTypeList(data?.features?.tier1);
+    const tier2FeaturesList = toDefaultOptionTypeList(data?.features?.tier2);
 
     useEffect(() => {
         let shouldEnableNext = getShouldEnableNext(tier1Features, tier2Features, numTier1Features, numTier2Features);
@@ -73,34 +55,48 @@ const Features: React.FC = () => {
         setNextEnabled(shouldEnableNext);
     };
 
+    if (error) {
+        return (
+            <p>Error loading features data from server.</p>
+        );
+    }
+    if (isLoading) {
+        return (
+            <Spin size="large" />
+        );
+    }
+    
     return (
+        
         <div>
             <p>Characters Level 2 and above can select advanced features that are gained upon levelling up.  These features allow you to customize your character's abilities and talents.</p>
             <p>Features are divided into two tiers, Tier I and Tier II.  Tier II features are more powerful, and are available to characters Level 4 and above.</p>
             <p>Select your desired features from the {hasTier2Features? "lists" : "list"} below.</p>
 
             <Row justify="center">
-                <Col span={6}>
+                <Col span={12}>
                     <div>
                         <h3>Tier I Features</h3>
                         <SelectMultiple
                             defaultValue={tier1Features}
+                            extraWide={true}
                             numElementsAllowed={numTier1Features}
                             onChange={onTier1FeatureChange}
-                            options={dummyTier1Features}
+                            options={tier1FeaturesList}
                             placeholder={tier1FeaturesSelectDescriptor}
                         />
                     </div>
                 </Col>
                 {hasTier2Features && (
-                    <Col span={6}>
+                    <Col span={12}>
                         <div>
                             <h3>Tier II Features</h3>
                             <SelectMultiple
                                 defaultValue={tier2Features}
+                                extraWide={true}
                                 numElementsAllowed={numTier2Features}
                                 onChange={onTier2FeatureChange}
-                                options={dummyTier2Features}
+                                options={tier2FeaturesList}
                                 placeholder={tier2FeaturesSelectDescriptor}
                             />
                         </div>
