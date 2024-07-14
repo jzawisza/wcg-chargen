@@ -37,7 +37,7 @@ const CreateCharacter: React.FC = () => {
     return (
         <div>
             <div className="charSheetSelectorArea">
-            <p>Choose the type of character sheet you want to create.  This will reveal the Create Character button.  Press this button to generate your character sheet.</p>
+            <p>Choose the type of character sheet you want to create, and then click on the Create Character button to generate your character.</p>
             <p>Since this is just a mockup, <b>character creation is not working yet.</b>  Stay tuned...</p>
                 <div className="charSheetButtonCenter">
                     <Radio.Group buttonStyle="solid" onChange={onRadioGroupChange} value={charSheetType}>
@@ -50,11 +50,14 @@ const CreateCharacter: React.FC = () => {
                     {charSheetType === GOOGLE_SHEETS_SHEET_TYPE && (
                         <p className="charSheetDescription">Homebrew character sheet with dynamic calculation of modifiers</p>
                     )}
-                    {charSheetType !== null && (
-                        <div className="createCharButton">
-                            <Button type="primary" onClick={onCreateCharacter}>Create Character</Button>
-                        </div>
-                    )}
+                    <div className="createCharButton">
+                        <Button
+                            type="primary"
+                            disabled={charSheetType == null}
+                            onClick={onCreateCharacter}>
+                            Create Character
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

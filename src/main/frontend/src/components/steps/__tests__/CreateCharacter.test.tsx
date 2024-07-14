@@ -22,36 +22,44 @@ test('initial load displays buttons for choosing character sheet type', () => {
     expect(googleSheetButton).toBeTruthy();
 });
 
-test('initial load does not display Create Character button', () => {
+test('initial load displays Create Character button as disabled', () => {
     render(<CreateCharacter />);
 
-    expect(() => screen.getByText('CreateCharacter')).toThrow();
+    const createCharText = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
+    const createCharButton = createCharText.parentElement;
+
+    expect(createCharButton).toBeTruthy();
+    expect(createCharButton).toHaveProperty('disabled', true);
 })
 
-test('clicking on PDF button displays appropriate text and Create Character button', () => {
+test('clicking on PDF button displays appropriate text and enables Create Character button', () => {
     render(<CreateCharacter />);
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);
 
     const pdfText = screen.getByText('Official OSF character sheet');
-    const createCharButton = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
+    const createCharText = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
+    const createCharButton = createCharText.parentElement;
 
     expect(pdfText).toBeTruthy();
     expect(createCharButton).toBeTruthy();
+    expect(createCharButton).toHaveProperty('disabled', false);
 });
 
-test('clicking on Google Sheet button displays appropriate text and Create Character button', () => {
+test('clicking on Google Sheet button displays appropriate text and enables Create Character button', () => {
     render(<CreateCharacter />);
 
     const googleSheetButton = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT);
     fireEvent.click(googleSheetButton);
 
     const googleSheetText = screen.getByText('Homebrew character sheet with dynamic calculation of modifiers');
-    const createCharButton = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
+    const createCharText = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
+    const createCharButton = createCharText.parentElement;
 
     expect(googleSheetText).toBeTruthy();
     expect(createCharButton).toBeTruthy();
+    expect(createCharButton).toHaveProperty('disabled', false);
 });
 
 test('clicking Create Character button displays appropriate screen', async () => {
