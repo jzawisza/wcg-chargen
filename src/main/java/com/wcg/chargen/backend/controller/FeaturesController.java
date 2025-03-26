@@ -3,7 +3,6 @@ package com.wcg.chargen.backend.controller;
 import com.wcg.chargen.backend.constants.LevelConstants;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.service.FeaturesService;
-import com.wcg.chargen.backend.service.impl.DefaultCharClassesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

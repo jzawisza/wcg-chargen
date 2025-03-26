@@ -1,12 +1,18 @@
-import React, { MouseEvent, useState } from "react";
-import { Radio, RadioChangeEvent, Button, Result } from "antd";
+import React, { MouseEvent, useContext, useState } from "react";
+import { Radio, RadioChangeEvent, Button, Result, Modal } from "antd";
+import { useGoogleLogin } from "@react-oauth/google";
+import { CharacterContext } from "../../Context";
+import { invokeGoogleSheetsApi } from "../../server/ServerData";
+import { CreateCharacterRequestBuilder } from "../../server/CreateCharacterRequestBuilder";
 
 const PDF_SHEET_TYPE = 'pdf';
 const GOOGLE_SHEETS_SHEET_TYPE='googlesheets';
+const GOOGLE_SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
 const CreateCharacter: React.FC = () => {
     const [charSheetType, setCharSheetType] = useState<string | null>(null);
     const [charGenerated, setCharGenerated] = useState(false);
+    const { charName, charClass, species } = useContext(CharacterContext);
 
     const onRadioGroupChange = (e: RadioChangeEvent) => {
         setCharSheetType(e.target.value);
@@ -15,6 +21,27 @@ const CreateCharacter: React.FC = () => {
     const onCreateCharacter = (e: MouseEvent<HTMLElement>) => {
         setCharGenerated(true);
     };
+
+    const googleLogin = useGoogleLogin({
+        scope: GOOGLE_SHEETS_SCOPE,
+        onSuccess: (codeResponse) => {
+            const createCharacterRequest = new CreateCharacterRequestBuilder()
+                .withCharacterName(charName)
+                .withCharacterClass(charClass)
+                .withSpecies(species)
+                .build();
+            invokeGoogleSheetsApi(codeResponse.token_type, codeResponse.access_token, createCharacterRequest)
+                .then(status => {
+                    setCharGenerated(status);
+                    if (!status) {
+                        Modal.error({
+                            title: 'Error creating character sheet',
+                            content: 'Please retry this operation later.  If you get the same error, contact <CONTACT_INFO>.',
+                        });
+                    }
+                });
+        }
+    });
 
     // Display Result control showing status of operation if the operation has been performed
     if (charGenerated) {
@@ -54,7 +81,9 @@ const CreateCharacter: React.FC = () => {
                         <Button
                             type="primary"
                             disabled={charSheetType == null}
-                            onClick={onCreateCharacter}>
+                            onClick={charSheetType === GOOGLE_SHEETS_SHEET_TYPE ?
+                                () => googleLogin() :
+                                onCreateCharacter}>
                             Create Character
                         </Button>
                     </div>

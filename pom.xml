@@ -19,6 +19,7 @@
 		<java.version>21</java.version>
 		<jackson.dataformat.yaml.version>2.16.1</jackson.dataformat.yaml.version>
 		<commons-lang3.version>3.14.0</commons-lang3.version>
+		<google.api.services.sheets.version>v4-rev20250211-2.0.0</google.api.services.sheets.version>
 	</properties>
 
 	<dependencies>
@@ -45,8 +46,15 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>${commons-lang3.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-sheets</artifactId>
+			<version>${google.api.services.sheets.version}</version>
+		</dependency>
 
 
+
+		<!-- Test scoped dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
