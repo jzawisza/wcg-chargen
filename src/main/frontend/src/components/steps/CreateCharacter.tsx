@@ -18,8 +18,8 @@ const CreateCharacter: React.FC = () => {
         setCharSheetType(e.target.value);
     };
 
-    const onCreateCharacter = (e: MouseEvent<HTMLElement>) => {
-        setCharGenerated(true);
+    const onClickPdf = (e: MouseEvent<HTMLElement>) => {
+        // placeholder method for when PDF character sheet generation is ready
     };
 
     const googleLogin = useGoogleLogin({
@@ -40,6 +40,13 @@ const CreateCharacter: React.FC = () => {
                         });
                     }
                 });
+        },
+        onError: (errorResponse) => {
+            console.error(errorResponse);
+            Modal.error({
+                title: 'Error logging in',
+                content: 'Unable to log in to Google.'
+            });
         }
     });
 
@@ -65,10 +72,10 @@ const CreateCharacter: React.FC = () => {
         <div>
             <div className="charSheetSelectorArea">
             <p>Choose the type of character sheet you want to create, and then click on the Create Character button to generate your character.</p>
-            <p>Since this is just a mockup, <b>character creation is not working yet.</b>  Stay tuned...</p>
+            <p>PDF character sheet generation will be supported in a future version of this application.</p>
                 <div className="charSheetButtonCenter">
                     <Radio.Group buttonStyle="solid" onChange={onRadioGroupChange} value={charSheetType}>
-                        <Radio.Button value={PDF_SHEET_TYPE}>PDF</Radio.Button>
+                        <Radio.Button value={PDF_SHEET_TYPE} disabled>PDF</Radio.Button>
                         <Radio.Button value={GOOGLE_SHEETS_SHEET_TYPE}>Google Sheet</Radio.Button>
                     </Radio.Group>
                     {charSheetType === PDF_SHEET_TYPE && (
@@ -83,7 +90,7 @@ const CreateCharacter: React.FC = () => {
                             disabled={charSheetType == null}
                             onClick={charSheetType === GOOGLE_SHEETS_SHEET_TYPE ?
                                 () => googleLogin() :
-                                onCreateCharacter}>
+                                onClickPdf}>
                             Create Character
                         </Button>
                     </div>

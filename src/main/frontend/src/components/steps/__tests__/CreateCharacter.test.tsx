@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateCharacter from "../CreateCharacter";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import { ReactNode } from "react";
 
 beforeAll(() => {
     Object.defineProperty(window, 'location', {
@@ -13,7 +15,10 @@ const GOOGLE_SHEET_BUTTON_TEXT = 'Google Sheet';
 const CREATE_CHARACTER_BUTTON_TEXT = 'Create Character';
 
 test('initial load displays buttons for choosing character sheet type', () => {
-    render(<CreateCharacter />);
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+    );
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     const googleSheetButton = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT);
@@ -23,32 +28,35 @@ test('initial load displays buttons for choosing character sheet type', () => {
 });
 
 test('initial load displays Create Character button as disabled', () => {
-    render(<CreateCharacter />);
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+)   ;
 
     const createCharText = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
     const createCharButton = createCharText.parentElement;
 
     expect(createCharButton).toBeTruthy();
     expect(createCharButton).toHaveProperty('disabled', true);
-})
+});
 
-test('clicking on PDF button displays appropriate text and enables Create Character button', () => {
-    render(<CreateCharacter />);
+test('PDF button is disabled for the time being', () => {
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+    );
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
-    fireEvent.click(pdfButton);
 
-    const pdfText = screen.getByText('Official OSF character sheet');
-    const createCharText = screen.getByText(CREATE_CHARACTER_BUTTON_TEXT);
-    const createCharButton = createCharText.parentElement;
-
-    expect(pdfText).toBeTruthy();
-    expect(createCharButton).toBeTruthy();
-    expect(createCharButton).toHaveProperty('disabled', false);
+    expect(pdfButton).toBeTruthy();
+    expect(pdfButton.previousElementSibling?.classList.contains('ant-radio-button-disabled')).toBeTruthy();
 });
 
 test('clicking on Google Sheet button displays appropriate text and enables Create Character button', () => {
-    render(<CreateCharacter />);
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+    );
 
     const googleSheetButton = screen.getByText(GOOGLE_SHEET_BUTTON_TEXT);
     fireEvent.click(googleSheetButton);
@@ -62,8 +70,11 @@ test('clicking on Google Sheet button displays appropriate text and enables Crea
     expect(createCharButton).toHaveProperty('disabled', false);
 });
 
-test('clicking Create Character button displays appropriate screen', async () => {
-    render(<CreateCharacter />);
+test.skip('clicking Create Character button displays appropriate screen', async () => {
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+    );
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);
@@ -80,8 +91,11 @@ test('clicking Create Character button displays appropriate screen', async () =>
     });
 })
 
-test('clicking Create Another button reloads window', async () => {
-    render(<CreateCharacter />);
+test.skip('clicking Create Another button reloads window', async () => {
+    render(<GoogleOAuthProvider clientId="">
+            <CreateCharacter />
+        </GoogleOAuthProvider>
+    );
 
     const pdfButton = screen.getByText(PDF_BUTTON_TEXT);
     fireEvent.click(pdfButton);
