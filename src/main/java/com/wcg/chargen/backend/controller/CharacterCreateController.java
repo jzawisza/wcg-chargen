@@ -19,7 +19,7 @@ public class CharacterCreateController {
     private final Logger logger = LoggerFactory.getLogger(CharacterCreateController.class);
 
     @PostMapping("googlesheets")
-    public ResponseEntity<String> createCharacter(@RequestHeader(name = HttpHeaders.AUTHORIZATION) String bearerToken,
+    public ResponseEntity<String> createCharacterGoogle(@RequestHeader(name = HttpHeaders.AUTHORIZATION) String bearerToken,
                                           @RequestBody CharacterCreateRequest characterCreateRequest) {
         try {
             var status = googleSheetsCharacterCreateService.createCharacter(characterCreateRequest, bearerToken);
