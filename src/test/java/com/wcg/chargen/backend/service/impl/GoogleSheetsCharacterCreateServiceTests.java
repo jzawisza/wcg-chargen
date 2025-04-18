@@ -11,12 +11,17 @@ import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCrea
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -105,5 +110,40 @@ public class GoogleSheetsCharacterCreateServiceTests {
         assertTrue(title.startsWith("SomeName_HUMAN_MYSTIC"));
         var timestampStr = title.substring(22);
         assertTrue(timestampStr.matches("[0-9]+"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("charTypesAndExpectedNumberOfSheets")
+    public void createCharacter_GeneratesSpreadsheetWithCorrectNumberOfSheets(CharType charType, int expectedNumSheets) {
+        var request = new CharacterCreateRequest("SomeName", charType, SpeciesType.HUMAN);
+
+        Mockito.when(characterCreateRequestValidatorService.validate(request))
+                .thenReturn(CharacterCreateStatus.SUCCESS);
+        Mockito.when(googleSheetsApiService.createSpreadsheet(any(), any()))
+                .thenReturn("");
+
+        var status = googleSheetsCharacterCreateService.createCharacter(request, "");
+
+        final ArgumentCaptor<Spreadsheet> captor = ArgumentCaptor.forClass(Spreadsheet.class);
+        verify(googleSheetsApiService).createSpreadsheet(captor.capture(), any());
+        final Spreadsheet spreadsheet = captor.getValue();
+
+        assertTrue(status.isSuccess());
+        assertNotNull(spreadsheet);
+        assertNotNull(spreadsheet.getSheets());
+        assertEquals(expectedNumSheets, spreadsheet.getSheets().size());
+    }
+
+    static Stream<Arguments> charTypesAndExpectedNumberOfSheets() {
+        return Stream.of(
+                Arguments.arguments(CharType.BERZERKER, 3),
+                Arguments.arguments(CharType.MAGE, 4),
+                Arguments.arguments(CharType.MYSTIC, 3),
+                Arguments.arguments(CharType.RANGER, 3),
+                Arguments.arguments(CharType.ROGUE, 3),
+                Arguments.arguments(CharType.SHAMAN, 4),
+                Arguments.arguments(CharType.SKALD, 4),
+                Arguments.arguments(CharType.WARRIOR, 3)
+        );
     }
 }
