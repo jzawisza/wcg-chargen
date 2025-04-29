@@ -1,10 +1,6 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
-import com.google.api.services.sheets.v4.model.Sheet;
-import com.google.api.services.sheets.v4.model.SheetProperties;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
-import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
-import com.wcg.chargen.backend.enums.CharType;
+import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
@@ -19,17 +15,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.wcg.chargen.backend.util.GoogleSheetsUtil.*;
+
 @Service
 public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateService {
-    private static final String STATS_SHEET_TITLE = "Stats";
-    private static final String SPELLS_SHEET_TITLE = "Spells";
-    private static final String FEATURES_SHEET_TITLE = "Class/Species Features";
-    private static final String GEAR_SHEET_TITLE = "Gear";
-
-    private static final List<CharType> MAGIC_USERS_LIST = new ArrayList<CharType>(
-            List.of(CharType.MAGE, CharType.SHAMAN, CharType.SKALD)
-    );
-
     private final Logger logger = LoggerFactory.getLogger(GoogleSheetsCharacterCreateService.class);
     @Autowired
     GoogleSheetsApiService googleSheetsApiService;
@@ -38,6 +27,7 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     public CharacterCreateStatus doCreateCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
         try {
             var spreadsheet = buildSpreadsheet(characterCreateRequest);
+            logger.debug("Spreadsheet to create = {}", spreadsheet);
             var spreadsheetId = googleSheetsApiService.createSpreadsheet(spreadsheet, bearerToken);
 
             if (spreadsheetId == null) {
@@ -77,25 +67,20 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private List<Sheet> buildSheets(CharacterCreateRequest characterCreateRequest) {
         var sheetList = new ArrayList<Sheet>();
 
-        var statsSheet = buildSheetWithTitle(STATS_SHEET_TITLE);
+        var statsSheet = buildStatsSheet(characterCreateRequest);
         sheetList.add(statsSheet);
 
-        if(MAGIC_USERS_LIST.contains(characterCreateRequest.characterClass())) {
-            var spellsSheet = buildSheetWithTitle(SPELLS_SHEET_TITLE);
+        if(characterCreateRequest.characterClass().isMagicUser()) {
+            var spellsSheet = buildSpellsSheet();
             sheetList.add(spellsSheet);
         }
 
-        var featuresSheet = buildSheetWithTitle(FEATURES_SHEET_TITLE);
+        var featuresSheet = buildFeaturesSheet();
         sheetList.add(featuresSheet);
 
-        var gearSheet = buildSheetWithTitle(GEAR_SHEET_TITLE);
+        var gearSheet = buildGearSheet();
         sheetList.add(gearSheet);
 
         return sheetList;
-    }
-
-    private Sheet buildSheetWithTitle(String title)
-    {
-        return new Sheet().setProperties(new SheetProperties().setTitle(title));
     }
 }

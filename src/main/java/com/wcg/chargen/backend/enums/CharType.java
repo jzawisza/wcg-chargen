@@ -18,4 +18,9 @@ public enum CharType {
     public String toString() {
         return name().toLowerCase();
     }
+
+    public boolean isMagicUser() {
+        return this == CharType.MAGE ||
+                this == CharType.SHAMAN;
+    }
 }

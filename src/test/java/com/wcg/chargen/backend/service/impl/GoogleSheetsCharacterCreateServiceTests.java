@@ -142,7 +142,7 @@ public class GoogleSheetsCharacterCreateServiceTests {
                 Arguments.arguments(CharType.RANGER, 3),
                 Arguments.arguments(CharType.ROGUE, 3),
                 Arguments.arguments(CharType.SHAMAN, 4),
-                Arguments.arguments(CharType.SKALD, 4),
+                Arguments.arguments(CharType.SKALD, 3),
                 Arguments.arguments(CharType.WARRIOR, 3)
         );
     }
