@@ -2,6 +2,7 @@ package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class CharacterCreateController {
 
     @PostMapping("googlesheets")
     public ResponseEntity<String> createCharacterGoogle(@RequestHeader(name = HttpHeaders.AUTHORIZATION) String bearerToken,
-                                          @RequestBody CharacterCreateRequest characterCreateRequest) {
+                                          @Valid @RequestBody CharacterCreateRequest characterCreateRequest) {
         try {
             var status = googleSheetsCharacterCreateService.createCharacter(characterCreateRequest, bearerToken);
             if (status.isSuccess()) {

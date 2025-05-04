@@ -1,5 +1,7 @@
 package com.wcg.chargen.backend.enums;
 
+import org.apache.commons.lang3.StringUtils;
+
 public enum SpeciesType {
     DWARF,
     ELF,
@@ -14,4 +16,8 @@ public enum SpeciesType {
     public String toString() {
         return name().toLowerCase();
     }
+
+    public String toCharSheetString() { return StringUtils.capitalize(toString() );
+    }
+
 }

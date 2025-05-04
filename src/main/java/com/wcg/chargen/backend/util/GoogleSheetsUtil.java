@@ -2,6 +2,8 @@ package com.wcg.chargen.backend.util;
 
 import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.SpeciesType;
+import com.wcg.chargen.backend.model.CharacterCreateInfo;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_BOLD);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
@@ -64,25 +66,37 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_BOLD);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
 
         public RowBuilder addCellWithText(String cellText) {
-            addCellToList(new ExtendedValue().setStringValue(cellText), null);
+            addCellToList(new ExtendedValue().setStringValue(cellText), null, null);
+
+            return this;
+        }
+
+        public RowBuilder addCellWithText(String cellText, DataValidationRule dataValidationRule) {
+            addCellToList(new ExtendedValue().setStringValue(cellText), null, dataValidationRule);
 
             return this;
         }
 
         public RowBuilder addCellWithNumber(double cellNumber) {
-            addCellToList(new ExtendedValue().setNumberValue(cellNumber), null);
+            addCellToList(new ExtendedValue().setNumberValue(cellNumber), null, null);
+
+            return this;
+        }
+
+        public RowBuilder addCellWithNumber(double cellNumber, DataValidationRule dataValidationRule) {
+            addCellToList(new ExtendedValue().setNumberValue(cellNumber), null, dataValidationRule);
 
             return this;
         }
 
         public RowBuilder addCellWithFormula(String formula) {
-            addCellToList(new ExtendedValue().setFormulaValue(formula), null);
+            addCellToList(new ExtendedValue().setFormulaValue(formula), null, null);
 
             return this;
         }
@@ -93,7 +107,7 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
@@ -104,7 +118,7 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
@@ -115,7 +129,7 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
@@ -126,7 +140,7 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat);
+            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
 
             return this;
         }
@@ -137,7 +151,8 @@ public class GoogleSheetsUtil {
             return this;
         }
 
-        private void addCellToList(ExtendedValue cellValue, CellFormat cellFormat) {
+        private void addCellToList(ExtendedValue cellValue, CellFormat cellFormat,
+                                   DataValidationRule dataValidationRule) {
             var newCell = new CellData().setUserEnteredValue(cellValue);
 
             CellFormat formatToApply;
@@ -153,6 +168,7 @@ public class GoogleSheetsUtil {
             }
 
             newCell.setUserEnteredFormat(formatToApply);
+            newCell.setDataValidation(dataValidationRule);
 
             rowCells.add(newCell);
         }
@@ -234,8 +250,10 @@ public class GoogleSheetsUtil {
      METHODS FOR BUILDING SHEETS
      ****************************/
 
-    public static Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
+    public static Sheet buildStatsSheet(CharacterCreateInfo characterCreateInfo) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
+        var characterCreateRequest = characterCreateInfo.characterCreateRequest();
+        var isClassCharacter = (characterCreateRequest.level() > 0);
 
         // Block with basic information and money sections
         var row1 = new RowBuilder()
@@ -262,12 +280,18 @@ public class GoogleSheetsUtil {
                 .addCellWithText("")
                 .build();
 
+        var profession = isClassCharacter ? "" : characterCreateRequest.profession();
+        var charClass = isClassCharacter ? characterCreateRequest.characterClass().toCharSheetString() : "";
         var row3 = new RowBuilder()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
+                .addCellWithText(characterCreateRequest.characterName())
+                .addCellWithText(characterCreateRequest.species().toCharSheetString(),
+                        buildSpeciesDataValidation())
+                .addCellWithNumber(characterCreateRequest.level(),
+                        buildLevelDataValidation(characterCreateRequest.level()))
+                .addCellWithText(profession,
+                        buildProfessionDataValidation(characterCreateInfo.professions()))
+                .addCellWithText(charClass,
+                        buildCharClassDataValidation())
                 .addCellWithText("")
                 .addEmptyCell()
                 .addHighlightedCellWithText("SP")
@@ -397,7 +421,8 @@ public class GoogleSheetsUtil {
 
         // If the character is a magic user, we have Spell under the list of attack modifiers.
         // Otherwise, we just have Melee and Ranged.
-        var isMagicUser = characterCreateRequest.characterClass().isMagicUser();
+        var isMagicUser = characterCreateRequest.characterClass() != null &&
+                characterCreateRequest.characterClass().isMagicUser();
         if (isMagicUser) {
             row9Builder = row9Builder
                     .addSecondaryHeaderCell("Spell");
@@ -520,6 +545,70 @@ public class GoogleSheetsUtil {
         sheet.setData(Collections.singletonList(gridData));
 
         return sheet;
+    }
+
+    private static DataValidationRule buildSpeciesDataValidation() {
+        var condition = new BooleanCondition();
+        condition.setType("ONE_OF_LIST");
+        var speciesValues = new ArrayList<ConditionValue>();
+        for (var species : SpeciesType.values()) {
+            var conditionValue = new ConditionValue();
+            conditionValue.setUserEnteredValue(species.toCharSheetString());
+            speciesValues.add(conditionValue);
+        }
+        condition.setValues(speciesValues);
+
+        var dataValidationRule = new DataValidationRule();
+        dataValidationRule.setShowCustomUi(true);
+        dataValidationRule.setCondition(condition);
+
+        return dataValidationRule;
+    }
+
+    private static DataValidationRule buildLevelDataValidation(int level) {
+        var condition = new BooleanCondition();
+        condition.setType("NUMBER_BETWEEN");
+        var levelValues = new ArrayList<ConditionValue>();
+        // Don't allow class characters to select level 0 as an option
+        var minAllowedLevel = (level > 0) ? "1" : "0";
+        levelValues.add(new ConditionValue().setUserEnteredValue(minAllowedLevel));
+        levelValues.add(new ConditionValue().setUserEnteredValue("7"));
+        condition.setValues(levelValues);
+
+        return buildDataValidationRuleWithCondition(condition);
+    }
+
+    private static DataValidationRule buildProfessionDataValidation(List<String> professions) {
+        var condition = new BooleanCondition();
+        condition.setType("ONE_OF_LIST");
+        var professionValues = professions.stream()
+                        .map(x -> new ConditionValue().setUserEnteredValue(x))
+                        .toList();
+        condition.setValues(professionValues);
+
+        return buildDataValidationRuleWithCondition(condition);
+    }
+
+    private static DataValidationRule buildCharClassDataValidation() {
+        var condition = new BooleanCondition();
+        condition.setType("ONE_OF_LIST");
+        var charClassValues = new ArrayList<ConditionValue>();
+        for (var charClass : CharType.values()) {
+            var conditionValue = new ConditionValue();
+            conditionValue.setUserEnteredValue(charClass.toCharSheetString());
+            charClassValues.add(conditionValue);
+        }
+        condition.setValues(charClassValues);
+
+        return buildDataValidationRuleWithCondition(condition);
+    }
+
+    private static DataValidationRule buildDataValidationRuleWithCondition(BooleanCondition condition) {
+        var dataValidationRule = new DataValidationRule();
+        dataValidationRule.setShowCustomUi(true);
+        dataValidationRule.setCondition(condition);
+
+        return dataValidationRule;
     }
 
     public static Sheet buildSpellsSheet() {

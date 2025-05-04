@@ -1,10 +1,13 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.model.CharacterCreateInfo;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
+import com.wcg.chargen.backend.model.Profession;
 import com.wcg.chargen.backend.service.GoogleSheetsApiService;
+import com.wcg.chargen.backend.service.ProfessionsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,8 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private final Logger logger = LoggerFactory.getLogger(GoogleSheetsCharacterCreateService.class);
     @Autowired
     GoogleSheetsApiService googleSheetsApiService;
+    @Autowired
+    ProfessionsService professionsService;
 
     @Override
     public CharacterCreateStatus doCreateCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
@@ -50,10 +55,14 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private Spreadsheet buildSpreadsheet(CharacterCreateRequest characterCreateRequest) {
         var currentDateTime = LocalDateTime.now();
         var dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+        var classOrProfession = (characterCreateRequest.level() > 0) ?
+                characterCreateRequest.characterClass().toString().toUpperCase() :
+                characterCreateRequest.profession().toUpperCase();
         var title = String.format("%s_%s_%s_%s",
                 characterCreateRequest.characterName(),
                 characterCreateRequest.species().toString().toUpperCase(),
-                characterCreateRequest.characterClass().toString().toUpperCase(),
+                classOrProfession,
                 currentDateTime.format(dateTimeFormatter));
 
         var spreadsheet = new Spreadsheet()
@@ -67,10 +76,16 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private List<Sheet> buildSheets(CharacterCreateRequest characterCreateRequest) {
         var sheetList = new ArrayList<Sheet>();
 
-        var statsSheet = buildStatsSheet(characterCreateRequest);
+        var professionsList = professionsService.getAllProfessions().professions().stream()
+                        .map(Profession::name)
+                        .toList();
+        var characterCreateInfo = new CharacterCreateInfo(characterCreateRequest, professionsList);
+
+        var statsSheet = buildStatsSheet(characterCreateInfo);
         sheetList.add(statsSheet);
 
-        if(characterCreateRequest.characterClass().isMagicUser()) {
+        if(characterCreateRequest.characterClass() != null &&
+                characterCreateRequest.characterClass().isMagicUser()) {
             var spellsSheet = buildSpellsSheet();
             sheetList.add(spellsSheet);
         }

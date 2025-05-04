@@ -6,8 +6,11 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
+import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
@@ -18,6 +21,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -32,8 +37,22 @@ public class CharacterCreateControllerTests {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final CharacterCreateRequest VALID_CHARACTER_CREATE_REQUEST =
-            new CharacterCreateRequest("Test", CharType.MAGE, SpeciesType.DWARF);
+    private static final CharacterCreateRequest VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS =
+            CharacterCreateRequestBuilder.getBuilder()
+                    .withCharacterName("Test")
+                    .withCharacterType(CharType.MAGE)
+                    .withSpeciesType(SpeciesType.DWARF)
+                    .withProfession(null)
+                    .withLevel(1)
+                    .build();
+    private static final CharacterCreateRequest VALID_CHARACTER_CREATE_REQUEST_WITH_PROFESSION =
+            CharacterCreateRequestBuilder.getBuilder()
+                    .withCharacterName("Test")
+                    .withCharacterType(null)
+                    .withSpeciesType(SpeciesType.DWARF)
+                    .withProfession("TestProfession")
+                    .withLevel(0)
+                    .build();
     private static final String DUMMY_BEARER_TOKEN = "some token";
     private static final String GOOGLE_SHEETS_URL = "/api/v1/createcharacter/googlesheets";
 
@@ -42,6 +61,7 @@ public class CharacterCreateControllerTests {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content("not valid JSON")
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -58,7 +78,7 @@ public class CharacterCreateControllerTests {
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
-                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST))
+                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isBadRequest());
@@ -71,15 +91,93 @@ public class CharacterCreateControllerTests {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"rogue", "Rogue", "roGUE"})
-    public void createCharacterGoogle_Returns400IfRequestCharacterClassIsNullEmptyOrInvalid(String characterClass) {
-        var requestJson = "{\"characterName\": \"Name\", \"species\": \"ELF\", \"characterClass\": \""
-                + characterClass
-                + "\"}";
+    public void createCharacterGoogle_Returns400IfCharacterNameIsNullOrEmpty(String characterName) {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(characterName)
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(1)
+                .build();
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(request))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void createCharacterGoogle_Returns400IfLevelIsNull() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.MAGE)
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(null)
+                .build();
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(request))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void createCharacterGoogle_Returns400IfSpeciesIsNull() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.MAGE)
+                .withSpeciesType(null)
+                .withProfession("Test")
+                .withLevel(1)
+                .build();
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(request))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "rogue", "Rogue", "roGUE"})
+    public void createCharacterGoogle_Returns400IfRequestCharacterClassStringCannotBeConvertedToEnumValue(String characterClass) {
+        var requestJson = "{\"characterName\": \"Name\", \"species\": \"ELF\", \"characterClass\": \""
+                + characterClass
+                + "\", \"level\": 1}";
+
+        try {
+            System.out.println(requestJson);
+
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(requestJson)
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -92,16 +190,16 @@ public class CharacterCreateControllerTests {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {"elf", "Elf", "eLF"})
-    public void createCharacterGoogle_Returns400IfSpeciesIsNullEmptyOrInvalid(String species) {
+    @ValueSource(strings = {"", "elf", "Elf", "eLF"})
+    public void createCharacterGoogle_Returns400IfRequestSpeciesStringCannotBeConvertedToEnumValue(String species) {
         var requestJson = "{\"characterName\": \"Name\", \"characterClass\": \"SKALD\", \"species\": \""
                 + species
-                + "\"}";
+                + "\", \"level\": 1}";
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(requestJson)
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -118,15 +216,15 @@ public class CharacterCreateControllerTests {
         var status = new CharacterCreateStatus(false, expectedErrMsg);
 
         Mockito.when(
-            googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST,
+            googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS,
                     DUMMY_BEARER_TOKEN))
             .thenReturn(status);
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
                     .post(GOOGLE_SHEETS_URL)
-                    .header(HttpHeaders.AUTHORIZATION, "some token")
-                    .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST))
+                    .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                    .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
@@ -141,7 +239,7 @@ public class CharacterCreateControllerTests {
     @Test
     public void createCharacterGoogle_Returns500IfGoogleServiceThrowsException() {
         Mockito.when(
-            googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST,
+            googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS,
                     DUMMY_BEARER_TOKEN))
             .thenThrow(new RuntimeException());
 
@@ -149,7 +247,7 @@ public class CharacterCreateControllerTests {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
-                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST))
+                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isInternalServerError());
@@ -160,18 +258,20 @@ public class CharacterCreateControllerTests {
         }
     }
 
-    @Test
-    public void createCharacterGoogle_Returns200OnSuccess() {
+    @ParameterizedTest
+    @MethodSource("validCharacterCreateRequests")
+    public void createCharacterGoogle_Returns200OnSuccessIfRequestIsValid(CharacterCreateRequest validRequest) {
         Mockito.when(
-            googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST,
+            googleSheetsCharacterCreateService.createCharacter(validRequest,
                     DUMMY_BEARER_TOKEN))
             .thenReturn(CharacterCreateStatus.SUCCESS);
 
         try {
+            System.out.println(objectMapper.writeValueAsString(validRequest));
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
-                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST))
+                            .content(objectMapper.writeValueAsString(validRequest))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -180,5 +280,12 @@ public class CharacterCreateControllerTests {
             e.printStackTrace();
             fail();
         }
+    }
+
+    static Stream<Arguments> validCharacterCreateRequests() {
+        return Stream.of(
+                Arguments.arguments(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS),
+                Arguments.arguments(VALID_CHARACTER_CREATE_REQUEST_WITH_PROFESSION)
+        );
     }
 }
