@@ -138,4 +138,102 @@ public class TestInvalidYamlLoaderServices
             return "feature-invalid-dadv-modifier-any.yml";
         }
     }
+
+    public static class NoAttackModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-attack-modifiers.yml";
+        }
+    }
+
+    public static class EmptyAttackModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "empty-attack-modifiers.yml";
+        }
+    }
+
+    public static class TooFewAttackModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "too-few-attack-modifiers.yml";
+        }
+    }
+
+    public static class TooManyAttackModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "too-many-attack-modifiers.yml";
+        }
+    }
+
+    public static class NoEvasionModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-evasion-modifiers.yml";
+        }
+    }
+
+    public static class EmptyEvasionModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "empty-evasion-modifiers.yml";
+        }
+    }
+
+    public static class TooFewEvasionModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "too-few-evasion-modifiers.yml";
+        }
+    }
+
+    public static class TooManyEvasionModifiers extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "too-many-evasion-modifiers.yml";
+        }
+    }
+
+    public static class NoLevel1Hp extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-level-1-hp.yml";
+        }
+    }
+
+    public static class NoMaxHpAtLevelUp extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-max-hp-at-level-up.yml";
+        }
+    }
+
+    public static class InvalidMaxHpAtLevelUp extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "invalid-max-hp-at-level-up.yml";
+        }
+    }
+
+    public static class NoSkills extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-skills.yml";
+        }
+    }
+
+    public static class EmptySkills extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "empty-skills.yml";
+        }
+    }
+
+    public static class InvalidSkill extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "invalid-skill.yml";
+        }
+    }
 }

@@ -314,7 +314,7 @@ public class GoogleSheetsUtil {
                 .addCellWithFormula("=MAX(B10,B13)")
                 .addCellWithText("")
                 .addCellWithFormula("=SUM(B10)")
-                .addCellWithText("")
+                .addCellWithText("20")  // Hardcode this for now
                 .addCellWithText("")
                 .addCellWithText("")
                 .build();

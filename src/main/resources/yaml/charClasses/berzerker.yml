@@ -1,4 +1,8 @@
 type: "berzerker"
+attackModifiers: [1, 2, 2, 3, 4, 4, 5]
+evasionModifiers: [12, 12, 13, 14, 14, 15, 16]
+level1Hp: 12
+maxHpAtLevelUp: 4
 skills:
   - Athletics
   - Intimidation

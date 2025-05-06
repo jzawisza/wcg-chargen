@@ -1,4 +1,8 @@
 type: "shaman"
+attackModifiers: [0, 1, 1, 2, 3, 3, 4]
+evasionModifiers: [11, 11, 12, 12, 13, 13, 14]
+level1Hp: 7
+maxHpAtLevelUp: 3
 skills:
   - Animal Expertise
   - Arcana

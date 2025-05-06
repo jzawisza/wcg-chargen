@@ -1,4 +1,8 @@
 type: "mystic"
+attackModifiers: [1, 2, 2, 3, 4, 4, 5]
+evasionModifiers: [11, 12, 13, 14, 15, 16, 17]
+level1Hp: 10
+maxHpAtLevelUp: 4
 skills:
   - Athletics
   - Religion

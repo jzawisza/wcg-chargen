@@ -1,4 +1,8 @@
 type: "warrior"
+attackModifiers: [1, 2, 3, 4, 5, 6, 7]
+evasionModifiers: [12, 13, 14, 15, 16, 17, 18]
+level1Hp: 10
+maxHpAtLevelUp: 4
 skills:
   - Animal Expertise
   - Athletics

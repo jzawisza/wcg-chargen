@@ -1,6 +1,5 @@
 type: "berzerker"
-attackModifiers: [1, 2, 3, 4, 5, 6, 7]
-evasionModifiers: [12, 13, 14, 15, 16, 17, 18]
+attackModifiers: [1, 2, 2, 3, 4, 4, 5]
 level1Hp: 10
 maxHpAtLevelUp: 4
 skills:
@@ -31,7 +30,7 @@ features:
     - description: "Two melee strikes per round"
       attributes: []
     - description: "Tough: +4 Extra HP & Double ADV with STA checks"
-      attributes: [{type: 'BONUS_HP', modifier: '4'}, {type: 'DADV', modifier: 'Not A Skill' }]
+      attributes: [{type: 'BONUS_HP', modifier: '4'}, {type: 'DADV', modifier: 'STA' }]
     - description: "Natural DA +1. Cumulative with any other bonuses"
       attributes: [ { type: 'DA_PLUS_1', modifier: 'ANY' } ]
     - description: "Critical Hit on Natural 19 or 20"

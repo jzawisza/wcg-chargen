@@ -153,7 +153,49 @@ public class DefaultCharClassesServiceTests {
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierAny()),
                     "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Any found for ADV/DADV value type"
-            )
+            ),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoAttackModifiers()),
+                    "Character class type berzerker has null or empty attack modifier list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.EmptyAttackModifiers()),
+                    "Character class type berzerker has null or empty attack modifier list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooFewAttackModifiers()),
+                    "Character class type berzerker attack modifier list has 4 elements: expected 7"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooManyAttackModifiers()),
+                    "Character class type berzerker attack modifier list has 8 elements: expected 7"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoEvasionModifiers()),
+                    "Character class type berzerker has null or empty evasion modifier list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.EmptyEvasionModifiers()),
+                    "Character class type berzerker has null or empty evasion modifier list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooFewEvasionModifiers()),
+                    "Character class type berzerker evasion modifier list has 4 elements: expected 7"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooManyEvasionModifiers()),
+                    "Character class type berzerker evasion modifier list has 8 elements: expected 7"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoLevel1Hp()),
+                    "Character class type berzerker has null level 1 HP"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoMaxHpAtLevelUp()),
+                    "Max HP at level up for character class type berzerker is null: expected 3 or 4"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidMaxHpAtLevelUp()),
+                    "Max HP at level up for character class type berzerker is 2: expected 3 or 4"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoSkills()),
+                    "Character class type berzerker has null or empty skills list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.EmptySkills()),
+                    "Character class type berzerker has null or empty skills list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkill()),
+                    "Character class type berzerker has unknown skill NotASkill")
         );
     }
 }

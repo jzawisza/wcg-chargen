@@ -1,4 +1,8 @@
 type: "skald"
+attackModifiers: [0, 1, 2, 2, 3, 3, 4]
+evasionModifiers: [11, 12, 12, 13, 13, 14, 14]
+level1Hp: 7
+maxHpAtLevelUp: 3
 skills:
   - Culture
   - Deceit

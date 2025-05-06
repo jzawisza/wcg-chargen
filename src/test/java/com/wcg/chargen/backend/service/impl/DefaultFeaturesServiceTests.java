@@ -81,7 +81,8 @@ public class DefaultFeaturesServiceTests {
             var skillsList = new ArrayList<String>();
             var featureList = new ArrayList<Feature>();
             var features = new Features(featureList, featureList);
-            var charClass = new CharClass("test", skillsList, features);
+            var charClass = new CharClass("test", null, null,
+                    null, null, skillsList, features);
 
             when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);
         }

@@ -1,4 +1,8 @@
 type: "rogue"
+attackModifiers: [0, 1, 1, 2, 3, 3, 4]
+evasionModifiers: [11, 12, 13, 13, 14, 15, 15]
+level1Hp: 8
+maxHpAtLevelUp: 3
 skills:
   - Appraisal
   - Athletics

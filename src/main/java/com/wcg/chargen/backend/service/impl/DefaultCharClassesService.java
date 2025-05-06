@@ -31,6 +31,11 @@ public class DefaultCharClassesService implements CharClassesService {
 
     private static final String ROGUE_ANY = "Any";
 
+    private static final int NUM_LEVELS = 7;
+
+    private static final int HP_PER_LEVEL_VALUE_1 = 3;
+    private static final int HP_PER_LEVEL_VALUE_2 = 4;
+
     @Autowired
     public DefaultCharClassesService(List<CharClassYamlLoaderService> charClassYamlLoaderServiceList,
                                      SkillsProvider skillsProvider) {
@@ -52,30 +57,85 @@ public class DefaultCharClassesService implements CharClassesService {
                 var charType = CharType.valueOf(charClass.type().toUpperCase());
                 charClassTypeMap.put(charType, charClass);
 
+                // Validate that lists of attack and evasion modifiers have correct number of elements
+                if (charClass.attackModifiers() == null || charClass.attackModifiers().isEmpty()) {
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null or empty attack modifier list");
+                }
+                if (charClass.attackModifiers().size() != NUM_LEVELS) {
+                    throw new IllegalStateException("Character class type " + charClass.type() +
+                            " attack modifier list has " + charClass.attackModifiers().size()
+                            + " elements: expected " + NUM_LEVELS);
+                }
+
+                if (charClass.evasionModifiers() == null || charClass.evasionModifiers().isEmpty()) {
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null or empty evasion modifier list");
+                }
+                if (charClass.evasionModifiers().size() != NUM_LEVELS) {
+                    throw new IllegalStateException("Character class type " + charClass.type() +
+                            " evasion modifier list has " + charClass.evasionModifiers().size()
+                            + " elements: expected " + NUM_LEVELS);
+                }
+
+                // Validate that level 1 HP is not null
+                if (charClass.level1Hp() == null) {
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null level 1 HP");
+                }
+
+                // Validate that max HP per level up is one of 2 known values
+                if (charClass.maxHpAtLevelUp() == null || (
+                        charClass.maxHpAtLevelUp() != HP_PER_LEVEL_VALUE_1
+                        && charClass.maxHpAtLevelUp() != HP_PER_LEVEL_VALUE_2)) {
+                    System.out.println("Got here");
+                    throw new IllegalStateException("Max HP at level up for character class type "
+                        + charClass.type() + " is " + charClass.maxHpAtLevelUp()
+                        + ": expected " + HP_PER_LEVEL_VALUE_1 + " or " + HP_PER_LEVEL_VALUE_2);
+                }
+
+                // Validate that skills list is not empty and that all listed skills are valid
+                if (charClass.skills() == null || charClass.skills().isEmpty()) {
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null or empty skills list");
+                }
+
+                for (var charSkill : charClass.skills()) {
+                    if (skillsProvider.getByName(charSkill) == null) {
+                        throw new IllegalStateException("Character class type " + charClass.type()
+                                + " has unknown skill " + charSkill);
+                    }
+                }
+
                 // Validate that all features have correct attribute data
                 if (charClass.features() == null) {
-                    throw new IllegalStateException("Character class type " + charClass.type() + " has null feature data");
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null feature data");
                 }
 
                 var tier1ErrMsg = checkFeaturesForErrors(charClass.features().tier1(), charType);
                 if (tier1ErrMsg != null) {
-                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier I feature data: " + tier1ErrMsg);
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has invalid Tier I feature data: " + tier1ErrMsg);
                 }
 
                 var tier2ErrMsg = checkFeaturesForErrors(charClass.features().tier2(), charType);
                 if (tier2ErrMsg != null) {
-                    throw new IllegalStateException("Character class type " + charClass.type() + " has invalid Tier II feature data: " + tier2ErrMsg);
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has invalid Tier II feature data: " + tier2ErrMsg);
                 }
             }
             catch (IllegalArgumentException e) {
-                throw new IllegalStateException("Character class type " + charClass.type() + " found in YAML file " + yamlFile + " is not valid");
+                throw new IllegalStateException("Character class type " + charClass.type()
+                        + " found in YAML file " + yamlFile + " is not valid");
             }
         }
 
         // Ensure that we have one character class for each character type
         for (var charType : CharType.values()) {
             if (charClassTypeMap.get(charType) == null) {
-                throw new IllegalStateException("No entry for character type " + charType.toString() + " in character class type map");
+                throw new IllegalStateException("No entry for character type " + charType.toString()
+                        + " in character class type map");
             }
         }
     }
