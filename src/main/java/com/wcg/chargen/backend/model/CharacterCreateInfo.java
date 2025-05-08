@@ -10,5 +10,7 @@ import java.util.List;
  * @param professions               List of all valid professions
  */
 public record CharacterCreateInfo(CharacterCreateRequest characterCreateRequest,
-                                  List<String> professions) {
+                                  List<String> professions,
+                                  int attack,
+                                  int evasion) {
 }

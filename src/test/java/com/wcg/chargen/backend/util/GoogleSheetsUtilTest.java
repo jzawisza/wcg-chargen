@@ -590,6 +590,36 @@ public class GoogleSheetsUtilTest {
                 expectedCharClassValuesList);
     }
 
+    @Test
+    public void buildStatsSheet_AttackAndEvasionArePopulatedCorrectly() {
+        // arrange
+        var expectedAttack = 3;
+        var expectedEvasion = 14;
+        var expectedEvasionFormula = String.format("=SUM(%d,B10)", expectedEvasion);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .build();
+        var info = new CharacterCreateInfoBuilder()
+                .withCharacterCreateRequest(request)
+                .withAttack(expectedAttack)
+                .withEvasion(expectedEvasion)
+                .build();
+
+        // act
+        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
+
+        // assert
+        var attackValue = getCellValueFromSheet(sheet, 4, 1);
+        assertEquals((double)expectedAttack, attackValue.getNumberValue());
+
+        var evasionValue = getCellValueFromSheet(sheet, 4, 2);
+        assertEquals(expectedEvasionFormula, evasionValue.getFormulaValue());
+    }
+
     private void assertConditionValueListHasAllValuesFromList(DataValidationRule dataValidationRule,
                                                               List<String> expectedValues) {
         assertNotNull(dataValidationRule);
@@ -690,6 +720,8 @@ public class GoogleSheetsUtilTest {
     private class CharacterCreateInfoBuilder {
         private CharacterCreateRequest characterCreateRequest = null;
         private List<String> professionsList = new ArrayList<>();
+        private int attack = -1;
+        private int evasion = -1;
 
         public CharacterCreateInfoBuilder withCharacterCreateRequest(CharacterCreateRequest characterCreateRequest) {
             this.characterCreateRequest = characterCreateRequest;
@@ -703,8 +735,21 @@ public class GoogleSheetsUtilTest {
             return this;
         }
 
+        public CharacterCreateInfoBuilder withAttack(int attack) {
+            this.attack = attack;
+
+            return this;
+        }
+
+        public CharacterCreateInfoBuilder withEvasion(int evasion) {
+            this.evasion = evasion;
+
+            return this;
+        }
+
         public CharacterCreateInfo build() {
-            return new CharacterCreateInfo(characterCreateRequest, professionsList);
+            return new CharacterCreateInfo(characterCreateRequest,
+                    professionsList, attack, evasion);
         }
     }
 }

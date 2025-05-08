@@ -310,10 +310,11 @@ public class GoogleSheetsUtil {
                 .addCellWithText("")
                 .build();
 
+        var evasionFormula = String.format("=SUM(%d,B10)", characterCreateInfo.evasion());
         var row5 = new RowBuilder()
                 .addCellWithFormula("=MAX(B10,B13)")
-                .addCellWithText("")
-                .addCellWithFormula("=SUM(B10)")
+                .addCellWithNumber(characterCreateInfo.attack())
+                .addCellWithFormula(evasionFormula)
                 .addCellWithText("20")  // Hardcode this for now
                 .addCellWithText("")
                 .addCellWithText("")

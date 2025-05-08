@@ -6,6 +6,8 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
 import com.wcg.chargen.backend.model.Profession;
+import com.wcg.chargen.backend.service.CharClassesService;
+import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.service.GoogleSheetsApiService;
 import com.wcg.chargen.backend.service.ProfessionsService;
 import org.slf4j.Logger;
@@ -27,6 +29,10 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     GoogleSheetsApiService googleSheetsApiService;
     @Autowired
     ProfessionsService professionsService;
+    @Autowired
+    CharClassesService charClassesService;
+    @Autowired
+    CommonerService commonerService;
 
     @Override
     public CharacterCreateStatus doCreateCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
@@ -76,10 +82,7 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private List<Sheet> buildSheets(CharacterCreateRequest characterCreateRequest) {
         var sheetList = new ArrayList<Sheet>();
 
-        var professionsList = professionsService.getAllProfessions().professions().stream()
-                        .map(Profession::name)
-                        .toList();
-        var characterCreateInfo = new CharacterCreateInfo(characterCreateRequest, professionsList);
+        var characterCreateInfo = buildCharacterCreateInfo(characterCreateRequest);
 
         var statsSheet = buildStatsSheet(characterCreateInfo);
         sheetList.add(statsSheet);
@@ -97,5 +100,28 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
         sheetList.add(gearSheet);
 
         return sheetList;
+    }
+
+    private CharacterCreateInfo buildCharacterCreateInfo(CharacterCreateRequest characterCreateRequest) {
+        var professionsList = professionsService.getAllProfessions().professions().stream()
+                .map(Profession::name)
+                .toList();
+
+        var attack = -1;
+        var evasion = -1;
+        var level = characterCreateRequest.level();
+        if (level > 0) {
+            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+            // Account for 1-based level count vs. 0-based list count
+            attack = charClass.attackModifiers().get(level - 1);
+            evasion = charClass.evasionModifiers().get(level - 1);
+        }
+        else {
+            var commonerInfo = commonerService.getInfo();
+            attack = commonerInfo.attack();
+            evasion = commonerInfo.evasion();
+        }
+
+        return new CharacterCreateInfo(characterCreateRequest, professionsList, attack, evasion);
     }
 }
