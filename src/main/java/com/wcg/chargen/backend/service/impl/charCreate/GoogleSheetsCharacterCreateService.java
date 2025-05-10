@@ -1,15 +1,10 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
 import com.google.api.services.sheets.v4.model.*;
-import com.wcg.chargen.backend.model.CharacterCreateInfo;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
-import com.wcg.chargen.backend.model.Profession;
-import com.wcg.chargen.backend.service.CharClassesService;
-import com.wcg.chargen.backend.service.CommonerService;
-import com.wcg.chargen.backend.service.GoogleSheetsApiService;
-import com.wcg.chargen.backend.service.ProfessionsService;
+import com.wcg.chargen.backend.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +15,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.wcg.chargen.backend.util.GoogleSheetsUtil.*;
-
 @Service
 public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateService {
     private final Logger logger = LoggerFactory.getLogger(GoogleSheetsCharacterCreateService.class);
     @Autowired
     GoogleSheetsApiService googleSheetsApiService;
+    @Autowired
+    GoogleSheetBuilderService googleSheetBuilderService;
     @Autowired
     ProfessionsService professionsService;
     @Autowired
@@ -82,46 +77,21 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     private List<Sheet> buildSheets(CharacterCreateRequest characterCreateRequest) {
         var sheetList = new ArrayList<Sheet>();
 
-        var characterCreateInfo = buildCharacterCreateInfo(characterCreateRequest);
-
-        var statsSheet = buildStatsSheet(characterCreateInfo);
+        var statsSheet = googleSheetBuilderService.buildStatsSheet(characterCreateRequest);
         sheetList.add(statsSheet);
 
         if(characterCreateRequest.characterClass() != null &&
                 characterCreateRequest.characterClass().isMagicUser()) {
-            var spellsSheet = buildSpellsSheet();
+            var spellsSheet = googleSheetBuilderService.buildSpellsSheet();
             sheetList.add(spellsSheet);
         }
 
-        var featuresSheet = buildFeaturesSheet();
+        var featuresSheet = googleSheetBuilderService.buildFeaturesSheet(characterCreateRequest);
         sheetList.add(featuresSheet);
 
-        var gearSheet = buildGearSheet();
+        var gearSheet = googleSheetBuilderService.buildGearSheet(characterCreateRequest);
         sheetList.add(gearSheet);
 
         return sheetList;
-    }
-
-    private CharacterCreateInfo buildCharacterCreateInfo(CharacterCreateRequest characterCreateRequest) {
-        var professionsList = professionsService.getAllProfessions().professions().stream()
-                .map(Profession::name)
-                .toList();
-
-        var attack = -1;
-        var evasion = -1;
-        var level = characterCreateRequest.level();
-        if (level > 0) {
-            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-            // Account for 1-based level count vs. 0-based list count
-            attack = charClass.attackModifiers().get(level - 1);
-            evasion = charClass.evasionModifiers().get(level - 1);
-        }
-        else {
-            var commonerInfo = commonerService.getInfo();
-            attack = commonerInfo.attack();
-            evasion = commonerInfo.evasion();
-        }
-
-        return new CharacterCreateInfo(characterCreateRequest, professionsList, attack, evasion);
     }
 }

@@ -1,29 +1,19 @@
 package com.wcg.chargen.backend.util;
 
 import com.google.api.services.sheets.v4.model.*;
-import com.wcg.chargen.backend.enums.CharType;
-import com.wcg.chargen.backend.enums.SpeciesType;
-import com.wcg.chargen.backend.model.CharacterCreateInfo;
-import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.*;
-import java.util.stream.Stream;
-
+import static com.wcg.chargen.backend.util.GoogleSheetsUtil.GridBuilder.getGridBuilder;
+import static com.wcg.chargen.backend.util.GoogleSheetsUtil.RowBuilder.getRowBuilder;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_AllAddMethodsCorrectlyAddCellToRow() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addHeaderCell("")
                 .addSecondaryHeaderCell("")
                 .addCellWithText("")
@@ -45,7 +35,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_AllMethodsThatAddNonEmptyCellSetFontFamilyToGeorgia() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addHeaderCell("")
                 .addSecondaryHeaderCell("")
                 .addCellWithText("")
@@ -72,7 +62,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_HeaderCellsDisplayBoldTextWithWordWrap() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addHeaderCell("")
                 .addSecondaryHeaderCell("")
                 .build();
@@ -93,7 +83,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_NonHeaderCellsDisplayNonBoldTextWithWordWrap() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addCellWithText("")
                 .addCellWithNumber(0.0)
                 .addCellWithFormula("")
@@ -119,7 +109,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_PrimaryHeaderCellsHaveTopBottomBorders() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addHeaderCell("")
                 .build();
 
@@ -139,7 +129,7 @@ public class GoogleSheetsUtilTest {
 
     @Test public void RowBuilder_NonPrimaryHeaderCellsHaveAllBorders() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addSecondaryHeaderCell("")
                 .addCellWithText("")
                 .addCellWithNumber(0.0)
@@ -168,7 +158,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_CellsWithBackgroundColorsSetColorsCorrectly() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addHeaderCell("")
                 .addSecondaryHeaderCell("")
                 .addHighlightedCellWithText("")
@@ -199,7 +189,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_CellsWithNoBackgroundColorsHaveNoColorSet() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addCellWithText("")
                 .addCellWithNumber(0.0)
                 .addCellWithFormula("")
@@ -218,7 +208,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void RowBuilder_EmptyCellsHaveNoFormat() {
         // act
-        var rowData = new GoogleSheetsUtil.RowBuilder()
+        var rowData = getRowBuilder()
                 .addEmptyCell()
                 .build();
 
@@ -232,12 +222,12 @@ public class GoogleSheetsUtilTest {
     @Test
     public void GridBuilder_AllAddMethodsCorrectlyAddRowToGrid() {
         // arrange
-        var row = new GoogleSheetsUtil.RowBuilder()
+        var row = getRowBuilder()
                 .addHeaderCell("Test")
                 .build();
 
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .addRow(row)
                 .addEmptyRow()
                 .build();
@@ -250,7 +240,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void GridBuilder_SettingColumnWidthHasNoEffectIfWithNumColumnsNotCalled() {
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .setColumnWidth(1, 200)
                 .build();
 
@@ -264,7 +254,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void GridBuilder_SettingColumnWidthDoesNotModifyColumnPropertiesIfColumnNumberIsGreaterThanTotalNumberOfColumns() {
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .withNumColumns(2)
                 .setColumnWidth(3, 200)
                 .build();
@@ -282,7 +272,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void GridBuilder_SettingColumnWidthDoesNotModifyColumnPropertiesIfColumnNumberIsNegative() {
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .withNumColumns(2)
                 .setColumnWidth(-1, 200)
                 .build();
@@ -301,7 +291,7 @@ public class GoogleSheetsUtilTest {
     @ValueSource(ints = { 0, -1 })
     public void GridBuilder_SettingColumnWidthDoesNotModifyColumnPropertiesIfColumnWidthIsZeroOrNegative(int width) {
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .withNumColumns(2)
                 .setColumnWidth(1, width)
                 .build();
@@ -319,7 +309,7 @@ public class GoogleSheetsUtilTest {
     @Test
     public void GridBuilder_SettingColumnWidthWorksAsExpectedWithColumnNumberLessThanTotalColumnsAndPositiveWidth() {
         // act
-        var grid = new GoogleSheetsUtil.GridBuilder()
+        var grid = getGridBuilder()
                 .withNumColumns(4)
                 .setColumnWidth(0, 200)
                 .setColumnWidth(2, 300)
@@ -341,415 +331,5 @@ public class GoogleSheetsUtilTest {
     private void assertWidth(DimensionProperties dimensionProps, int expectedWidth) {
         assertNotNull(dimensionProps.getPixelSize());
         assertEquals(expectedWidth, dimensionProps.getPixelSize());
-    }
-
-    @Test
-    public void buildStatsSheet_BuildsSheetWithExpectedTitle() {
-        // arrange
-        var request = getCharacterCreateRequest(CharType.BERZERKER);
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        assertNotNull(sheet);
-        assertNotNull(sheet.getProperties());
-        assertEquals("Stats", sheet.getProperties().getTitle());
-    }
-
-    @ParameterizedTest
-    @MethodSource("getMagicUsersAndExpectedAttributeCells")
-    public void buildStatsSheet_MagicUsersHaveSpellAttackModifierWithCorrectFormulaForClass(
-            CharType charType, String cellName) {
-        // arrange
-        var request = getCharacterCreateRequest(charType);
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .build();
-        var expectedFormula = "=SUM(B5," + cellName + ")";
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var spellTextValue = getCellValueFromSheet(sheet, 9, 7);
-        assertEquals("Spell", spellTextValue.getStringValue());
-
-        var spellFormulaValue = getCellValueFromSheet(sheet,9, 8);
-        assertEquals(expectedFormula, spellFormulaValue.getFormulaValue());
-
-        var damageModifiersValue = getCellValueFromSheet(sheet, 11, 7);
-        assertEquals("DAMAGE MODIFIERS", damageModifiersValue.getStringValue());
-
-        var meleeValue =  getCellValueFromSheet(sheet, 12, 7);
-        assertEquals("Melee", meleeValue.getStringValue());
-
-        var rangedValue =  getCellValueFromSheet(sheet, 13, 7);
-        assertEquals("Ranged", rangedValue.getStringValue());
-    }
-
-    @ParameterizedTest
-    @EnumSource(CharType.class)
-    public void buildStatsSheet_NonMagicUsersDoNotHaveSpellAttackModifier(CharType charType) {
-        if (!charType.isMagicUser()) {
-            // arrange
-            var request = getCharacterCreateRequest(charType);
-            var info = new CharacterCreateInfoBuilder()
-                    .withCharacterCreateRequest(request)
-                    .build();
-
-            // act
-            var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-            // assert
-            var damageModifiersValue = getCellValueFromSheet(sheet, 10, 7);
-            assertEquals("DAMAGE MODIFIERS", damageModifiersValue.getStringValue());
-
-            var meleeValue =  getCellValueFromSheet(sheet, 11, 7);
-            assertEquals("Melee", meleeValue.getStringValue());
-
-            var rangedValue =  getCellValueFromSheet(sheet, 12, 7);
-            assertEquals("Ranged", rangedValue.getStringValue());
-        }
-    }
-
-    @Test
-    public void buildStatsSheet_FirstDataRowIsPopulatedCorrectlyForClassCharacter() {
-        // arrange
-        var expectedCharName = "TestName";
-        var expectedLevel = 3;
-        var expectedSpecies = SpeciesType.ELF;
-        var expectedCharType = CharType.SKALD;
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(expectedCharName)
-                .withSpeciesType(expectedSpecies)
-                .withCharacterType(expectedCharType)
-                .withLevel(expectedLevel)
-                .build();
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var charNameValue = getCellValueFromSheet(sheet, 2, 0);
-        assertEquals(expectedCharName, charNameValue.getStringValue());
-
-        var speciesValue = getCellValueFromSheet(sheet, 2, 1);
-        assertEquals(expectedSpecies.toCharSheetString(), speciesValue.getStringValue());
-
-        var levelValue = getCellValueFromSheet(sheet, 2, 2);
-        assertEquals(expectedLevel, levelValue.getNumberValue());
-
-        var professionValue = getCellValueFromSheet(sheet, 2, 3);
-        assertEquals("", professionValue.getStringValue());
-
-        var charClassValue = getCellValueFromSheet(sheet, 2, 4);
-        assertEquals(expectedCharType.toCharSheetString(), charClassValue.getStringValue());
-    }
-
-    @Test
-    public void buildStatsSheet_FirstDataRowIsPopulatedCorrectlyForCommonerCharacter() {
-        // arrange
-        var expectedCharName = "TestName";
-        var expectedLevel = 0;
-        var expectedSpecies = SpeciesType.ELF;
-        var expectedProfession = "Cartwright";
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(expectedCharName)
-                .withSpeciesType(expectedSpecies)
-                .withProfession(expectedProfession)
-                .withLevel(expectedLevel)
-                .build();
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var charNameValue = getCellValueFromSheet(sheet, 2, 0);
-        assertEquals(expectedCharName, charNameValue.getStringValue());
-
-        var speciesValue = getCellValueFromSheet(sheet, 2, 1);
-        assertEquals(expectedSpecies.toCharSheetString(), speciesValue.getStringValue());
-
-        var levelValue = getCellValueFromSheet(sheet, 2, 2);
-        assertEquals(expectedLevel, levelValue.getNumberValue());
-
-        var professionValue = getCellValueFromSheet(sheet, 2, 3);
-        assertEquals(expectedProfession, professionValue.getStringValue());
-
-        var charClassValue = getCellValueFromSheet(sheet, 2, 4);
-        assertEquals("", charClassValue.getStringValue());
-    }
-
-    @Test
-    public void buildStatsSheet_FirstDataRowHasExpectedDataValidationsForClassCharacter() {
-        // arrange
-        var expectedSpeciesValuesList = Arrays.stream(SpeciesType.values())
-                .map(SpeciesType::toCharSheetString)
-                .toList();
-        var expectedProfessionValuesList = Arrays.asList("Profession1", "Profession2", "Profession3");
-        var expectedCharClassValuesList = Arrays.stream(CharType.values())
-                .map(CharType::toCharSheetString)
-                .toList();
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(1)
-                .build();
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .withProfessionsList(expectedProfessionValuesList)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var speciesCellData = getCellDataFromSheet(sheet, 2, 1);
-        assertConditionValueListHasAllValuesFromList(speciesCellData.getDataValidation(),
-                expectedSpeciesValuesList);
-
-        var levelCellData = getCellDataFromSheet(sheet, 2, 2);
-        assertNotNull(levelCellData.getDataValidation());
-        assertNotNull(levelCellData.getDataValidation().getCondition());
-        var levelConditionValuesList = levelCellData.getDataValidation().getCondition().getValues();
-        assertNotNull(levelConditionValuesList);
-        assertEquals(2, levelConditionValuesList.size());
-        assertEquals("1", levelConditionValuesList.getFirst().getUserEnteredValue());
-        assertEquals("7", levelConditionValuesList.getLast().getUserEnteredValue());
-
-        var professionCellData = getCellDataFromSheet(sheet, 2, 3);
-        assertConditionValueListHasAllValuesFromList(professionCellData.getDataValidation(),
-                expectedProfessionValuesList);
-
-        var charClassCellData = getCellDataFromSheet(sheet, 2, 4);
-        assertConditionValueListHasAllValuesFromList(charClassCellData.getDataValidation(),
-                expectedCharClassValuesList);
-    }
-
-    @Test
-    public void buildStatsSheet_FirstDataRowHasExpectedDataValidationsForCommonerCharacter() {
-        // arrange
-        var expectedSpeciesValuesList = Arrays.stream(SpeciesType.values())
-                .map(SpeciesType::toCharSheetString)
-                .toList();
-        var expectedProfessionValuesList = Arrays.asList("Profession1", "Profession2", "Profession3");
-        var expectedCharClassValuesList = Arrays.stream(CharType.values())
-                .map(CharType::toCharSheetString)
-                .toList();
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withProfession("Profession1")
-                .withLevel(0)
-                .build();
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .withProfessionsList(expectedProfessionValuesList)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var speciesCellData = getCellDataFromSheet(sheet, 2, 1);
-        assertConditionValueListHasAllValuesFromList(speciesCellData.getDataValidation(),
-                expectedSpeciesValuesList);
-
-        var levelCellData = getCellDataFromSheet(sheet, 2, 2);
-        assertNotNull(levelCellData.getDataValidation());
-        assertNotNull(levelCellData.getDataValidation().getCondition());
-        var levelConditionValuesList = levelCellData.getDataValidation().getCondition().getValues();
-        assertNotNull(levelConditionValuesList);
-        assertEquals(2, levelConditionValuesList.size());
-        assertEquals("0", levelConditionValuesList.getFirst().getUserEnteredValue());
-        assertEquals("7", levelConditionValuesList.getLast().getUserEnteredValue());
-
-        var professionCellData = getCellDataFromSheet(sheet, 2, 3);
-        assertConditionValueListHasAllValuesFromList(professionCellData.getDataValidation(),
-                expectedProfessionValuesList);
-
-        // We include character class validations for Level 0 characters because
-        // they can get promoted to class characters...if they live long enough
-        var charClassCellData = getCellDataFromSheet(sheet, 2, 4);
-        assertConditionValueListHasAllValuesFromList(charClassCellData.getDataValidation(),
-                expectedCharClassValuesList);
-    }
-
-    @Test
-    public void buildStatsSheet_AttackAndEvasionArePopulatedCorrectly() {
-        // arrange
-        var expectedAttack = 3;
-        var expectedEvasion = 14;
-        var expectedEvasionFormula = String.format("=SUM(%d,B10)", expectedEvasion);
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(1)
-                .build();
-        var info = new CharacterCreateInfoBuilder()
-                .withCharacterCreateRequest(request)
-                .withAttack(expectedAttack)
-                .withEvasion(expectedEvasion)
-                .build();
-
-        // act
-        var sheet = GoogleSheetsUtil.buildStatsSheet(info);
-
-        // assert
-        var attackValue = getCellValueFromSheet(sheet, 4, 1);
-        assertEquals((double)expectedAttack, attackValue.getNumberValue());
-
-        var evasionValue = getCellValueFromSheet(sheet, 4, 2);
-        assertEquals(expectedEvasionFormula, evasionValue.getFormulaValue());
-    }
-
-    private void assertConditionValueListHasAllValuesFromList(DataValidationRule dataValidationRule,
-                                                              List<String> expectedValues) {
-        assertNotNull(dataValidationRule);
-        var condition = dataValidationRule.getCondition();
-        assertNotNull(condition);
-        var conditionValueList = condition.getValues();
-        assertNotNull(conditionValueList);
-
-        var expectedValueSet = new HashSet<>(expectedValues);
-        for (var conditionValue : conditionValueList) {
-            var valueStr = conditionValue.getUserEnteredValue();
-            var containedValue = expectedValueSet.remove(valueStr);
-            if (!containedValue) {
-                fail("Data validation rule condition missing expected value " + valueStr);
-            }
-        }
-
-        assertTrue(expectedValueSet.isEmpty());
-    }
-
-    @Test
-    public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {
-        // act
-        var sheet = GoogleSheetsUtil.buildSpellsSheet();
-
-        // assert
-        assertNotNull(sheet);
-        assertNotNull(sheet.getProperties());
-        assertEquals("Spells", sheet.getProperties().getTitle());
-    }
-
-    @Test
-    public void buildFeaturesSheet_BuildsSheetWithExpectedTitle() {
-        // act
-        var sheet = GoogleSheetsUtil.buildFeaturesSheet();
-
-        // assert
-        assertNotNull(sheet);
-        assertNotNull(sheet.getProperties());
-        assertEquals("Class/Species Features", sheet.getProperties().getTitle());
-    }
-
-    @Test
-    public void buildGearSheet_BuildsSheetWithExpectedTitle() {
-        // act
-        var sheet = GoogleSheetsUtil.buildGearSheet();
-
-        // assert
-        assertNotNull(sheet);
-        assertNotNull(sheet.getProperties());
-        assertEquals("Gear", sheet.getProperties().getTitle());
-    }
-
-    private CharacterCreateRequest getCharacterCreateRequest(CharType charType) {
-        return CharacterCreateRequestBuilder
-                .getBuilder()
-                .withCharacterName("Test")
-                .withCharacterType(charType)
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withProfession(null)
-                .withLevel(1)
-                .build();
-    }
-
-    private CellData getCellDataFromSheet(Sheet sheet, int rowIndex, int colIndex) {
-        assertNotNull(sheet);
-        assertNotNull(sheet.getData());
-        assertNotNull(sheet.getData().getFirst());
-        assertNotNull(sheet.getData().getFirst().getRowData());
-        assertTrue(sheet.getData().getFirst().getRowData().size() >= rowIndex);
-
-        var row = sheet.getData().getFirst().getRowData().get(rowIndex);
-        assertNotNull(row);
-        assertNotNull(row.getValues());
-        assertNotNull(row.getValues().get(colIndex));
-
-        var cellData = row.getValues().get(colIndex);
-        assertNotNull(cellData);
-
-        return cellData;
-    }
-
-    private ExtendedValue getCellValueFromSheet(Sheet sheet, int rowIndex, int colIndex) {
-        var cellData = getCellDataFromSheet(sheet, rowIndex, colIndex);
-        var cellValue = cellData.getUserEnteredValue();
-        assertNotNull(cellValue);
-
-        return cellValue;
-    }
-
-    static Stream<Arguments> getMagicUsersAndExpectedAttributeCells() {
-        return Stream.of(
-                Arguments.arguments(CharType.MAGE, "B12"),
-                Arguments.arguments(CharType.SHAMAN, "B14")
-        );
-    }
-
-    private class CharacterCreateInfoBuilder {
-        private CharacterCreateRequest characterCreateRequest = null;
-        private List<String> professionsList = new ArrayList<>();
-        private int attack = -1;
-        private int evasion = -1;
-
-        public CharacterCreateInfoBuilder withCharacterCreateRequest(CharacterCreateRequest characterCreateRequest) {
-            this.characterCreateRequest = characterCreateRequest;
-
-            return this;
-        }
-
-        public CharacterCreateInfoBuilder withProfessionsList(List<String> professionsList) {
-            this.professionsList.addAll(professionsList);
-
-            return this;
-        }
-
-        public CharacterCreateInfoBuilder withAttack(int attack) {
-            this.attack = attack;
-
-            return this;
-        }
-
-        public CharacterCreateInfoBuilder withEvasion(int evasion) {
-            this.evasion = evasion;
-
-            return this;
-        }
-
-        public CharacterCreateInfo build() {
-            return new CharacterCreateInfo(characterCreateRequest,
-                    professionsList, attack, evasion);
-        }
     }
 }
