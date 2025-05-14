@@ -1,13 +1,11 @@
 package com.wcg.chargen.backend.service.impl;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.service.CharClassesService;
-import com.wcg.chargen.backend.service.CommonerService;
-import com.wcg.chargen.backend.service.GoogleSheetBuilderService;
-import com.wcg.chargen.backend.service.ProfessionsService;
+import com.wcg.chargen.backend.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +23,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     CharClassesService charClassesService;
     @Autowired
     CommonerService commonerService;
+    @Autowired
+    RandomNumberService randomNumberService;
 
     private static final String STATS_SHEET_TITLE = "Stats";
     private static final String SPELLS_SHEET_TITLE = "Spells";
@@ -135,6 +135,37 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return String.format("=SUM(%d,B10)", evasion);
     }
 
+    private int getFortunePoints(CharacterCreateRequest characterCreateRequest) {
+        var luckScore = characterCreateRequest.getAttributeValue(AttributeType.LUC);
+        // Level 1 characters start with 1 fortune point, and you get 1 more per level
+        var fortunePoints = characterCreateRequest.level();
+
+        // Fortune points can never go below 0
+        return Math.max(0, fortunePoints + luckScore);
+    }
+
+    private int getHitPoints(CharacterCreateRequest characterCreateRequest) {
+        var staminaScore = characterCreateRequest.getAttributeValue(AttributeType.STA);
+        if (characterCreateRequest.level() == 0) {
+            var d4Roll = randomNumberService.getIntFromRange(1, 4);
+
+            return d4Roll + 1 + staminaScore;
+        }
+        else {
+            var charType = characterCreateRequest.characterClass();
+            var charClass = charClassesService.getCharClassByType(charType);
+
+            // Base hit points for level 1 character
+            var hitPoints = charClass.level1Hp() + staminaScore;
+            // Add hit points for each level above 1
+            for (int i = 1; i < characterCreateRequest.level(); i++) {
+                hitPoints += randomNumberService.getIntFromRange(1, charClass.maxHpAtLevelUp());
+            }
+
+            return hitPoints;
+        }
+    }
+
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -186,21 +217,22 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addSecondaryHeaderCell("Initiative")
                 .addSecondaryHeaderCell("Attack")
                 .addSecondaryHeaderCell("Evasion")
-                .addSecondaryHeaderCell("Critical Hit")
                 .addSecondaryHeaderCell("Fortune Points")
-                .addSecondaryHeaderCell("Hit Points")
+                .addSecondaryHeaderCell("Current HP")
+                .addSecondaryHeaderCell("Max HP")
                 .addEmptyCell()
                 .addHighlightedCellWithText("Other")
                 .addCellWithText("")
                 .build();
 
+        var hitPoints = getHitPoints(characterCreateRequest);
         var row5 = getRowBuilder()
                 .addCellWithFormula("=MAX(B10,B13)")
                 .addCellWithNumber(getAttack(characterCreateRequest))
                 .addCellWithFormula(getEvasionFormula(characterCreateRequest))
-                .addCellWithText("20")  // Hardcode this for now
-                .addCellWithText("")
-                .addCellWithText("")
+                .addCellWithNumber(getFortunePoints(characterCreateRequest))
+                .addCellWithNumber(hitPoints)
+                .addCellWithNumber(hitPoints)
                 .build();
 
         // Block with attributes, skills, attack, and damage
@@ -230,7 +262,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row8 = getRowBuilder()
                 .addHighlightedCellWithText("Strength (STR)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.STR)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -242,7 +274,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row9Builder = getRowBuilder()
                 .addHighlightedCellWithText("Coordination (COR)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.COR)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -251,7 +283,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row10Builder = getRowBuilder()
                 .addHighlightedCellWithText("Stamina (STA)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.STA)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -260,7 +292,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row11Builder = getRowBuilder()
                 .addHighlightedCellWithText("Intellect (INT)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.INT)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -269,7 +301,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row12Builder = getRowBuilder()
                 .addHighlightedCellWithText("Perception (PER)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.PER)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -278,7 +310,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row13Builder = getRowBuilder()
                 .addHighlightedCellWithText("Presence (PRS)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.PRS)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")
@@ -287,7 +319,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var row14 = getRowBuilder()
                 .addHighlightedCellWithText("Luck (LUC)")
-                .addCellWithText("")
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.LUC)
                 .addEmptyCell()
                 .addCellWithText("")
                 .addCellWithText("")

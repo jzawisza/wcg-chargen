@@ -4,6 +4,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { CharacterContext } from "../../Context";
 import { invokeGoogleSheetsApi } from "../../server/ServerData";
 import { CreateCharacterRequestBuilder } from "../../server/CreateCharacterRequestBuilder";
+import { getIsHuman } from "../../constants/SpeciesInfo";
 
 const PDF_SHEET_TYPE = 'pdf';
 const GOOGLE_SHEETS_SHEET_TYPE='googlesheets';
@@ -12,7 +13,8 @@ const GOOGLE_SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const CreateCharacter: React.FC = () => {
     const [charSheetType, setCharSheetType] = useState<string | null>(null);
     const [charGenerated, setCharGenerated] = useState(false);
-    const { charName, charClass, species, profession, level } = useContext(CharacterContext);
+    const { charName, charClass, species, profession, level,
+        attributeScoreObj, speciesStrengthAttribute, speciesWeaknessAttribute } = useContext(CharacterContext);
 
     const onRadioGroupChange = (e: RadioChangeEvent) => {
         setCharSheetType(e.target.value);
@@ -29,7 +31,13 @@ const CreateCharacter: React.FC = () => {
             const createCharacterRequestBuilder = new CreateCharacterRequestBuilder()
                 .withCharacterName(charName)
                 .withSpecies(species)
-                .withLevel(level);
+                .withLevel(level)
+                .withAttributes(attributeScoreObj)
+                .withSpeciesStrength(speciesStrengthAttribute);
+            
+            if (!getIsHuman(species)) {
+                createCharacterRequestBuilder.withSpeciesWeakness(speciesWeaknessAttribute);
+            }
 
             if (level > 0) {
                 createCharacterRequestBuilder.withCharacterClass(charClass);
@@ -39,6 +47,8 @@ const CreateCharacter: React.FC = () => {
             }
 
             const createCharacterRequest = createCharacterRequestBuilder.build();
+            // JPZTEST
+            console.log(createCharacterRequest);
 
             invokeGoogleSheetsApi(codeResponse.token_type, codeResponse.access_token, createCharacterRequest)
                 .then(status => {

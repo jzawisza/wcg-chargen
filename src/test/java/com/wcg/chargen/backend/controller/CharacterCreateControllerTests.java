@@ -22,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -37,6 +39,18 @@ public class CharacterCreateControllerTests {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final Map<String, Integer> ATTRIBUTES = Map.of(
+        "STR", 1,
+            "COR", 1,
+            "STA", 2,
+            "PER", 2,
+            "INT", -1,
+            "PRS", 0,
+            "LUC", 0
+    );
+
+    private static final String SPECIES_STRENGTH_ATTRIBUTE = "STR";
+
     private static final CharacterCreateRequest VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS =
             CharacterCreateRequestBuilder.getBuilder()
                     .withCharacterName("Test")
@@ -44,6 +58,8 @@ public class CharacterCreateControllerTests {
                     .withSpeciesType(SpeciesType.DWARF)
                     .withProfession(null)
                     .withLevel(1)
+                    .withAttributes(ATTRIBUTES)
+                    .withSpeciesStrength(SPECIES_STRENGTH_ATTRIBUTE)
                     .build();
     private static final CharacterCreateRequest VALID_CHARACTER_CREATE_REQUEST_WITH_PROFESSION =
             CharacterCreateRequestBuilder.getBuilder()
@@ -52,6 +68,8 @@ public class CharacterCreateControllerTests {
                     .withSpeciesType(SpeciesType.DWARF)
                     .withProfession("TestProfession")
                     .withLevel(0)
+                    .withAttributes(ATTRIBUTES)
+                    .withSpeciesStrength(SPECIES_STRENGTH_ATTRIBUTE)
                     .build();
     private static final String DUMMY_BEARER_TOKEN = "some token";
     private static final String GOOGLE_SHEETS_URL = "/api/v1/createcharacter/googlesheets";
@@ -210,6 +228,60 @@ public class CharacterCreateControllerTests {
             fail();
         }
     }
+
+    @Test
+    public void createCharacterGoogle_Returns400IfAttributesIsNull() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.MAGE)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withProfession("Test")
+                .withLevel(1)
+                .withNullAttributes()
+                .withSpeciesStrength("COR")
+                .build();
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(request))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void createCharacterGoogle_Returns400IfSpeciesStrengthIsNull() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.MAGE)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withProfession("Test")
+                .withLevel(1)
+                .withAttributes(new HashMap<>())
+                .build();
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(GOOGLE_SHEETS_URL)
+                            .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(request))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
     @Test
     public void createCharacterGoogle_Returns500WithErrorMessageIfGoogleServiceReturnsFailureStatus() {
         var expectedErrMsg = "Some error message";

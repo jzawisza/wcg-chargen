@@ -1,3 +1,4 @@
+import { AttributeScoreObject, EMPTY_ATTRIBUTE_SCORE_OBJ } from "../constants/AttributeScoreObject";
 import { CreateCharacterRequest } from "./CreateCharacterRequest";
 
 export class CreateCharacterRequestBuilder {
@@ -6,6 +7,9 @@ export class CreateCharacterRequestBuilder {
     _species = "";
     _profession = "";
     _level = 1;
+    _attributes = EMPTY_ATTRIBUTE_SCORE_OBJ;
+    _speciesStrength = "";
+    _speciesWeakness = "";
 
     withCharacterName(charName: string) {
         this._charName = charName;
@@ -35,11 +39,32 @@ export class CreateCharacterRequestBuilder {
         return this;
     }
 
+    withAttributes(attributes: AttributeScoreObject) {
+        this._attributes = attributes;
+
+        return this;
+    }
+
+    withSpeciesStrength(speciesStrength: string) {
+        this._speciesStrength = speciesStrength;
+
+        return this;
+    }
+
+    withSpeciesWeakness(speciesWeakness: string) {
+        this._speciesWeakness = speciesWeakness;
+
+        return this;
+    }
+
     build() {
         const createCharacterRequest: CreateCharacterRequest = {
             "characterName": this._charName,
             "species": this._species,
-            "level": this._level
+            "level": this._level,
+            "attributes": this._attributes,
+            "speciesStrength": this._speciesStrength,
+            "speciesWeakness": this._speciesWeakness
         };
 
         if (this._level > 0) {

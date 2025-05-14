@@ -1,6 +1,11 @@
 package com.wcg.chargen.backend.util;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.SpeciesType;
+import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -217,6 +222,86 @@ public class GoogleSheetsUtilTest {
         assertNotNull(rowData.getValues());
         assertNotNull(rowData.getValues().getFirst());
         assertNull(rowData.getValues().getFirst().getUserEnteredFormat());
+    }
+
+    @Test
+    public void RowBuilder_AddCellWithAttributeValueCreatesNumberCellIfAttributeIsNotSpeciesStrengthOrWeakness() {
+        // arrange
+        var characterCreateRequest = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.WARRIOR)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withLevel(2)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.LUC)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+        assertNotNull(rowData.getValues().getFirst().getUserEnteredValue());
+        assertEquals(-2, rowData.getValues().getFirst().getUserEnteredValue().getNumberValue());
+    }
+
+    @Test
+    public void RowBuilder_AddCellWithAttributeValueCreatesFormulaCellIfAttributeIsSpeciesStrength() {
+        // arrange
+        var expectedFormula = "=SUM(1,1)";
+        var characterCreateRequest = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.WARRIOR)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withLevel(2)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.STA)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+        assertNotNull(rowData.getValues().getFirst().getUserEnteredValue());
+        assertEquals(expectedFormula, rowData.getValues().getFirst().getUserEnteredValue().getFormulaValue());
+    }
+
+    @Test
+    public void RowBuilder_AddCellWithAttributeValueCreatesFormulaCellIfAttributeIsSpeciesWeakness() {
+        // arrange
+        var expectedFormula = "=SUM(0,-1)";
+        var characterCreateRequest = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName("Test")
+                .withCharacterType(CharType.WARRIOR)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withLevel(2)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithAttributeValue(characterCreateRequest, AttributeType.PER)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+        assertNotNull(rowData.getValues().getFirst().getUserEnteredValue());
+        assertEquals(expectedFormula, rowData.getValues().getFirst().getUserEnteredValue().getFormulaValue());
     }
 
     @Test

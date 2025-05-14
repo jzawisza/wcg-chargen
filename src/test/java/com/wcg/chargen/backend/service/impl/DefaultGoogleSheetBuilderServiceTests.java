@@ -7,16 +7,14 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.*;
-import com.wcg.chargen.backend.service.CharClassesService;
-import com.wcg.chargen.backend.service.CommonerService;
-import com.wcg.chargen.backend.service.GoogleSheetBuilderService;
-import com.wcg.chargen.backend.service.ProfessionsService;
+import com.wcg.chargen.backend.service.*;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
@@ -43,10 +41,15 @@ public class DefaultGoogleSheetBuilderServiceTests {
     CharClassesService charClassesService;
     @MockBean
     CommonerService commonerService;
+    @Autowired
+    RandomNumberService randomNumberService;
 
     private static final String PROFESSION_1_NAME = "Profession1";
     private static final String PROFESSION_2_NAME = "Profession2";
     private static final String PROFESSION_3_NAME = "Profession3";
+    private static final int TEST_LEVEL_1_HP = 8;
+    private static final int TEST_MAX_HP_AT_LEVEL_UP = 4;
+
     @BeforeEach
     public void beforeTest() {
         var profession1 = new Profession(PROFESSION_1_NAME, 0, 3);
@@ -57,8 +60,8 @@ public class DefaultGoogleSheetBuilderServiceTests {
         var charClass = new CharClass(CharType.WARRIOR.toString(),
                 Arrays.asList(1, 2, 3, 4, 5, 6, 7),
                 Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
-                8,
-                4,
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
                 null,
                 null);
 
@@ -336,6 +339,413 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
         assertTrue(expectedValueSet.isEmpty());
     }
+
+    @Test
+    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsNotSpeciesStrengthOrWeakness() {
+        // arrange
+        var luckValue = 1;
+        var level = 3;
+        var expectedFortunePoints = level + luckValue;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var fortunePointsValue = getCellValueFromSheet(sheet, 4, 3);
+        assertEquals(expectedFortunePoints, fortunePointsValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsSpeciesStrength() {
+        // arrange
+        var luckValue = 1;
+        var level = 3;
+        // Extra +1 since luck is species strength
+        var expectedFortunePoints = level + luckValue + 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("LUC")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
+        assertEquals(expectedFortunePoints, fortunePoints.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsSpeciesWeakness() {
+        // arrange
+        var luckValue = 1;
+        var level = 3;
+        // -1 since luck is species weakness
+        var expectedFortunePoints = level + luckValue - 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
+        assertEquals(expectedFortunePoints, fortunePoints.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_FortunePointsAreNotLessThanZero() {
+        // arrange
+        var luckValue = -2;
+        var level = 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
+        assertEquals(0, fortunePoints.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForCommonerCharacterWhereStaminaIsNotSpeciesStrengthOrWeakness() {
+        // arrange
+        var staValue = 1;
+        // min d4+1
+        var minHp = staValue + 1 + 1;
+        // max d4+1
+        var maxHp = staValue + 4 + 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(0)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("INT")
+                .withSpeciesWeakness("PRS")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForCommonerCharacterWhereStaminaIsSpeciesStrength() {
+        // arrange
+        var staValue = 1;
+        // min d4+1 + 1 for species strength
+        var minHp = staValue + 1 + 1 + 1;
+        // max d4+1 + 1 for species strength
+        var maxHp = staValue + 4 + 1 + 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(0)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PRS")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForCommonerCharacterWhereStaminaIsSpeciesWeakness() {
+        // arrange
+        var staValue = 1;
+        // min d4+1 - 1 for species weakness
+        var minHp = staValue + 1 + 1 - 1;
+        // max d4+1 - 1 for species weakness
+        var maxHp = staValue + 4 + 1 - 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(0)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("INT")
+                .withSpeciesWeakness("STA")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsArePopulatedCorrectlyForLevel1CharacterWhereStaminaIsNotSpeciesStrengthOrWeakness() {
+        // arrange
+        var staValue = 1;
+        var expectedHitPoints = TEST_LEVEL_1_HP + staValue;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertEquals(expectedHitPoints, currentHpValue.getNumberValue());
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(expectedHitPoints, maxHpValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsArePopulatedCorrectlyForLevel1CharacterWhereStaminaIsSpeciesStrength() {
+        // arrange
+        var staValue = 1;
+        var expectedHitPoints = TEST_LEVEL_1_HP + staValue + 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertEquals(expectedHitPoints, currentHpValue.getNumberValue());
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(expectedHitPoints, maxHpValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_HitPointsArePopulatedCorrectlyForLevel1CharacterWhereStaminaIsSpeciesWeakness() {
+        // arrange
+        var staValue = 1;
+        var expectedHitPoints = TEST_LEVEL_1_HP + staValue - 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("STA")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertEquals(expectedHitPoints, currentHpValue.getNumberValue());
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(expectedHitPoints, maxHpValue.getNumberValue());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "2, 9, 13",
+            "3, 10, 17",
+            "4, 11, 21",
+            "5, 12, 25",
+            "6, 13, 29",
+            "7, 14, 33"
+    })
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForHigherLevelCharacterWhereStaminaIsNotSpeciesStrengthOrWeakness(
+            int level, int minHp, int maxHp
+    ) {
+        // arrange
+        var staValue = 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "2, 10, 14",
+            "3, 11, 18",
+            "4, 12, 22",
+            "5, 13, 26",
+            "6, 14, 30",
+            "7, 15, 34"
+    })
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForHigherLevelCharacterWhereStaminaIsSpeciesStrength(
+            int level, int minHp, int maxHp
+    ) {
+        // arrange
+        var staValue = 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STA")
+                .withSpeciesWeakness("PER")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "2, 8, 12",
+            "3, 9, 16",
+            "4, 10, 20",
+            "5, 11, 24",
+            "6, 12, 28",
+            "7, 13, 32"
+    })
+    public void buildStatsSheet_HitPointsAreInExpectedRangeForHigherLevelCharacterWhereStaminaIsSpeciesWeakness(
+            int level, int minHp, int maxHp
+    ) {
+        // arrange
+        var staValue = 1;
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("STA")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertNotNull(currentHpValue.getNumberValue());
+
+        assertTrue(currentHpValue.getNumberValue() >= minHp);
+        assertTrue(currentHpValue.getNumberValue() <= maxHp);
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
+    }
+
 
     @Test
     public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {

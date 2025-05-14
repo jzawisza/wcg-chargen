@@ -1,6 +1,8 @@
 package com.wcg.chargen.backend.util;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.model.CharacterCreateRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +94,25 @@ public class GoogleSheetsUtil {
 
         public RowBuilder addCellWithFormula(String formula) {
             addCellToList(new ExtendedValue().setFormulaValue(formula), null, null);
+
+            return this;
+        }
+
+        public RowBuilder addCellWithAttributeValue(CharacterCreateRequest request,
+                                                    AttributeType attributeType) {
+            var attributeTypeStr = attributeType.toString();
+            var attributeValue = request.attributes().get(attributeTypeStr);
+            if (attributeTypeStr.equals(request.speciesStrength())) {
+                var formula = String.format("=SUM(%d,1)", attributeValue);
+                addCellWithFormula(formula);
+            }
+            else if (attributeTypeStr.equals(request.speciesWeakness())) {
+                var formula = String.format("=SUM(%d,-1)", attributeValue);
+                addCellWithFormula(formula);
+            }
+            else {
+                addCellWithNumber((double)attributeValue);
+            }
 
             return this;
         }

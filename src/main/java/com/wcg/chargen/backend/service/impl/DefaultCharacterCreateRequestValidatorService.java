@@ -1,5 +1,7 @@
 package com.wcg.chargen.backend.service.impl;
 
+import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
@@ -8,10 +10,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Service
 public class DefaultCharacterCreateRequestValidatorService implements CharacterCreateRequestValidatorService {
     @Autowired
     ProfessionsService professionsService;
+
+    private static final List<Integer> CHALLENGING_ATTRIBUTE_VALUES =
+            Arrays.asList(-2, -1, 0, 0, 1, 1, 2);
+    private static final List<Integer> HEROIC_ATTRIBUTE_VALUES =
+            Arrays.asList(-1, 0, 0, 0, 1, 2, 2);
+    private static final int MIN_ATTRIBUTE_VALUE = -3;
+    private static final int MAX_ATTRIBUTE_VALUE = 3;
 
     public CharacterCreateStatus validate(CharacterCreateRequest characterCreateRequest) {
         if (characterCreateRequest == null) {
@@ -31,8 +43,9 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
         if (level < 0 || level > 7) {
             return failedStatus("Level must be between 0 and 7");
         }
-        if (level == 0) {
-            // A level 0 character should have a profession and not a class
+        var isCommoner = (level == 0);
+        if (isCommoner) {
+            // A commoner character should have a profession and not a class
             if (characterCreateRequest.characterClass() != null) {
                 return failedStatus("Level 0 characters cannot have a character class");
             }
@@ -51,6 +64,59 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
         else if (characterCreateRequest.characterClass() == null) {
             // Characters with levels 1-7 must have a class
             return failedStatus("Missing character class");
+        }
+
+        var attributesMap = characterCreateRequest.attributes();
+        for (var attributeName : AttributeType.values()) {
+            if (!attributesMap.containsKey(attributeName.toString())) {
+                return failedStatus("Attributes object is missing required attribute " + attributeName);
+            }
+        }
+
+        // For class characters, the values from the attributes object should match either the
+        // Challenging or Heroic attribute array
+        // For commoner characters, they should all be between -3 and 3
+        if (isCommoner) {
+            for (var attributeKey : attributesMap.keySet()) {
+                var attributeValue  = attributesMap.get(attributeKey);
+                if (attributeValue < MIN_ATTRIBUTE_VALUE || attributeValue > MAX_ATTRIBUTE_VALUE) {
+                    return failedStatus(
+                            String.format("Attribute %s has invalid value %d which is not between %d and %d",
+                            attributeKey, attributeValue, MIN_ATTRIBUTE_VALUE, MAX_ATTRIBUTE_VALUE));
+                }
+            }
+        }
+        else {
+            var attributeValuesList = attributesMap.values().stream().sorted().toList();
+
+            if (!(CHALLENGING_ATTRIBUTE_VALUES.equals(attributeValuesList) ||
+                    HEROIC_ATTRIBUTE_VALUES.equals(attributeValuesList))) {
+                return failedStatus("Attribute values do not match challenging or heroic attribute arrays");
+            }
+        }
+
+        try {
+            AttributeType.valueOf(characterCreateRequest.speciesStrength());
+        }
+        catch (IllegalArgumentException e) {
+            return failedStatus("Species strength value " + characterCreateRequest.speciesStrength()
+            + " is not a valid attribute type");
+        }
+
+        if (characterCreateRequest.species() != SpeciesType.HUMAN &&
+                StringUtils.isEmpty(characterCreateRequest.speciesWeakness())) {
+            // Non-human characters must have a species weakness specified
+            return failedStatus("Non-human characters must specify a species weakness");
+        }
+
+        try {
+            if (!(characterCreateRequest.species() == SpeciesType.HUMAN)) {
+                AttributeType.valueOf(characterCreateRequest.speciesWeakness());
+            }
+        }
+        catch (IllegalArgumentException e) {
+            return failedStatus("Species weakness value " + characterCreateRequest.speciesWeakness()
+                    + " is not a valid attribute type");
         }
 
         return CharacterCreateStatus.SUCCESS;
