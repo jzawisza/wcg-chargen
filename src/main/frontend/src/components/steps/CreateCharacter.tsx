@@ -47,8 +47,6 @@ const CreateCharacter: React.FC = () => {
             }
 
             const createCharacterRequest = createCharacterRequestBuilder.build();
-            // JPZTEST
-            console.log(createCharacterRequest);
 
             invokeGoogleSheetsApi(codeResponse.token_type, codeResponse.access_token, createCharacterRequest)
                 .then(status => {
