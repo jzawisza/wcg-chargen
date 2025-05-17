@@ -20,4 +20,6 @@ public enum SpeciesType {
     public String toCharSheetString() { return StringUtils.capitalize(toString() );
     }
 
+    public boolean isHuman() { return this == SpeciesType.HUMAN; }
+
 }

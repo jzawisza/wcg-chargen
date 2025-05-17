@@ -2,9 +2,6 @@ type: "dwarf"
 strengths:
   - STR
   - STA
-weaknesses:
-  - PRS
-  - LUC
 skills:
   - Appraisal
   - Athletics

@@ -1,11 +1,11 @@
 package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.enums.AttributeType;
-import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.ProfessionsService;
+import com.wcg.chargen.backend.service.SpeciesService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,8 @@ import java.util.List;
 public class DefaultCharacterCreateRequestValidatorService implements CharacterCreateRequestValidatorService {
     @Autowired
     ProfessionsService professionsService;
+    @Autowired
+    SpeciesService speciesService;
 
     private static final List<Integer> CHALLENGING_ATTRIBUTE_VALUES =
             Arrays.asList(-2, -1, 0, 0, 1, 1, 2);
@@ -103,20 +105,36 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
             + " is not a valid attribute type");
         }
 
-        if (characterCreateRequest.species() != SpeciesType.HUMAN &&
-                StringUtils.isEmpty(characterCreateRequest.speciesWeakness())) {
+        var isHuman = characterCreateRequest.species().isHuman();
+
+        if (!isHuman && StringUtils.isEmpty(characterCreateRequest.speciesWeakness())) {
             // Non-human characters must have a species weakness specified
             return failedStatus("Non-human characters must specify a species weakness");
         }
 
         try {
-            if (!(characterCreateRequest.species() == SpeciesType.HUMAN)) {
+            if (!isHuman) {
                 AttributeType.valueOf(characterCreateRequest.speciesWeakness());
             }
         }
         catch (IllegalArgumentException e) {
             return failedStatus("Species weakness value " + characterCreateRequest.speciesWeakness()
                     + " is not a valid attribute type");
+        }
+
+        // For non-human characters, the species strengths and weaknesses from the request
+        // must sync up with the values from the species YAML files
+        if (!isHuman) {
+            var speciesType = characterCreateRequest.species();
+            var species = speciesService.getSpeciesByType(speciesType);
+            if (!species.strengths().contains(characterCreateRequest.speciesStrength())) {
+                return failedStatus(String.format("Species strength %s is not valid for species %s",
+                        characterCreateRequest.speciesStrength(), speciesType));
+            }
+            if (!species.weaknesses().contains(characterCreateRequest.speciesWeakness())) {
+                return failedStatus(String.format("Species weakness %s is not valid for species %s",
+                        characterCreateRequest.speciesWeakness(), speciesType));
+            }
         }
 
         return CharacterCreateStatus.SUCCESS;

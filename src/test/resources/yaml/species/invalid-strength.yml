@@ -1,6 +1,6 @@
 type: "dwarf"
 strengths:
-  - STR
+  - INVALID
   - STA
 weaknesses:
   - PRS

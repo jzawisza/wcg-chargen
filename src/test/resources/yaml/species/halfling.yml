@@ -1,4 +1,10 @@
 type: "halfling"
+strengths:
+  - LUC
+  - COR
+weaknesses:
+  - PER
+  - STR
 skills:
   - Culture
   - Precise Tasks

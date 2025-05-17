@@ -1,4 +1,10 @@
 type: "elf"
+strengths:
+  - COR
+  - PER
+weaknesses:
+  - STR
+  - STA
 skills:
   - Alchemy
   - Arcana

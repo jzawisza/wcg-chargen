@@ -3,6 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.service.impl.yaml.SpeciesYamlLoaderService;
 import com.wcg.chargen.backend.testUtil.PostConstructUtil;
+import com.wcg.chargen.backend.testUtil.TestInvalidSpeciesYamlLoaderServices;
 import com.wcg.chargen.backend.testUtil.TestYamlLoaderServices;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,28 +20,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultSpeciesServiceTests {
-    static class InvalidSpeciesDataYamlLoaderService extends SpeciesYamlLoaderService {
-        public InvalidSpeciesDataYamlLoaderService() {
-
-        }
-
-        @Override
-        public String getYamlFile() {
-            return "invalid-data.yml";
-        }
-    }
-
-    static class InvalidSpeciesTypeYamlLoaderService extends SpeciesYamlLoaderService {
-        public InvalidSpeciesTypeYamlLoaderService() {
-
-        }
-
-        @Override
-        public String getYamlFile() {
-            return "invalid-species.yml";
-        }
-    }
-
     @ParameterizedTest
     @MethodSource("yamlServicesWithBadDataProvider")
     void test_yamlFiles_With_Invalid_Data_Throw_Exception(List<SpeciesYamlLoaderService> yamlLoaderServiceList, String expectedMsg) {
@@ -64,7 +43,7 @@ public class DefaultSpeciesServiceTests {
             PostConstructUtil.invokeMethod(DefaultSpeciesService.class, defaultSpeciesService);
         }
         catch (Exception e) {
-            fail();
+                fail();
         }
 
         var species = defaultSpeciesService.getSpeciesByType(speciesType);
@@ -73,10 +52,42 @@ public class DefaultSpeciesServiceTests {
 
     static Stream<Arguments> yamlServicesWithBadDataProvider() {
         return Stream.of(
-                Arguments.arguments(Collections.singletonList(new InvalidSpeciesDataYamlLoaderService()),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.InvalidSpeciesDataYamlLoaderService()),
                         "Error loading species YAML file invalid-data.yml"),
-                Arguments.arguments(Collections.singletonList(new InvalidSpeciesTypeYamlLoaderService()),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.InvalidSpeciesTypeYamlLoaderService()),
                         "Species type invalid found in YAML file invalid-species.yml is not valid"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.NoStrengthsSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species strengths for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.EmptyStrengthsSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species strengths for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.TooFewStrengthsSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species strengths for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.TooManyStrengthsSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species strengths for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.NoWeaknessesSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species weaknesses for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.EmptyWeaknessesSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species weaknesses for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.TooFewWeaknessesSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species weaknesses for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.TooManyWeaknessesSpeciesTypeYamlLoaderService()),
+                        "Expected 2 species weaknesses for species dwarf"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.InvalidStrengthSpeciesTypeYamlLoaderService()),
+                        "Species strength value INVALID for species dwarf is not valid"),
+                Arguments.arguments(Collections.singletonList(
+                        new TestInvalidSpeciesYamlLoaderServices.InvalidWeaknessSpeciesTypeYamlLoaderService()),
+                        "Species weakness value INVALID for species dwarf is not valid"),
                 Arguments.arguments(new ArrayList<>(List.of(
                   // Randomly chosen selection of species
                   new TestYamlLoaderServices.TestElfYamlLoaderService(),

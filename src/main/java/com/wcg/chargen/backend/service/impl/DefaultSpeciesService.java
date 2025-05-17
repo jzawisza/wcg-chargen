@@ -1,5 +1,6 @@
 package com.wcg.chargen.backend.service.impl;
 
+import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.Species;
 import com.wcg.chargen.backend.service.SpeciesService;
@@ -42,10 +43,45 @@ public class DefaultSpeciesService implements SpeciesService {
             }
         }
 
-        // Ensure we have a species object for each species type
+        // Ensure we have a species object for each species type, and that non-human species have
+        // 2 valid strengths and weaknesses specified
         for (var speciesType : SpeciesType.values()) {
-            if (speciesTypeMap.get(speciesType) == null) {
+            var species = speciesTypeMap.get(speciesType);
+            if (species == null) {
                 throw new IllegalStateException("No entry for species " + speciesType.toString() + " in species type map");
+            }
+
+            if (!speciesType.isHuman()) {
+                var strengths = species.strengths();
+                var weaknesses = species.weaknesses();
+                if (strengths == null || strengths.size() != 2) {
+                    throw new IllegalStateException("Expected 2 species strengths for species " + speciesType.toString());
+                }
+                if (weaknesses == null || weaknesses.size() != 2) {
+                    throw new IllegalStateException("Expected 2 species weaknesses for species " + speciesType.toString());
+                }
+
+                for (var strength : species.strengths()) {
+                    try {
+                        AttributeType.valueOf(strength);
+                    }
+                    catch (IllegalArgumentException e) {
+                        throw new IllegalStateException(
+                                String.format("Species strength value %s for species %s is not valid",
+                                        strength, speciesType.toString()));
+                    }
+                }
+
+                for (var weakness : species.weaknesses()) {
+                    try {
+                        AttributeType.valueOf(weakness);
+                    }
+                    catch (IllegalArgumentException e) {
+                        throw new IllegalStateException(
+                                String.format("Species weakness value %s for species %s is not valid",
+                                        weakness, speciesType.toString()));
+                    }
+                }
             }
         }
     }

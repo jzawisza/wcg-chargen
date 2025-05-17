@@ -2,6 +2,7 @@ type: "dwarf"
 strengths:
   - STR
   - STA
+  - COR
 weaknesses:
   - PRS
   - LUC

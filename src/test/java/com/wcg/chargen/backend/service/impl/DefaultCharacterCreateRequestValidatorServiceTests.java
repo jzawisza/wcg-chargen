@@ -4,20 +4,27 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Species;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
+import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 public class DefaultCharacterCreateRequestValidatorServiceTests {
@@ -25,6 +32,17 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
     private static final String VALID_PROFESSION = "Forester";
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
+    @MockBean
+    SpeciesService speciesService;
+
+    @BeforeEach
+    public void setup() {
+        var dwarfStrengths = Arrays.asList("STR", "STA");
+        var dwarfWeaknesses = Arrays.asList("PRS", "LUC");
+        var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, null);
+
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+    }
 
     @Test
     public void validate_ReturnsFailureIfRequestIsNull() {
@@ -347,6 +365,52 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
 
         assertNotNull(status);
         assertTrue(status.isSuccess());
+    }
+
+    @Test
+    public void validate_ReturnsFailureIfSpeciesStrengthIsNotInSpeciesStrengthsListForNonHumanSpecies() {
+        var requestSpeciesStrength = "LUC";
+        var expectedMsg = String.format("Species strength %s is not valid for species dwarf",
+                requestSpeciesStrength);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength(requestSpeciesStrength)
+                .withSpeciesWeakness("PRS")
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @Test
+    public void validate_ReturnsFailureIfSpeciesWeaknessIsNotInSpeciesWeaknessesListForNonHumanSpecies() {
+        var requestSpeciesWeakness = "INT";
+        var expectedMsg = String.format("Species weakness %s is not valid for species dwarf",
+                requestSpeciesWeakness);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness(requestSpeciesWeakness)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
     }
 
     @Test
