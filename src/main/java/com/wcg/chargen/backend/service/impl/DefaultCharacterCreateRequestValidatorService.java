@@ -3,9 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
-import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
-import com.wcg.chargen.backend.service.ProfessionsService;
-import com.wcg.chargen.backend.service.SpeciesService;
+import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,8 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
     ProfessionsService professionsService;
     @Autowired
     SpeciesService speciesService;
+    @Autowired
+    SkillsProvider skillsProvider;
 
     private static final List<Integer> CHALLENGING_ATTRIBUTE_VALUES =
             Arrays.asList(-2, -1, 0, 0, 1, 1, 2);
@@ -123,17 +123,46 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
         }
 
         // For non-human characters, the species strengths and weaknesses from the request
-        // must sync up with the values from the species YAML files
+        // must sync up with the values from the species YAML files, and their bonus skill
+        // must be included in the species YAML file
         if (!isHuman) {
             var speciesType = characterCreateRequest.species();
             var species = speciesService.getSpeciesByType(speciesType);
+
             if (!species.strengths().contains(characterCreateRequest.speciesStrength())) {
                 return failedStatus(String.format("Species strength %s is not valid for species %s",
                         characterCreateRequest.speciesStrength(), speciesType));
             }
+
             if (!species.weaknesses().contains(characterCreateRequest.speciesWeakness())) {
                 return failedStatus(String.format("Species weakness %s is not valid for species %s",
                         characterCreateRequest.speciesWeakness(), speciesType));
+            }
+
+            if (!isCommoner && !species.skills().contains(characterCreateRequest.speciesSkill())) {
+                return failedStatus(String.format("Species skill %s is not valid for species %s",
+                        characterCreateRequest.speciesSkill(), speciesType));
+            }
+        }
+
+        if (!isCommoner) {
+            if (characterCreateRequest.bonusSkills() == null) {
+                return failedStatus("Bonus skills cannot be null for characters Level 1 and above");
+            }
+
+            // Humans are allowed 2 bonus skills, while non-humans only get 1,
+            // and the bonus skills must all be valid
+            var expectedBonusSkills = isHuman ? 2 : 1;
+            var speciesClass = isHuman ? "human" : "non-human";
+            if (characterCreateRequest.bonusSkills().size() != expectedBonusSkills) {
+                return failedStatus(String.format("Expected %d bonus skills for %s species, got %d",
+                        expectedBonusSkills, speciesClass, characterCreateRequest.bonusSkills().size()));
+            }
+
+            for (var skill : characterCreateRequest.bonusSkills()) {
+                if (skillsProvider.getByName(skill) == null) {
+                    return failedStatus(String.format("Bonus skill %s is not a valid skill", skill));
+                }
             }
         }
 

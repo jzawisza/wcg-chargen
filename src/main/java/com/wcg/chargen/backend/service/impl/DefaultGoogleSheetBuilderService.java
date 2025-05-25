@@ -5,12 +5,16 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.GridBuilder.getGridBuilder;
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.RowBuilder.getRowBuilder;
@@ -25,12 +29,15 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     CommonerService commonerService;
     @Autowired
     RandomNumberService randomNumberService;
+    @Autowired
+    SkillsProvider skillsProvider;
 
     private static final String STATS_SHEET_TITLE = "Stats";
     private static final String SPELLS_SHEET_TITLE = "Spells";
     private static final String FEATURES_SHEET_TITLE = "Class/Species Features";
     private static final String GEAR_SHEET_TITLE = "Gear";
     private static final int NUM_GEAR_ROWS = 10;
+    private static final int NUM_DEFAULT_SKILL_ROWS = 7;
 
 
     private static Sheet buildSheetWithTitle(String title)
@@ -38,7 +45,10 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return new Sheet().setProperties(new SheetProperties().setTitle(title));
     }
 
-    private static String generateTotalModifierFormula(String cellToLeft) {
+    private static String generateTotalModifierFormula(int index) {
+        var startingIndex = 9;
+        var cellToLeft = String.format("E%d", startingIndex + index);
+
         return """
                 =SUM(C3,IFS(EXACT(%s,"STR"), B9, EXACT(%s,"COR"), B10, EXACT(%s,"STA"), B11, \
                 EXACT(%s,"INT"), B12, EXACT(%s,"PER"), B13, EXACT(%s,"PRS"), B14, EXACT(%s,"LUC"), B15))
@@ -166,9 +176,83 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
     }
 
+    private List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {
+        // Commoner characters don't have skills
+        if (characterCreateRequest.level() == 0) {
+            return Collections.emptyList();
+        }
+
+        // First, get all the class skills
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        // Wrap with ArrayList so we can mutate the list to add species and bonus skills
+        var skillsList = new ArrayList<>(charClass.skills().stream()
+                .map(x -> skillsProvider.getByName(x))
+                .toList());
+
+        // Then add the species skill (if applicable) and bonus skills
+        if (!StringUtils.isEmpty(characterCreateRequest.speciesSkill())) {
+            skillsList.add(skillsProvider.getByName(characterCreateRequest.speciesSkill()));
+        }
+        for (var bonusSkill : characterCreateRequest.bonusSkills()) {
+            skillsList.add(skillsProvider.getByName(bonusSkill));
+        }
+
+        return skillsList.stream()
+                .sorted((Comparator.comparing(Skill::name)))
+                .toList();
+    }
+
+    private Skill getSkillFromList(List<Skill> skillsList, int index) {
+        // If we've gone through the entire list of skills, don't return anything
+        return (skillsList.size() > index) ? skillsList.get(index) : null;
+    }
+
+    private String getSkillNameText(List<Skill> skillsList, int index) {
+        var skill = getSkillFromList(skillsList, index);
+
+        return (skill != null) ? skill.name() : "";
+    }
+
+    private String getSkillAttributeText(List<Skill> skillsList, int index) {
+        var skill = getSkillFromList(skillsList, index);
+
+        // Return the first element from the attributes array:
+        // either there's only 1 element, or the data validation rule for the cell
+        // will allow the user to select the other elements
+        return (skill != null) ? skill.attributes()[0] : "";
+    }
+
+    private DataValidationRule getSkillAttributeDataValidation(List<Skill> skillsList, int index) {
+        var skill = getSkillFromList(skillsList, index);
+
+        // If we don't have any more skills to add, or if the skill has only 1 attribute,
+        // there's no need for a data validation rule
+        if (skill == null || skill.attributes().length == 1) {
+            return null;
+        }
+
+        var condition = new BooleanCondition();
+        condition.setType("ONE_OF_LIST");
+        var skillAttributeValues = new ArrayList<ConditionValue>();
+        for (var attribute : skill.attributes()) {
+            var conditionValue = new ConditionValue();
+            conditionValue.setUserEnteredValue(attribute);
+            skillAttributeValues.add(conditionValue);
+        }
+
+        condition.setValues(skillAttributeValues);
+
+        var dataValidationRule = new DataValidationRule();
+        dataValidationRule.setShowCustomUi(true);
+        dataValidationRule.setCondition(condition);
+
+        return dataValidationRule;
+    }
+
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
+        var skillsList = getSkillsList(characterCreateRequest);
 
         // Block with basic information and money sections
         var row1 = getRowBuilder()
@@ -264,9 +348,10 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addHighlightedCellWithText("Strength (STR)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.STR)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E9"))
+                .addCellWithText(getSkillNameText(skillsList, 0))
+                .addCellWithText(getSkillAttributeText(skillsList, 0),
+                        getSkillAttributeDataValidation(skillsList, 0))
+                .addCellWithFormula(generateTotalModifierFormula(0))
                 .addEmptyCell()
                 .addSecondaryHeaderCell("Ranged")
                 .addCellWithFormula("=SUM(B5,B10)")
@@ -276,63 +361,60 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addHighlightedCellWithText("Coordination (COR)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.COR)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E10"))
+                .addCellWithText(getSkillNameText(skillsList, 1))
+                .addCellWithText(getSkillAttributeText(skillsList, 1),
+                        getSkillAttributeDataValidation(skillsList, 1))
+                .addCellWithFormula(generateTotalModifierFormula(1))
                 .addEmptyCell();
 
         var row10Builder = getRowBuilder()
                 .addHighlightedCellWithText("Stamina (STA)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.STA)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E11"))
+                .addCellWithText(getSkillNameText(skillsList, 2))
+                .addCellWithText(getSkillAttributeText(skillsList, 2),
+                        getSkillAttributeDataValidation(skillsList, 2))
+                .addCellWithFormula(generateTotalModifierFormula(2))
                 .addEmptyCell();
 
         var row11Builder = getRowBuilder()
                 .addHighlightedCellWithText("Intellect (INT)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.INT)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E12"))
+                .addCellWithText(getSkillNameText(skillsList, 3))
+                .addCellWithText(getSkillAttributeText(skillsList, 3),
+                        getSkillAttributeDataValidation(skillsList, 3))
+                .addCellWithFormula(generateTotalModifierFormula(3))
                 .addEmptyCell();
 
         var row12Builder = getRowBuilder()
                 .addHighlightedCellWithText("Perception (PER)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.PER)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E13"))
+                .addCellWithText(getSkillNameText(skillsList, 4))
+                .addCellWithText(getSkillAttributeText(skillsList, 4),
+                        getSkillAttributeDataValidation(skillsList, 4))
+                .addCellWithFormula(generateTotalModifierFormula(4))
                 .addEmptyCell();
 
         var row13Builder = getRowBuilder()
                 .addHighlightedCellWithText("Presence (PRS)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.PRS)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E14"))
+                .addCellWithText(getSkillNameText(skillsList, 5))
+                .addCellWithText(getSkillAttributeText(skillsList, 5),
+                        getSkillAttributeDataValidation(skillsList, 5))
+                .addCellWithFormula(generateTotalModifierFormula(5))
                 .addEmptyCell();
 
         var row14 = getRowBuilder()
                 .addHighlightedCellWithText("Luck (LUC)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.LUC)
                 .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E15"))
-                .build();
-
-        var row15 = getRowBuilder()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithFormula(generateTotalModifierFormula("E16"))
+                .addCellWithText(getSkillNameText(skillsList, 6))
+                .addCellWithText(getSkillAttributeText(skillsList, 6),
+                        getSkillAttributeDataValidation(skillsList, 6))
+                .addCellWithFormula(generateTotalModifierFormula(6))
                 .build();
 
         // If the character is a magic user, we have Spell under the list of attack modifiers.
@@ -371,6 +453,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
 
         // Block with armor and weapons
+        // Note that row 15 is deliberately skipped, as it will be added below
         var row16 = getRowBuilder()
                 .addHeaderCell("ARMOR")
                 .addHeaderCell("")
@@ -428,7 +511,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithText("")
                 .build();
 
-        var gridData = getGridBuilder()
+        var gridDataBuilder = getGridBuilder()
                 .withNumColumns(9)
                 .addRow(row1)
                 .addRow(row2)
@@ -444,8 +527,27 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addRow(row11Builder.build())
                 .addRow(row12Builder.build())
                 .addRow(row13Builder.build())
-                .addRow(row14)
-                .addRow(row15)
+                .addRow(row14);
+
+        // If we have more than 7 skills, add rows for all the ones we need
+        // If we have 7 or fewer skills, this is a no-op
+        var numRemainingSkillRowsNeeded = skillsList.size() - NUM_DEFAULT_SKILL_ROWS;
+        for (var j = 0; j < numRemainingSkillRowsNeeded; j++) {
+            var index = j + NUM_DEFAULT_SKILL_ROWS;
+            var row15 = getRowBuilder()
+                    .addEmptyCell()
+                    .addEmptyCell()
+                    .addEmptyCell()
+                    .addCellWithText(getSkillNameText(skillsList, index))
+                    .addCellWithText(getSkillAttributeText(skillsList, index),
+                            getSkillAttributeDataValidation(skillsList, index))
+                    .addCellWithFormula(generateTotalModifierFormula(index))
+                    .build();
+
+            gridDataBuilder.addRow(row15);
+        }
+
+         gridDataBuilder
                 .addEmptyRow()
                 .addRow(row16)
                 .addRow(row17)
@@ -458,7 +560,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .setColumnWidth(5, 150)
                 .build();
 
-        sheet.setData(Collections.singletonList(gridData));
+        sheet.setData(Collections.singletonList(gridDataBuilder.build()));
 
         return sheet;
     }

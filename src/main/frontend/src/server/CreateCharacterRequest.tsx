@@ -8,5 +8,7 @@ export interface CreateCharacterRequest {
     level: number,
     attributes: AttributeScoreObject,
     speciesStrength: string,
-    speciesWeakness?: string
+    speciesWeakness?: string,
+    speciesSkill?: string,
+    bonusSkills?: string[]
 }

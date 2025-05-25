@@ -43,26 +43,34 @@ public class DefaultGoogleSheetBuilderServiceTests {
     CommonerService commonerService;
     @Autowired
     RandomNumberService randomNumberService;
+    @Autowired
+    SkillsProvider skillsProvider;
 
     private static final String PROFESSION_1_NAME = "Profession1";
     private static final String PROFESSION_2_NAME = "Profession2";
     private static final String PROFESSION_3_NAME = "Profession3";
+    private static final String SKILL_1_NAME = "Arcana";
+    private static final String SKILL_2_NAME = "Athletics";
+    private static final String SKILL_3_NAME = "Deceit";
+    private static final String SKILL_4_NAME = "Stealth";
     private static final int TEST_LEVEL_1_HP = 8;
     private static final int TEST_MAX_HP_AT_LEVEL_UP = 4;
 
     @BeforeEach
     public void beforeTest() {
-        var profession1 = new Profession(PROFESSION_1_NAME, 0, 3);
-        var profession2 = new Profession(PROFESSION_2_NAME, 4, 8);
-        var profession3 = new Profession(PROFESSION_3_NAME, 9, 11);
-        var professions = new Professions(Arrays.asList(profession1, profession2, profession3));
+        var professions = new Professions(List.of(
+                new Profession(PROFESSION_1_NAME, 0, 3),
+                new Profession(PROFESSION_2_NAME, 4, 8),
+                new Profession(PROFESSION_3_NAME, 9, 11)));
+
+        var skills = List.of(SKILL_1_NAME, SKILL_2_NAME, SKILL_3_NAME, SKILL_4_NAME);
 
         var charClass = new CharClass(CharType.WARRIOR.toString(),
                 Arrays.asList(1, 2, 3, 4, 5, 6, 7),
                 Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
                 TEST_LEVEL_1_HP,
                 TEST_MAX_HP_AT_LEVEL_UP,
-                null,
+                skills,
                 null);
 
         var commonerInfo = new Commoner(0, 10);
@@ -746,6 +754,197 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(currentHpValue.getNumberValue(), maxHpValue.getNumberValue());
     }
 
+    @Test
+    public void buildStatsSheet_ContainsExpectedSkillsAndSkillAttributesForNonHumanCharacter() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PRS")
+                .withSpeciesSkill("Intimidation")
+                .withBonusSkills(List.of("Healing"))
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var skill1NameValue = getCellValueFromSheet(sheet, 8, 3);
+        assertEquals(SKILL_1_NAME, skill1NameValue.getStringValue());
+        var skill2NameValue = getCellValueFromSheet(sheet, 9, 3);
+        assertEquals(SKILL_2_NAME, skill2NameValue.getStringValue());
+        var skill3NameValue = getCellValueFromSheet(sheet, 10, 3);
+        assertEquals(SKILL_3_NAME, skill3NameValue.getStringValue());
+        var skill4NameValue = getCellValueFromSheet(sheet, 11, 3);
+        assertEquals("Healing", skill4NameValue.getStringValue());
+        var skill5NameValue = getCellValueFromSheet(sheet, 12, 3);
+        assertEquals("Intimidation", skill5NameValue.getStringValue());
+        var skill6NameValue = getCellValueFromSheet(sheet, 13, 3);
+        assertEquals(SKILL_4_NAME, skill6NameValue.getStringValue());
+        // Last attribute row should have no skill name
+        var skill7NameValue = getCellValueFromSheet(sheet, 14, 3);
+        assertEquals("", skill7NameValue.getStringValue());
+
+        var skill1AttributeValue = getCellValueFromSheet(sheet, 8, 4);
+        assertEquals("INT", skill1AttributeValue.getStringValue());
+        var skill2AttributeValue = getCellValueFromSheet(sheet, 9, 4);
+        assertEquals("STR", skill2AttributeValue.getStringValue());
+        var skill3AttributeValue = getCellValueFromSheet(sheet, 10, 4);
+        assertEquals("PRS", skill3AttributeValue.getStringValue());
+        var skill4AttributeValue = getCellValueFromSheet(sheet, 11, 4);
+        assertEquals("INT", skill4AttributeValue.getStringValue());
+        var skill5AttributeValue = getCellValueFromSheet(sheet, 12, 4);
+        assertEquals("STR", skill5AttributeValue.getStringValue());
+        var skill6AttributeValue = getCellValueFromSheet(sheet, 13, 4);
+        assertEquals("COR", skill6AttributeValue.getStringValue());
+        // Last attribute row should have no skill attribute
+        var skill7AttributeValue = getCellValueFromSheet(sheet, 14, 4);
+        assertEquals("", skill7AttributeValue.getStringValue());
+    }
+
+    @Test
+    public void buildStatsSheet_ContainsExpectedSkillsAndSkillAttributesForHumanCharacter() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withSpeciesStrength("INT")
+                .withBonusSkills(List.of("Healing", "Negotiation"))
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var skill1NameValue = getCellValueFromSheet(sheet, 8, 3);
+        assertEquals(SKILL_1_NAME, skill1NameValue.getStringValue());
+        var skill2NameValue = getCellValueFromSheet(sheet, 9, 3);
+        assertEquals(SKILL_2_NAME, skill2NameValue.getStringValue());
+        var skill3NameValue = getCellValueFromSheet(sheet, 10, 3);
+        assertEquals(SKILL_3_NAME, skill3NameValue.getStringValue());
+        var skill4NameValue = getCellValueFromSheet(sheet, 11, 3);
+        assertEquals("Healing", skill4NameValue.getStringValue());
+        var skill5NameValue = getCellValueFromSheet(sheet, 12, 3);
+        assertEquals("Negotiation", skill5NameValue.getStringValue());
+        var skill6NameValue = getCellValueFromSheet(sheet, 13, 3);
+        assertEquals(SKILL_4_NAME, skill6NameValue.getStringValue());
+        // Last attribute row should have no skill name
+        var skill7NameValue = getCellValueFromSheet(sheet, 14, 3);
+        assertEquals("", skill7NameValue.getStringValue());
+
+        var skill1AttributeValue = getCellValueFromSheet(sheet, 8, 4);
+        assertEquals("INT", skill1AttributeValue.getStringValue());
+        var skill2AttributeValue = getCellValueFromSheet(sheet, 9, 4);
+        assertEquals("STR", skill2AttributeValue.getStringValue());
+        var skill3AttributeValue = getCellValueFromSheet(sheet, 10, 4);
+        assertEquals("PRS", skill3AttributeValue.getStringValue());
+        var skill4AttributeValue = getCellValueFromSheet(sheet, 11, 4);
+        assertEquals("INT", skill4AttributeValue.getStringValue());
+        var skill5AttributeValue = getCellValueFromSheet(sheet, 12, 4);
+        assertEquals("PRS", skill5AttributeValue.getStringValue());
+        var skill6AttributeValue = getCellValueFromSheet(sheet, 13, 4);
+        assertEquals("COR", skill6AttributeValue.getStringValue());
+        // Last attribute row should have no skill attribute
+        var skill7AttributeValue = getCellValueFromSheet(sheet, 14, 4);
+        assertEquals("", skill7AttributeValue.getStringValue());
+    }
+
+    @Test
+    public void buildStats_ContainsExpectedDataValidationRulesForSkillAttributes() {
+        // arrange
+        var expectedAttributeValuesList = List.of("STR", "COR", "STA");
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withSpeciesStrength("INT")
+                .withBonusSkills(List.of("Healing", "Negotiation"))
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var singleAttributeValueCellData = getCellDataFromSheet(sheet, 8, 4);
+        // The data validation for the Arcana skill should be null, since Arcana only uses INT
+        assertNull(singleAttributeValueCellData.getDataValidation());
+
+        var multiAttributeValueCellData = getCellDataFromSheet(sheet, 9, 4);
+        // Athletics has 3 possible skills that it uses, so we should have a data validation rule
+        assertConditionValueListHasAllValuesFromList(multiAttributeValueCellData.getDataValidation(),
+                expectedAttributeValuesList);
+    }
+
+    @Test
+    public void buildStats_CommonerCharactersHaveNoSkillsOrSkillAttributes() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(0)
+                .withSpeciesStrength("INT")
+                .withSpeciesWeakness("PRS")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var startIndex = 8;
+        var numAttributeRows = 7;
+        for (int i = startIndex; i < startIndex + numAttributeRows; i++) {
+            var skillNameValue = getCellValueFromSheet(sheet, i, 3);
+            assertEquals("", skillNameValue.getStringValue());
+
+            var skillAttributeCellData = getCellDataFromSheet(sheet, i,4 );
+            assertNotNull(skillAttributeCellData.getUserEnteredValue());
+            assertEquals("", skillAttributeCellData.getUserEnteredValue().getStringValue());
+            assertNull(skillAttributeCellData.getDataValidation());
+        }
+    }
+
+    @Test
+    public void buildStats_ExtraRowsGeneratedIfNumberOfSkillsExceedsDefaultNumberOfRows() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withSpeciesStrength("INT")
+                .withBonusSkills(List.of("Healing", "History", "Intimidation", "Languages", "Negotiation"))
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var skill1NameValue = getCellValueFromSheet(sheet, 8, 3);
+        assertEquals(SKILL_1_NAME, skill1NameValue.getStringValue());
+        var skill2NameValue = getCellValueFromSheet(sheet, 9, 3);
+        assertEquals(SKILL_2_NAME, skill2NameValue.getStringValue());
+        var skill3NameValue = getCellValueFromSheet(sheet, 10, 3);
+        assertEquals(SKILL_3_NAME, skill3NameValue.getStringValue());
+        var skill4NameValue = getCellValueFromSheet(sheet, 11, 3);
+        assertEquals("Healing", skill4NameValue.getStringValue());
+        var skill5NameValue = getCellValueFromSheet(sheet, 12, 3);
+        assertEquals("History", skill5NameValue.getStringValue());
+        var skill6NameValue = getCellValueFromSheet(sheet, 13, 3);
+        assertEquals("Intimidation", skill6NameValue.getStringValue());
+        var skill7NameValue = getCellValueFromSheet(sheet, 14, 3);
+        assertEquals("Languages", skill7NameValue.getStringValue());
+        var skill8NameValue = getCellValueFromSheet(sheet, 15, 3);
+        assertEquals("Negotiation", skill8NameValue.getStringValue());
+        var skill9NameValue = getCellValueFromSheet(sheet, 16, 3);
+        assertEquals(SKILL_4_NAME, skill9NameValue.getStringValue());
+    }
 
     @Test
     public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {

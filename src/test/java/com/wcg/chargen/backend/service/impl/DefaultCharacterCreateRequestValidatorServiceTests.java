@@ -3,9 +3,9 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
-import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Species;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
+import com.wcg.chargen.backend.service.SkillsProvider;
 import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -19,8 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,12 +35,15 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
     @MockBean
     SpeciesService speciesService;
+    @Autowired
+    SkillsProvider skillsProvider;
 
     @BeforeEach
     public void setup() {
         var dwarfStrengths = Arrays.asList("STR", "STA");
         var dwarfWeaknesses = Arrays.asList("PRS", "LUC");
-        var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, null);
+        var dwarfSkills = Arrays.asList("Appraisal", "Athletics", "Intimidation");
+        var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, dwarfSkills);
 
         Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
     }
@@ -359,6 +363,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
                 .withSpeciesStrength("LUC")
                 .withSpeciesWeakness(invalidSpeciesWeakness)
+                .withBonusSkills(Arrays.asList("Healing", "History"))
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);
@@ -414,6 +419,122 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
     }
 
     @Test
+    public void validate_ReturnsFailureIfSpeciesSkillIsNotInSpeciesSkillsListForNonHumanSpecies() {
+        var invalidSkill = "Invalid";
+        var expectedMsg = String.format("Species skill %s is not valid for species dwarf", invalidSkill);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill(invalidSkill)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @Test
+    public void validate_ReturnsFailureIfClassCharacterBonusSkillsAreNull() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(null)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Bonus skills cannot be null for characters Level 1 and above", status.message());
+    }
+    @ParameterizedTest
+    @MethodSource("speciesAndBonusSkillsTestCases")
+    public void validate_ReturnsExpectedStatusBasedOnNumberOfBonusSkillsPerSpecies(
+            SpeciesType speciesType, List<String> bonusSkillsList, boolean expectedStatus) {
+        var expectedMsg = "";
+        if (!expectedStatus) {
+            var expectedBonusSkills = (speciesType == SpeciesType.HUMAN) ? 2 : 1;
+            var speciesClass = (speciesType == SpeciesType.HUMAN) ? "human" : "non-human";
+            expectedMsg = String.format("Expected %d bonus skills for %s species, got %d",
+                    expectedBonusSkills, speciesClass, bonusSkillsList.size());
+        }
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(speciesType)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(bonusSkillsList)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertEquals(expectedStatus, status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    static Stream<Arguments> speciesAndBonusSkillsTestCases() {
+        return Stream.of(
+                Arguments.arguments(SpeciesType.DWARF, List.of("Healing"), true),
+                Arguments.arguments(SpeciesType.DWARF, Collections.emptyList(), false),
+                Arguments.arguments(SpeciesType.DWARF, List.of("Healing", "History"), false),
+                Arguments.arguments(SpeciesType.ELF, List.of("Healing"), true),
+                Arguments.arguments(SpeciesType.ELF, Collections.emptyList(), false),
+                Arguments.arguments(SpeciesType.ELF, List.of("Healing", "History"), false),
+                Arguments.arguments(SpeciesType.HALFLING, List.of("Healing"), true),
+                Arguments.arguments(SpeciesType.HALFLING, Collections.emptyList(), false),
+                Arguments.arguments(SpeciesType.HALFLING, List.of("Healing", "History"), false),
+                Arguments.arguments(SpeciesType.HUMAN, List.of("Healing", "History"), true),
+                Arguments.arguments(SpeciesType.HUMAN, Collections.emptyList(), false),
+                Arguments.arguments(SpeciesType.HUMAN, List.of("Healing"), false),
+                Arguments.arguments(SpeciesType.HUMAN, List.of("Healing", "History", "Languages"), false)
+        );
+    }
+
+    @Test
+    public void validate_ReturnsFailureIfBonusSkillIsNotInMasterSkillsList() {
+        var invalidBonusSkill = "Invalid";
+        var expectedMsg = String.format("Bonus skill %s is not a valid skill", invalidBonusSkill);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(List.of(invalidBonusSkill))
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @Test
     public void validate_ReturnsSuccessIfRequestIsValidClassCharacterWithHeroicArray() {
         var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(2, 1, 2, 0, -1, 0, 0);
         var request = CharacterCreateRequestBuilder.getBuilder()
@@ -424,6 +545,8 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withAttributes(attributesMap)
                 .withSpeciesStrength(AttributeType.STA.name())
                 .withSpeciesWeakness(AttributeType.LUC.name())
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(List.of("Healing"))
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);
@@ -443,6 +566,8 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withAttributes(attributesMap)
                 .withSpeciesStrength(AttributeType.STA.name())
                 .withSpeciesWeakness(AttributeType.LUC.name())
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(List.of("Healing"))
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);

@@ -6,6 +6,7 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
 import java.util.Map;
 
 public record CharacterCreateRequest(@NotEmpty String characterName,
@@ -15,7 +16,9 @@ public record CharacterCreateRequest(@NotEmpty String characterName,
                                      @NotNull Integer level,
                                      @NotNull Map<String, Integer> attributes,
                                      @NotEmpty String speciesStrength,
-                                     String speciesWeakness) {
+                                     String speciesWeakness,
+                                     String speciesSkill,
+                                     List<String> bonusSkills) {
     public Integer getAttributeValue(AttributeType attributeType) {
         // The request validation will guarantee that this value exists
         var attributeValue = attributes().get(attributeType.toString());

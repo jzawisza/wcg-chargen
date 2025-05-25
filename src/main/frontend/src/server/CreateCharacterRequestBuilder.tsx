@@ -1,6 +1,8 @@
 import { AttributeScoreObject, EMPTY_ATTRIBUTE_SCORE_OBJ } from "../constants/AttributeScoreObject";
 import { CreateCharacterRequest } from "./CreateCharacterRequest";
 
+let emptyStringArray: string[] = [];
+
 export class CreateCharacterRequestBuilder {
     _charName = "";
     _charClass = "";
@@ -10,6 +12,8 @@ export class CreateCharacterRequestBuilder {
     _attributes = EMPTY_ATTRIBUTE_SCORE_OBJ;
     _speciesStrength = "";
     _speciesWeakness = "";
+    _speciesSkill = "";
+    _bonusSkills = emptyStringArray;
 
     withCharacterName(charName: string) {
         this._charName = charName;
@@ -57,6 +61,18 @@ export class CreateCharacterRequestBuilder {
         return this;
     }
 
+    withSpeciesSkill(speciesSkill: string) {
+        this._speciesSkill = speciesSkill;
+
+        return this;
+    }
+
+    withBonusSkills(bonusSkills: string[]) {
+        this._bonusSkills = bonusSkills;
+
+        return this;
+    }
+
     build() {
         const createCharacterRequest: CreateCharacterRequest = {
             "characterName": this._charName,
@@ -69,9 +85,16 @@ export class CreateCharacterRequestBuilder {
 
         if (this._level > 0) {
             createCharacterRequest.characterClass = this._charClass;
+            createCharacterRequest.bonusSkills = Array.isArray(this._bonusSkills)
+            ? this._bonusSkills
+            : [this._bonusSkills];
         }
         else {
             createCharacterRequest.profession = this._profession;
+        }
+
+        if (this._speciesSkill !== "") {
+            createCharacterRequest.speciesSkill = this._speciesSkill;
         }
 
         return createCharacterRequest;

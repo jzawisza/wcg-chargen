@@ -5,7 +5,9 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CharacterCreateRequestBuilder {
@@ -17,6 +19,8 @@ public class CharacterCreateRequestBuilder {
     private Map<String, Integer> attributes = null;
     private String speciesStrength = null;
     private String speciesWeakness = null;
+    private String speciesSkill = null;
+    private List<String> bonusSkills = new ArrayList<>();
     private boolean useNullAttributes = false;
 
 
@@ -84,6 +88,18 @@ public class CharacterCreateRequestBuilder {
         return this;
     }
 
+    public CharacterCreateRequestBuilder withSpeciesSkill(String speciesSkill) {
+        this.speciesSkill = speciesSkill;
+
+        return this;
+    }
+
+    public CharacterCreateRequestBuilder withBonusSkills(List<String> bonusSkills) {
+        this.bonusSkills = bonusSkills;
+
+        return this;
+    }
+
     public CharacterCreateRequest build() {
         // If the attributes map is null, provide something valid by default so the unit tests pass,
         // but allow for the attributes to be deliberately null as well
@@ -91,7 +107,7 @@ public class CharacterCreateRequestBuilder {
             attributes = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0,0, 0);
         }
         return new CharacterCreateRequest(characterName, characterType, speciesType, profession, level,
-                attributes, speciesStrength, speciesWeakness);
+                attributes, speciesStrength, speciesWeakness, speciesSkill, bonusSkills);
     }
 
     public static Map<String, Integer> getAttributesMap(int strVal, int corVal, int staVal, int perVal,
