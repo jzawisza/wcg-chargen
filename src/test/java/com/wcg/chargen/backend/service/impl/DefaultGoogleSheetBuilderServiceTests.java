@@ -71,6 +71,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_LEVEL_1_HP,
                 TEST_MAX_HP_AT_LEVEL_UP,
                 skills,
+                null,
                 null);
 
         var commonerInfo = new Commoner(0, 10);

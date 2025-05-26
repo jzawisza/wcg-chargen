@@ -1,7 +1,7 @@
 type: "shaman"
 attackModifiers: [0, 1, 1, 2, 3, 3, 4]
 evasionModifiers: [11, 11, 12, 12, 13, 13, 14]
-level1Hp: 10
+level1Hp: 7
 maxHpAtLevelUp: 3
 skills:
   - Animal Expertise
@@ -10,6 +10,24 @@ skills:
   - Nature
   - Religion
   - Survival
+gear:
+  armor:
+    - name: Leather
+      type: Light
+      da: 3
+  weapons:
+    - name: Staff
+      type: Light
+      damage: 1d8
+    - name: Bone Dirk
+      type: Light/Thrown
+      damage: 1d8
+  maxCopper: 24
+  maxSilver: 0
+  items:
+    - Flint & Steel
+    - Rations (3)
+    - Waterskin
 features:
   tier1:
     - description: "Learn 1 additional spell of less than character level"

@@ -6,6 +6,35 @@ maxHpAtLevelUp: 4
 skills:
   - Animal Expertise
   - Athletics
+gear:
+  armor:
+    - name: Leather
+      type: Light
+      da: 3
+    - name: Hoplite Shield
+      type: Shield
+      da: All from one hit (destroys shield)
+  weapons:
+    - name: Arming Sword
+      type: Light
+      damage: 1d8
+    - name: Recurve Bow
+      type: Bow
+      damage: 1d10
+    - name: Dagger
+      type: Light/Thrown
+      damage: 1d8
+  maxCopper: 0
+  maxSilver: 4
+  items:
+    - Quiver & 15 arrows
+    - Backpack
+    - Flint & Steel
+    - Blanket
+    - Rope (50 ft.)
+    - Torches (2)
+    - Rations (3)
+    - Waterskin
 features:
   tier1:
     - description: "Specialize in a melee weapon type: +1 to hit & damage"

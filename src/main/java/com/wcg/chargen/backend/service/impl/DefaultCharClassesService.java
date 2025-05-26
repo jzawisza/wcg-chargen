@@ -107,6 +107,46 @@ public class DefaultCharClassesService implements CharClassesService {
                     }
                 }
 
+                // Validate that quick gear has expected data
+                if (charClass.gear() == null) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null gear data",
+                                    charClass.type()));
+                }
+
+                if (charClass.gear().armor() == null ||
+                    charClass.gear().armor().isEmpty()) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null or missing armor information in gear",
+                                    charClass.type()));
+                }
+
+                if (charClass.gear().weapons() == null ||
+                        charClass.gear().weapons().isEmpty()) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null or missing weapon information in gear",
+                                    charClass.type()));
+                }
+
+                if (charClass.gear().maxCopper() == null) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null or missing max copper information in gear",
+                                    charClass.type()));
+                }
+
+                if (charClass.gear().maxSilver() == null) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null or missing max silver information in gear",
+                                    charClass.type()));
+                }
+
+                if (charClass.gear().items() == null ||
+                        charClass.gear().items().isEmpty()) {
+                    throw new IllegalStateException(
+                            String.format("Character class type %s has null or missing item information in gear",
+                                    charClass.type()));
+                }
+
                 // Validate that all features have correct attribute data
                 if (charClass.features() == null) {
                     throw new IllegalStateException("Character class type " + charClass.type()

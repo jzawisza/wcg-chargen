@@ -1,7 +1,7 @@
 type: "skald"
 attackModifiers: [0, 1, 2, 2, 3, 3, 4]
 evasionModifiers: [11, 12, 12, 13, 13, 14, 14]
-level1Hp: 10
+level1Hp: 7
 maxHpAtLevelUp: 3
 skills:
   - Culture
@@ -10,6 +10,26 @@ skills:
   - History
   - Negotiation
   - Perform
+gear:
+  armor:
+    - name: Brigandine
+      type: Light
+      da: 3
+  weapons:
+    - name: Short Sword
+      type: Light
+      damage: 1d8
+    - name: Dagger
+      type: Light/Thrown
+      damage: 1d8
+  maxCopper: 20
+  maxSilver: 20
+  items:
+    - Backpack
+    - Flint & Steel
+    - Bedroll
+    - Rations (3)
+    - Waterskin
 features:
   tier1:
     - description: "Healing Song: Heal Close allies 1d3 dmg or 1 AP"

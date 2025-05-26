@@ -1,7 +1,7 @@
 type: "berzerker"
-attackModifiers: []
+attackModifiers: [1, 2, 2, 3, 4, 4, 5]
 evasionModifiers: [12, 12, 13, 14, 14, 15, 16]
-level1Hp: 10
+level1Hp: 12
 maxHpAtLevelUp: 4
 skills:
   - Athletics
@@ -9,9 +9,6 @@ skills:
   - Survival
 gear:
   armor:
-    - name: Leather
-      type: Light
-      da: 3
   weapons:
     - name: Great Axe
       type: Heavy

@@ -1,7 +1,7 @@
 type: "berzerker"
-attackModifiers: []
+attackModifiers: [1, 2, 2, 3, 4, 4, 5]
 evasionModifiers: [12, 12, 13, 14, 14, 15, 16]
-level1Hp: 10
+level1Hp: 12
 maxHpAtLevelUp: 4
 skills:
   - Athletics
@@ -13,12 +13,6 @@ gear:
       type: Light
       da: 3
   weapons:
-    - name: Great Axe
-      type: Heavy
-      damage: 1d10
-    - name: Hand Axe
-      type: Light/Thrown
-      damage: 1d8
   maxCopper: 12
   maxSilver: 10
   items:

@@ -7,6 +7,30 @@ skills:
   - Athletics
   - Religion
   - Stealth
+gear:
+  armor:
+    - name: Leather
+      type: Light
+      da: 3
+  weapons:
+    - name: Short Sword
+      type: Light
+      damage: 1d8
+    - name: Dagger
+      type: Light/Thrown
+      damage: 1d8
+    - name: Fists
+      type: Unarmed
+      damage: 1d6
+  maxCopper: 4
+  maxSilver: 4
+  items:
+    - Backpack
+    - Flint & Steel
+    - Blanket
+    - Torches (2)
+    - Rations (3)
+    - Waterskin
 features:
   tier1:
     - description: "Butterfly Whirl: Far zone fall dmg 0, thereafter half"

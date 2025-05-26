@@ -236,4 +236,88 @@ public class TestInvalidYamlLoaderServices
             return "invalid-skill.yml";
         }
     }
+
+    public static class NoGear extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "no-gear.yml";
+        }
+    }
+
+    public static class EmptyGear extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "empty-gear.yml";
+        }
+    }
+
+    public static class GearNoArmor extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-no-armor.yml";
+        }
+    }
+
+    public static class GearEmptyArmor extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-empty-armor.yml";
+        }
+    }
+
+    public static class GearNoWeapons extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-no-weapons.yml";
+        }
+    }
+
+    public static class GearEmptyWeapons extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-empty-weapons.yml";
+        }
+    }
+
+    public static class GearNoMaxCopper extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-no-max-copper.yml";
+        }
+    }
+
+    public static class GearEmptyMaxCopper extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-empty-max-copper.yml";
+        }
+    }
+
+    public static class GearNoMaxSilver extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-no-max-silver.yml";
+        }
+    }
+
+    public static class GearEmptyMaxSilver extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-empty-max-silver.yml";
+        }
+    }
+
+    public static class GearNoItems extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-no-items.yml";
+        }
+    }
+
+    public static class GearEmptyItems extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() {
+            return "gear-empty-items.yml";
+        }
+    }
 }

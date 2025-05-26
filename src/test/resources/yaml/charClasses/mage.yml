@@ -1,7 +1,7 @@
 type: "mage"
 attackModifiers: [0, 1, 1, 2, 3, 3, 4]
 evasionModifiers: [11, 11, 12, 12, 13, 13, 14]
-level1Hp: 10
+level1Hp: 6
 maxHpAtLevelUp: 3
 skills:
   - Alchemy
@@ -9,6 +9,28 @@ skills:
   - Culture
   - History
   - Languages
+gear:
+  armor:
+    - name: Gambeson
+      type: Light
+      da: 3
+  weapons:
+    - name: Dagger
+      type: Light
+      damage: 1d8
+  maxCopper: 6
+  maxSilver: 6
+  items:
+    - Backpack
+    - Flint & Steel
+    - Bedroll
+    - Torches (2)
+    - Ink & Pen
+    - Parchment Case & 3 Parchment Sheets
+    - Candles (2)
+    - Flasks (2)
+    - Rations (3)
+    - Waterskin
 features:
   tier1:
     - description: "Learn 1 Cantrip & 1 Level 1 spell"

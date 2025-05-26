@@ -169,7 +169,7 @@ public class DefaultSkillsServiceTests {
                 ROGUE_SKILL_NAME_LIST :
                 INVALID_SKILL_NAME_LIST;
         var charClass = new CharClass(CharType.SKALD.toString(), null, null,
-                null, null, classSkillList, null);
+                null, null, classSkillList, null, null);
         var species = new Species("test", null, null, speciesSkillsStatus.getSkillsList());
 
         when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);

@@ -195,7 +195,43 @@ public class DefaultCharClassesServiceTests {
                     "Character class type berzerker has null or empty skills list"),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkill()),
-                    "Character class type berzerker has unknown skill NotASkill")
+                    "Character class type berzerker has unknown skill NotASkill"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoGear()),
+                    "Character class type berzerker has null gear data"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.EmptyGear()),
+                    "Character class type berzerker has null gear data"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearNoArmor()),
+                    "Character class type berzerker has null or missing armor information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyArmor()),
+                    "Character class type berzerker has null or missing armor information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearNoWeapons()),
+                    "Character class type berzerker has null or missing weapon information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyWeapons()),
+                    "Character class type berzerker has null or missing weapon information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearNoMaxCopper()),
+                    "Character class type berzerker has null or missing max copper information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyMaxCopper()),
+                    "Character class type berzerker has null or missing max copper information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearNoMaxSilver()),
+                    "Character class type berzerker has null or missing max silver information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyMaxSilver()),
+                    "Character class type berzerker has null or missing max silver information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearNoItems()),
+                    "Character class type berzerker has null or missing item information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyItems()),
+                    "Character class type berzerker has null or missing item information in gear")
         );
     }
 }
