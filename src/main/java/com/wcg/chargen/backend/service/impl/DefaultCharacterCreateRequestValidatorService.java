@@ -164,6 +164,10 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
                     return failedStatus(String.format("Bonus skill %s is not a valid skill", skill));
                 }
             }
+
+            if (characterCreateRequest.useQuickGear() == null) {
+                return failedStatus("Use quick gear field must be specified for class characters");
+            }
         }
 
         return CharacterCreateStatus.SUCCESS;

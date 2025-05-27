@@ -364,6 +364,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withSpeciesStrength("LUC")
                 .withSpeciesWeakness(invalidSpeciesWeakness)
                 .withBonusSkills(Arrays.asList("Healing", "History"))
+                .withUseQuickGear(false)
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);
@@ -483,6 +484,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withSpeciesWeakness("LUC")
                 .withSpeciesSkill("Athletics")
                 .withBonusSkills(bonusSkillsList)
+                .withUseQuickGear(false)
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);
@@ -535,6 +537,27 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
     }
 
     @Test
+    public void validate_ReturnsFailureIfUseQuickGearIsNotSpecifiedForCharacterClass() {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Athletics")
+                .withBonusSkills(List.of("Intimidation"))
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Use quick gear field must be specified for class characters", status.message());
+    }
+
+    @Test
     public void validate_ReturnsSuccessIfRequestIsValidClassCharacterWithHeroicArray() {
         var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(2, 1, 2, 0, -1, 0, 0);
         var request = CharacterCreateRequestBuilder.getBuilder()
@@ -547,6 +570,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withSpeciesWeakness(AttributeType.LUC.name())
                 .withSpeciesSkill("Athletics")
                 .withBonusSkills(List.of("Healing"))
+                .withUseQuickGear(true)
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);
@@ -568,6 +592,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withSpeciesWeakness(AttributeType.LUC.name())
                 .withSpeciesSkill("Athletics")
                 .withBonusSkills(List.of("Healing"))
+                .withUseQuickGear(false)
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);

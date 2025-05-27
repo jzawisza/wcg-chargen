@@ -22,7 +22,7 @@ public class CharacterCreateRequestBuilder {
     private String speciesSkill = null;
     private List<String> bonusSkills = new ArrayList<>();
     private boolean useNullAttributes = false;
-
+    private Boolean useQuickGear = null;
 
     // Private constructor to disallow direct instantiation
     private CharacterCreateRequestBuilder() {}
@@ -100,6 +100,12 @@ public class CharacterCreateRequestBuilder {
         return this;
     }
 
+    public CharacterCreateRequestBuilder withUseQuickGear(Boolean useQuickGear) {
+        this.useQuickGear = useQuickGear;
+
+        return this;
+    }
+
     public CharacterCreateRequest build() {
         // If the attributes map is null, provide something valid by default so the unit tests pass,
         // but allow for the attributes to be deliberately null as well
@@ -107,7 +113,7 @@ public class CharacterCreateRequestBuilder {
             attributes = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0,0, 0);
         }
         return new CharacterCreateRequest(characterName, characterType, speciesType, profession, level,
-                attributes, speciesStrength, speciesWeakness, speciesSkill, bonusSkills);
+                attributes, speciesStrength, speciesWeakness, speciesSkill, bonusSkills, useQuickGear);
     }
 
     public static Map<String, Integer> getAttributesMap(int strVal, int corVal, int staVal, int perVal,
