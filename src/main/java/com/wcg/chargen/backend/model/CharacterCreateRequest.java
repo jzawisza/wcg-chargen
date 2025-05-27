@@ -34,4 +34,10 @@ public record CharacterCreateRequest(@NotEmpty String characterName,
             return attributeValue;
         }
     }
+
+    public boolean isCommoner() {
+        // Need a null check here because the unit tests deliberately violate
+        // the @NotNull constraint on level
+        return level() != null && level() == 0;
+    }
 }

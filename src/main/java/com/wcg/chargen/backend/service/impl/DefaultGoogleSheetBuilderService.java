@@ -74,12 +74,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return dataValidationRule;
     }
 
-    private DataValidationRule buildLevelDataValidation(int level) {
+    private DataValidationRule buildLevelDataValidation(CharacterCreateRequest characterCreateRequest) {
         var condition = new BooleanCondition();
         condition.setType("NUMBER_BETWEEN");
         var levelValues = new ArrayList<ConditionValue>();
         // Don't allow class characters to select level 0 as an option
-        var minAllowedLevel = (level > 0) ? "1" : "0";
+        var minAllowedLevel = characterCreateRequest.isCommoner() ? "0" : "1";
         levelValues.add(new ConditionValue().setUserEnteredValue(minAllowedLevel));
         levelValues.add(new ConditionValue().setUserEnteredValue("7"));
         condition.setValues(levelValues);
@@ -121,10 +121,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     }
 
     private int getAttack(CharacterCreateRequest characterCreateRequest) {
-        var level = characterCreateRequest.level();
-        if (level > 0) {
+        if (!characterCreateRequest.isCommoner()) {
             var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-            return charClass.attackModifiers().get(level - 1);
+            return charClass.attackModifiers().get(characterCreateRequest.level() - 1);
         }
         else {
             return commonerService.getInfo().attack();
@@ -134,9 +133,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private String getEvasionFormula(CharacterCreateRequest characterCreateRequest) {
         var level = characterCreateRequest.level();
         var evasion = -1;
-        if (level > 0) {
+        if (!characterCreateRequest.isCommoner()) {
             var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-            evasion = charClass.evasionModifiers().get(level - 1);
+            evasion = charClass.evasionModifiers().get(characterCreateRequest.level() - 1);
         }
         else {
             evasion = commonerService.getInfo().evasion();
@@ -286,7 +285,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithText(characterCreateRequest.species().toCharSheetString(),
                         buildSpeciesDataValidation())
                 .addCellWithNumber(characterCreateRequest.level(),
-                        buildLevelDataValidation(characterCreateRequest.level()))
+                        buildLevelDataValidation(characterCreateRequest))
                 .addCellWithText(profession,
                         buildProfessionDataValidation())
                 .addCellWithText(charClass,

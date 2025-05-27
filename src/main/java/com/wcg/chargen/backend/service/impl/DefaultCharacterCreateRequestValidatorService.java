@@ -45,8 +45,7 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
         if (level < 0 || level > 7) {
             return failedStatus("Level must be between 0 and 7");
         }
-        var isCommoner = (level == 0);
-        if (isCommoner) {
+        if (characterCreateRequest.isCommoner()) {
             // A commoner character should have a profession and not a class
             if (characterCreateRequest.characterClass() != null) {
                 return failedStatus("Level 0 characters cannot have a character class");
@@ -78,7 +77,7 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
         // For class characters, the values from the attributes object should match either the
         // Challenging or Heroic attribute array
         // For commoner characters, they should all be between -3 and 3
-        if (isCommoner) {
+        if (characterCreateRequest.isCommoner()) {
             for (var attributeKey : attributesMap.keySet()) {
                 var attributeValue  = attributesMap.get(attributeKey);
                 if (attributeValue < MIN_ATTRIBUTE_VALUE || attributeValue > MAX_ATTRIBUTE_VALUE) {
@@ -139,13 +138,14 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
                         characterCreateRequest.speciesWeakness(), speciesType));
             }
 
-            if (!isCommoner && !species.skills().contains(characterCreateRequest.speciesSkill())) {
+            if (!characterCreateRequest.isCommoner() &&
+                    !species.skills().contains(characterCreateRequest.speciesSkill())) {
                 return failedStatus(String.format("Species skill %s is not valid for species %s",
                         characterCreateRequest.speciesSkill(), speciesType));
             }
         }
 
-        if (!isCommoner) {
+        if (!characterCreateRequest.isCommoner()) {
             if (characterCreateRequest.bonusSkills() == null) {
                 return failedStatus("Bonus skills cannot be null for characters Level 1 and above");
             }

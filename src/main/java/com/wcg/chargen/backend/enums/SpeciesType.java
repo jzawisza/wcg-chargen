@@ -21,5 +21,4 @@ public enum SpeciesType {
     }
 
     public boolean isHuman() { return this == SpeciesType.HUMAN; }
-
 }
