@@ -74,7 +74,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 null,
                 null);
 
-        var commonerInfo = new Commoner(0, 10);
+        var commonerInfo = new Commoner(0, 10, 12, 4, null);
 
         Mockito.when(professionsService.getAllProfessions()).thenReturn(professions);
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);

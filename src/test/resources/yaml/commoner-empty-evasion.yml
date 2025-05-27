@@ -1,2 +1,7 @@
 attack: 0
 evasion:
+maxCopper: 12
+maxSilver: 4
+items:
+  - Item relevant to your profession (player/GM's choice)
+  - Item relevant to your profession (player/GM's choice)

@@ -2,6 +2,7 @@ package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.model.Commoner;
 import com.wcg.chargen.backend.service.YamlLoaderService;
+import com.wcg.chargen.backend.service.impl.yaml.CommonerYamlLoaderService;
 import com.wcg.chargen.backend.testUtil.PostConstructUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,44 +15,59 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultCommonerServiceTests {
-    static class MissingAttackDataYamlLoaderService implements YamlLoaderService<Commoner> {
+    static class MissingAttackDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
         public String getYamlFile() { return "commoner-missing-attack.yml"; }
-
-        @Override
-        public Class<Commoner> getObjClass() { return Commoner.class; }
     }
 
-    static class EmptyAttackDataYamlLoaderService implements YamlLoaderService<Commoner> {
+    static class EmptyAttackDataYamlLoaderService extends CommonerYamlLoaderService{
         @Override
         public String getYamlFile() { return "commoner-empty-attack.yml"; }
-
-        @Override
-        public Class<Commoner> getObjClass() { return Commoner.class; }
     }
 
-    static class MissingEvasionDataYamlLoaderService implements YamlLoaderService<Commoner> {
+    static class MissingEvasionDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
         public String getYamlFile() { return "commoner-missing-evasion.yml"; }
-
-        @Override
-        public Class<Commoner> getObjClass() { return Commoner.class; }
     }
 
-    static class EmptyEvasionDataYamlLoaderService implements YamlLoaderService<Commoner> {
+    static class EmptyEvasionDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
         public String getYamlFile() { return "commoner-empty-evasion.yml"; }
-
-        @Override
-        public Class<Commoner> getObjClass() { return Commoner.class; }
     }
 
-    static class ValidDataYamlLoaderService implements YamlLoaderService<Commoner> {
+    static class MissingMaxCopperDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-missing-max-copper.yml"; }
+    }
+
+    static class EmptyMaxCopperDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-empty-max-copper.yml"; }
+    }
+
+    static class MissingMaxSilverDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-missing-max-silver.yml"; }
+    }
+
+    static class EmptyMaxSilverDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-empty-max-silver.yml"; }
+    }
+
+    static class MissingItemsDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-missing-items.yml"; }
+    }
+
+    static class EmptyItemsDataYamlLoaderService extends CommonerYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "commoner-empty-items.yml"; }
+    }
+
+    static class ValidDataYamlLoaderService extends CommonerYamlLoaderService{
         @Override
         public String getYamlFile() { return "commoner.yml"; }
-
-        @Override
-        public Class<Commoner> getObjClass() { return Commoner.class; }
     }
 
     @Test
@@ -95,7 +111,19 @@ public class DefaultCommonerServiceTests {
                 Arguments.arguments(new MissingEvasionDataYamlLoaderService(),
                         "Missing commoner evasion info"),
                 Arguments.arguments(new EmptyEvasionDataYamlLoaderService(),
-                        "Missing commoner evasion info")
+                        "Missing commoner evasion info"),
+                Arguments.arguments(new MissingMaxCopperDataYamlLoaderService(),
+                        "Missing commoner max copper info"),
+                Arguments.arguments(new EmptyMaxCopperDataYamlLoaderService(),
+                        "Missing commoner max copper info"),
+                Arguments.arguments(new MissingMaxSilverDataYamlLoaderService(),
+                        "Missing commoner max silver info"),
+                Arguments.arguments(new EmptyMaxSilverDataYamlLoaderService(),
+                        "Missing commoner max silver info"),
+                Arguments.arguments(new MissingItemsDataYamlLoaderService(),
+                        "Missing commoner item info"),
+                Arguments.arguments(new EmptyItemsDataYamlLoaderService(),
+                        "Missing commoner item info")
         );
     }
 }

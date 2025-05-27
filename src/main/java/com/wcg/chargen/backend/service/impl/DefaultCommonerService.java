@@ -33,6 +33,18 @@ public class DefaultCommonerService implements CommonerService  {
         if (commonerInfo.evasion() == null) {
             throw new IllegalStateException("Missing commoner evasion info");
         }
+
+        if (commonerInfo.maxCopper() == null) {
+            throw new IllegalStateException("Missing commoner max copper info");
+        }
+
+        if (commonerInfo.maxSilver() == null) {
+            throw new IllegalStateException("Missing commoner max silver info");
+        }
+
+        if (commonerInfo.items() == null || commonerInfo.items().isEmpty()) {
+            throw new IllegalStateException("Missing commoner item info");
+        }
     }
 
     @Override
