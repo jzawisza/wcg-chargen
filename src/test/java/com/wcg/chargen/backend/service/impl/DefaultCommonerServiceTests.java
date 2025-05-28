@@ -17,62 +17,57 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultCommonerServiceTests {
     static class MissingAttackDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-missing-attack.yml"; }
+        public String getYamlFile() { return "commoner/no-attack.yml"; }
     }
 
     static class EmptyAttackDataYamlLoaderService extends CommonerYamlLoaderService{
         @Override
-        public String getYamlFile() { return "commoner-empty-attack.yml"; }
+        public String getYamlFile() { return "commoner/empty-attack.yml"; }
     }
 
     static class MissingEvasionDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-missing-evasion.yml"; }
+        public String getYamlFile() { return "commoner/no-evasion.yml"; }
     }
 
     static class EmptyEvasionDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-empty-evasion.yml"; }
+        public String getYamlFile() { return "commoner/empty-evasion.yml"; }
     }
 
     static class MissingMaxCopperDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-missing-max-copper.yml"; }
+        public String getYamlFile() { return "commoner/no-max-copper.yml"; }
     }
 
     static class EmptyMaxCopperDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-empty-max-copper.yml"; }
+        public String getYamlFile() { return "commoner/empty-max-copper.yml"; }
     }
 
     static class MissingMaxSilverDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-missing-max-silver.yml"; }
+        public String getYamlFile() { return "commoner/no-max-silver.yml"; }
     }
 
     static class EmptyMaxSilverDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-empty-max-silver.yml"; }
+        public String getYamlFile() { return "commoner/empty-max-silver.yml"; }
     }
 
     static class MissingItemsDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-missing-items.yml"; }
+        public String getYamlFile() { return "commoner/no-items.yml"; }
     }
 
     static class EmptyItemsDataYamlLoaderService extends CommonerYamlLoaderService {
         @Override
-        public String getYamlFile() { return "commoner-empty-items.yml"; }
-    }
-
-    static class ValidDataYamlLoaderService extends CommonerYamlLoaderService{
-        @Override
-        public String getYamlFile() { return "commoner.yml"; }
+        public String getYamlFile() { return "commoner/empty-items.yml"; }
     }
 
     @Test
     public void getInfo_ReturnsCorrectDataIfYamlFileIsValid() {
-        var commonerService = new DefaultCommonerService(new ValidDataYamlLoaderService());
+        var commonerService = new DefaultCommonerService(new CommonerYamlLoaderService());
 
         // Invoke PostConstruct method to populate data
         try {
@@ -85,6 +80,13 @@ public class DefaultCommonerServiceTests {
         var commonerInfo = commonerService.getInfo();
         assertEquals(0, commonerInfo.attack());
         assertEquals(10, commonerInfo.evasion());
+        assertEquals(12, commonerInfo.maxCopper());
+        assertEquals(4, commonerInfo.maxSilver());
+        assertEquals(2, commonerInfo.items().size());
+        assertEquals("Item relevant to your profession (player/GM's choice)",
+                commonerInfo.items().getFirst());
+        assertEquals("Item relevant to your profession (player/GM's choice)",
+                commonerInfo.items().getLast());
     }
 
     @ParameterizedTest

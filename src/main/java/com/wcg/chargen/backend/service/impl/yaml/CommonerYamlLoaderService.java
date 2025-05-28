@@ -5,7 +5,7 @@ import com.wcg.chargen.backend.service.YamlLoaderService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommonerYamlLoaderService  implements YamlLoaderService<Commoner> {
+public class CommonerYamlLoaderService implements YamlLoaderService<Commoner> {
     @Override
     public String getYamlFile() {
         return "commoner.yml";
