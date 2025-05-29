@@ -10,5 +10,6 @@ export interface CreateCharacterRequest {
     speciesStrength: string,
     speciesWeakness?: string,
     speciesSkill?: string,
-    bonusSkills?: string[]
+    bonusSkills?: string[],
+    useQuickGear?: boolean
 }

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { NextButtonEnabledContext, CharacterContext } from "../../Context";
 import { Row, Col, Checkbox, Popover } from "antd";
+import type { CheckboxProps } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import SelectableCard from "../util/cards/SelectableCard";
 import { BERZERKER_CHARCLASS, MAGE_CHARCLASS, MYSTIC_CHARCLASS, RANGER_CHARCLASS,
@@ -98,7 +99,8 @@ const quickGearExplanation = (
 
 const CharacterClass: React.FC = () => {
     const { setNextEnabled } = useContext(NextButtonEnabledContext);
-    const { charClass, setCharClass, setTier1Features, setTier2Features } = useContext(CharacterContext);
+    const { charClass, setCharClass, setTier1Features, setTier2Features,
+        useQuickGear, setUseQuickGear } = useContext(CharacterContext);
 
     useEffect(() => {
         setNextEnabled(charClass !== '');
@@ -115,13 +117,17 @@ const CharacterClass: React.FC = () => {
         setNextEnabled(true);
     };
 
+    const onCheckboxClicked: CheckboxProps['onChange'] = (e) => {
+        setUseQuickGear(e.target.checked);
+      };
+
     return (
         <div>
             <p>Select the character class you want to play as, and then click Next to proceed.</p>
             <p>Each class has a particular set of abilities which they use during an adventure.  It is advisable for a party to have a diverse set of classes, but any and all classes can be invaluable.</p>
             <p>Hover over or click the information icons for more details on the features of each class.</p>
             <div  className="quickGearCheckboxCenter">
-                <Checkbox>Use Quick Gear</Checkbox>
+                <Checkbox onChange={onCheckboxClicked} checked={useQuickGear}>Use Quick Gear</Checkbox>
                 <Popover content={quickGearExplanation} title="About Quick Gear">
                     <InfoCircleOutlined />
                 </Popover>

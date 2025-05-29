@@ -39,5 +39,7 @@ export const CharacterContext = createContext({
     speciesStrengthAttribute: '',
     setSpeciesStrengthAttribute: (newSpeciesStrength: string) => {},
     speciesWeaknessAttribute: '',
-    setSpeciesWeaknessAttribute: (newSpeciesWeakness: string) => {}
+    setSpeciesWeaknessAttribute: (newSpeciesWeakness: string) => {},
+    useQuickGear: false,
+    setUseQuickGear: (useQuickGear: boolean) => {}
 });

@@ -14,6 +14,7 @@ export class CreateCharacterRequestBuilder {
     _speciesWeakness = "";
     _speciesSkill = "";
     _bonusSkills = emptyStringArray;
+    _useQuickGear = false;
 
     withCharacterName(charName: string) {
         this._charName = charName;
@@ -73,6 +74,12 @@ export class CreateCharacterRequestBuilder {
         return this;
     }
 
+    withUseQuickGear(useQuickGear: boolean) {
+        this._useQuickGear = useQuickGear;
+
+        return this;
+    }
+
     build() {
         const createCharacterRequest: CreateCharacterRequest = {
             "characterName": this._charName,
@@ -88,6 +95,7 @@ export class CreateCharacterRequestBuilder {
             createCharacterRequest.bonusSkills = Array.isArray(this._bonusSkills)
             ? this._bonusSkills
             : [this._bonusSkills];
+            createCharacterRequest.useQuickGear = this._useQuickGear;
         }
         else {
             createCharacterRequest.profession = this._profession;

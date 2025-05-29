@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import CharacterClass from "../CharacterClass";
 import { CharacterContext, NextButtonEnabledContext } from "../../../Context";
+import exp from "constants";
 
 test('all eight classes represented on component', () => {
     render(<CharacterClass />);
@@ -30,6 +31,44 @@ test('use quick gear checkbox displays', () => {
     const quickGearElement = screen.getByText('Use Quick Gear');
 
     expect(quickGearElement).toBeTruthy();
+});
+
+test('selecting quick gear checkbox updates context', () => {
+    const mockSetUseQuickGear = jest.fn();
+    const charInfoContext = {
+        useQuickGear: false,
+        setUseQuickGear: mockSetUseQuickGear
+    };
+
+    render(
+        <CharacterContext.Provider value={charInfoContext}>
+            <CharacterClass />
+        </CharacterContext.Provider>
+    );
+
+    const quickGearCheckbox = screen.getByRole('checkbox', { name: 'Use Quick Gear' });
+    fireEvent.click(quickGearCheckbox);
+
+    expect(mockSetUseQuickGear).toHaveBeenCalledWith(true);
+});
+
+test.each([
+    true,
+    false
+])('quick gear checkbox initial state is based on context', (useQuickGear: boolean) => {
+    const charInfoContext = {
+        useQuickGear: useQuickGear,
+        setUseQuickGear: (newUseQuickGear: boolean) => {}
+    };
+
+    const { container } = render(
+        <CharacterContext.Provider value={charInfoContext}>
+            <CharacterClass />
+        </CharacterContext.Provider>
+    );
+
+    const checkbox = container.querySelectorAll("input[type='checkbox']")[0] as HTMLInputElement;
+    expect(checkbox.checked).toBe(useQuickGear);
 });
 
 test.each([
