@@ -548,6 +548,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
                 .withSpeciesWeakness("LUC")
                 .withSpeciesSkill("Athletics")
                 .withBonusSkills(List.of("Intimidation"))
+                .withUseQuickGear(null)
                 .build();
 
         var status = characterCreateRequestValidatorService.validate(request);

@@ -22,7 +22,7 @@ public class CharacterCreateRequestBuilder {
     private String speciesSkill = null;
     private List<String> bonusSkills = new ArrayList<>();
     private boolean useNullAttributes = false;
-    private Boolean useQuickGear = null;
+    private Boolean useQuickGear = false;
 
     // Private constructor to disallow direct instantiation
     private CharacterCreateRequestBuilder() {}

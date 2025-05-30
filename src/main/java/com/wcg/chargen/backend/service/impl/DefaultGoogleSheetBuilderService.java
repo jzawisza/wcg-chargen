@@ -248,6 +248,55 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return dataValidationRule;
     }
 
+    private int getCopper(CharacterCreateRequest characterCreateRequest) {
+        int maxCopper;
+
+        if (characterCreateRequest.isCommoner()) {
+            maxCopper = commonerService.getInfo().maxCopper();
+        }
+        else {
+            if (characterCreateRequest.useQuickGear()) {
+                maxCopper = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
+                        .gear().maxCopper();
+            }
+            else {
+                // If quick gear is not used, characters start with no money
+                return 0;
+            }
+        }
+
+        if (characterCreateRequest.characterClass() == CharType.SHAMAN) {
+            // Shamans are a special case where we roll 2d12 for copper instead of a single die
+            var firstDie = randomNumberService.getIntFromRange(1, 12);
+            var secondDie = randomNumberService.getIntFromRange(1, 12);
+
+            return firstDie + secondDie;
+        }
+        else {
+            return maxCopper > 1 ? randomNumberService.getIntFromRange(1, maxCopper) : maxCopper;
+        }
+    }
+
+    private int getSilver(CharacterCreateRequest characterCreateRequest) {
+        int maxSilver;
+
+        if (characterCreateRequest.isCommoner()) {
+            maxSilver = commonerService.getInfo().maxSilver();
+        }
+        else {
+            if (characterCreateRequest.useQuickGear()) {
+                maxSilver = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
+                        .gear().maxSilver();
+            }
+            else {
+                // If quick gear is not used, characters start with no money
+                return 0;
+            }
+        }
+
+        return maxSilver > 1 ? randomNumberService.getIntFromRange(1, maxSilver) : maxSilver;
+    }
+
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -275,7 +324,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addSecondaryHeaderCell("XP")
                 .addEmptyCell()
                 .addHighlightedCellWithText("CP")
-                .addCellWithText("")
+                .addCellWithNumber(getCopper(characterCreateRequest))
                 .build();
 
         var profession = isClassCharacter ? "" : characterCreateRequest.profession();
@@ -293,7 +342,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithText("")
                 .addEmptyCell()
                 .addHighlightedCellWithText("SP")
-                .addCellWithText("")
+                .addCellWithNumber(getSilver(characterCreateRequest))
                 .build();
 
         var row4 = getRowBuilder()
