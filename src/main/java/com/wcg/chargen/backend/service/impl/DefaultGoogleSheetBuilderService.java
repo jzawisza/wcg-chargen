@@ -131,17 +131,23 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     }
 
     private String getEvasionFormula(CharacterCreateRequest characterCreateRequest) {
-        var level = characterCreateRequest.level();
         var evasion = -1;
+        var hasShield = false;
         if (!characterCreateRequest.isCommoner()) {
             var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
             evasion = charClass.evasionModifiers().get(characterCreateRequest.level() - 1);
+
+            // If a character has a shield, they get a +1 bonus to evasion
+            hasShield = characterCreateRequest.useQuickGear() &&
+                    charClass.gear().armor().stream()
+                    .anyMatch(a -> a.type().equals("Shield"));
         }
         else {
             evasion = commonerService.getInfo().evasion();
         }
 
-        return String.format("=SUM(%d,B10)", evasion);
+        return hasShield ? String.format("=SUM(%d,B10,1)", evasion) :
+                String.format("=SUM(%d,B10)", evasion);
     }
 
     private int getFortunePoints(CharacterCreateRequest characterCreateRequest) {
@@ -295,6 +301,89 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
 
         return maxSilver > 1 ? randomNumberService.getIntFromRange(1, maxSilver) : maxSilver;
+    }
+
+    private int getNumArmorAndWeaponsRows(CharacterCreateRequest characterCreateRequest) {
+        if (characterCreateRequest.isCommoner()) {
+            // Commoner characters won't have armor, but they may have an improvised weapon
+            return 1;
+        }
+
+        if (!characterCreateRequest.useQuickGear()) {
+            // If quick gear is not used, leave blank rows for armor and weapons
+            return 3;
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return Math.max(gear.armor().size(), gear.weapons().size());
+    }
+
+    private String getArmorName(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.armor().size()) ? gear.armor().get(index).name() : "";
+    }
+
+    private String getArmorType(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.armor().size()) ? gear.armor().get(index).type() : "";
+    }
+
+    private String getArmorDa(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.armor().size()) ? gear.armor().get(index).da() : "";
+    }
+
+    private String getWeaponName(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.weapons().size()) ? gear.weapons().get(index).name() : "";
+    }
+
+    private String getWeaponType(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.weapons().size()) ? gear.weapons().get(index).type() : "";
+    }
+
+    private String getWeaponDamage(CharacterCreateRequest characterCreateRequest, int index) {
+        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.weapons().size()) ? gear.weapons().get(index).damage() : "";
     }
 
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
@@ -524,41 +613,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addSecondaryHeaderCell("Total Damage")
                 .build();
 
-        var row18 = getRowBuilder()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .build();
-
-        var row19 = getRowBuilder()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .build();
-
-        // This duplicates row19 for now, but that one may be populated during character creation,
-        // while this one will most likely not be
-        var row20 = getRowBuilder()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addEmptyCell()
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .addCellWithText("")
-                .build();
-
         var gridDataBuilder = getGridBuilder()
                 .withNumColumns(9)
                 .addRow(row1)
@@ -598,10 +652,26 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
          gridDataBuilder
                 .addEmptyRow()
                 .addRow(row16)
-                .addRow(row17)
-                .addRow(row18)
-                .addRow(row19)
-                .addRow(row20)
+                .addRow(row17);
+
+        // Add rows for armor and weapons
+        var numArmorAndWeaponsRows = getNumArmorAndWeaponsRows(characterCreateRequest);
+        for (var k = 0; k < numArmorAndWeaponsRows; k++) {
+            var armorWeaponRow = getRowBuilder()
+                    .addCellWithText(getArmorName(characterCreateRequest, k))
+                    .addCellWithText(getArmorType(characterCreateRequest, k))
+                    .addCellWithText(getArmorDa(characterCreateRequest, k))
+                    .addEmptyCell()
+                    .addCellWithText(getWeaponName(characterCreateRequest, k))
+                    .addCellWithText(getWeaponType(characterCreateRequest, k))
+                    .addCellWithText("")
+                    .addCellWithText(getWeaponDamage(characterCreateRequest, k))
+                    .build();
+
+            gridDataBuilder.addRow(armorWeaponRow);
+        }
+
+        gridDataBuilder
                 .setColumnWidth(0, 225)
                 .setColumnWidth(3, 125)
                 .setColumnWidth(4, 150)
