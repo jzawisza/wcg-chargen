@@ -36,7 +36,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final String SPELLS_SHEET_TITLE = "Spells";
     private static final String FEATURES_SHEET_TITLE = "Class/Species Features";
     private static final String GEAR_SHEET_TITLE = "Gear";
-    private static final int NUM_GEAR_ROWS = 10;
+    private static final int NUM_DEFAULT_GEAR_ROWS = 10;
+    private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
 
 
@@ -766,12 +767,35 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var gridDataBuilder = getGridBuilder()
                 .addRow(headerRow);
 
+        List<String> itemList = null;
+        if (characterCreateRequest.isCommoner()) {
+            itemList = commonerService.getInfo().items();
+        }
+        else if (characterCreateRequest.useQuickGear()) {
+            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+            itemList = charClass.gear().items();
+        }
+
+        if (itemList != null) {
+            for (var item : itemList) {
+                var itemRow = getRowBuilder()
+                        .addCellWithText(item)
+                        .addEmptyCell()
+                        .addCellWithText("")
+                        .build();
+                gridDataBuilder.addRow(itemRow);
+            }
+        }
+
+        var numExtraGearRows = (itemList != null) ?
+                NUM_EXTRA_GEAR_ROWS : NUM_DEFAULT_GEAR_ROWS;
+
         var gearRow = getRowBuilder()
                 .addCellWithText("")
                 .addEmptyCell()
                 .addCellWithText("")
                 .build();
-        for (int i = 0; i < NUM_GEAR_ROWS; i++) {
+        for (int i = 0; i < numExtraGearRows; i++) {
             gridDataBuilder.addRow(gearRow);
         }
 

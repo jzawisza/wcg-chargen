@@ -54,6 +54,12 @@ public class DefaultGoogleSheetBuilderServiceTests {
     private static final int MAX_COMMONER_SILVER = 4;
     private static final int MAX_CLASS_COPPER = 6;
     private static final int MAX_CLASS_SILVER = 10;
+    private static final String ITEM_1_NAME = "Item1";
+    private static final String ITEM_2_NAME = "Item2";
+    private static final String ITEM_3_NAME = "Item3";
+    private static final String ITEM_4_NAME = "Item4";
+    private static final String ITEM_5_NAME = "Item5";
+    private static final String ITEM_6_NAME = "Item6";
 
     @BeforeEach
     public void beforeTest() {
@@ -68,7 +74,9 @@ public class DefaultGoogleSheetBuilderServiceTests {
         var weaponsList = List.of(
                 new Weapon("Short Sword", "Melee", "1d8"),
                 new Weapon("Dagger", "Thrown", "1d6"));
-        var gear = new Gear(armorList, weaponsList, MAX_CLASS_COPPER, MAX_CLASS_SILVER, null);
+        var itemsList = List.of(ITEM_1_NAME, ITEM_2_NAME, ITEM_3_NAME,
+                ITEM_4_NAME, ITEM_5_NAME, ITEM_6_NAME);
+        var gear = new Gear(armorList, weaponsList, MAX_CLASS_COPPER, MAX_CLASS_SILVER, itemsList);
         var charClass = new CharClass(CharType.WARRIOR.toString(),
                 Arrays.asList(1, 2, 3, 4, 5, 6, 7),
                 Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
@@ -78,12 +86,14 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 gear,
                 null);
 
-        var commonerInfo = new Commoner(0, 10, MAX_COMMONER_COPPER, MAX_COMMONER_SILVER, null);
+        var commonerInfo = new Commoner(0, 10, MAX_COMMONER_COPPER, MAX_COMMONER_SILVER,
+                List.of(ITEM_1_NAME, ITEM_2_NAME));
 
         Mockito.when(professionsService.getAllProfessions()).thenReturn(professions);
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
         Mockito.when(commonerService.getInfo()).thenReturn(commonerInfo);
     }
+
     @Test
     public void buildStatsSheet_BuildsSheetWithExpectedTitle() {
         // arrange
@@ -1156,7 +1166,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
         // The armor and weapons row should be the last row in the sheet,
         // accounting for one empty row
-        assertEquals(19, sheet.getData().getFirst().getRowData().size());
+        assertEquals(19, getNumRowsInSheet(sheet));
     }
 
     @Test
@@ -1183,7 +1193,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
         // The armor and weapons rows should be the last rows in the sheet,
         // accounting for one empty row
-        assertEquals(21, sheet.getData().getFirst().getRowData().size());
+        assertEquals(21, getNumRowsInSheet(sheet));
 
     }
 
@@ -1202,13 +1212,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
         var sheet = googleSheetBuilderService.buildStatsSheet(request);
 
         // assert
-                /*
-        var armorList = List.of(new Armor("Leather Armor", "Light", "3"));
-        var weaponsList = List.of(
-                new Weapon("Short Sword", "Melee", "1d8"),
-                new Weapon("Dagger", "Thrown", "1d6"));
-         */
-
         // First row has armor and weapon
         var armorWeaponsRow1ArmorName = getCellValueFromSheet(sheet, 18, 0);
         assertEquals("Leather Armor", armorWeaponsRow1ArmorName.getStringValue());
@@ -1239,7 +1242,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
         // The armor and weapons rows should be the last rows in the sheet,
         // accounting for one empty row
-        assertEquals(20, sheet.getData().getFirst().getRowData().size());
+        assertEquals(20, getNumRowsInSheet(sheet));
     }
 
 
@@ -1268,12 +1271,104 @@ public class DefaultGoogleSheetBuilderServiceTests {
     @Test
     public void buildGearSheet_BuildsSheetWithExpectedTitle() {
         // act
-        var sheet = googleSheetBuilderService.buildGearSheet(null);
+        var sheet = googleSheetBuilderService.buildGearSheet(getCharacterCreateRequest(CharType.BERZERKER));
 
         // assert
         assertNotNull(sheet);
         assertNotNull(sheet.getProperties());
         assertEquals("Gear", sheet.getProperties().getTitle());
+    }
+
+    @Test
+    public void buildGearSheet_ContainsExpectedItemsAndRowsForCommonerCharacters() {
+        // arrange
+        var expectedRows = 1 + 2 + 6; // 1 header row, 2 item rows, 6 blank rows for future
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession("Test")
+                .withLevel(0)
+                .withSpeciesStrength("INT")
+                .withSpeciesWeakness("PRS")
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildGearSheet(request);
+
+        // assert
+        var item1Value = getCellValueFromSheet(sheet, 1, 0);
+        assertEquals(ITEM_1_NAME, item1Value.getStringValue());
+
+        var item2Value = getCellValueFromSheet(sheet, 2, 0);
+        assertEquals(ITEM_2_NAME, item2Value.getStringValue());
+
+        assertEquals(expectedRows, getNumRowsInSheet(sheet));
+    }
+
+    @Test
+    public void buildGearSheet_ContainsExpectedItemsAndRowsForClassCharactersWithQuickGear() {
+        // arrange
+        var expectedRows = 1 + 6 + 6; // 1 header row, 6 item rows, 6 blank rows for future
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildGearSheet(request);
+
+        // assert
+        var item1Value = getCellValueFromSheet(sheet, 1, 0);
+        assertEquals(ITEM_1_NAME, item1Value.getStringValue());
+
+        var item2Value = getCellValueFromSheet(sheet, 2, 0);
+        assertEquals(ITEM_2_NAME, item2Value.getStringValue());
+
+        var item3Value = getCellValueFromSheet(sheet, 3, 0);
+        assertEquals(ITEM_3_NAME, item3Value.getStringValue());
+
+        var item4Value = getCellValueFromSheet(sheet, 4, 0);
+        assertEquals(ITEM_4_NAME, item4Value.getStringValue());
+
+        var item5Value = getCellValueFromSheet(sheet, 5, 0);
+        assertEquals(ITEM_5_NAME, item5Value.getStringValue());
+
+        var item6Value = getCellValueFromSheet(sheet, 6, 0);
+        assertEquals(ITEM_6_NAME, item6Value.getStringValue());
+
+        assertEquals(expectedRows, getNumRowsInSheet(sheet));
+    }
+
+    @Test
+    public void buildGearSheet_ContainsExpectedItemsAndRowsForClassCharactersWithoutQuickGear() {
+        // arrange
+        var expectedRows = 1 + 10; // 1 header row, 10 blank rows for future
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildGearSheet(request);
+
+        // assert
+
+        // Without quick gear, we expect 10 rows with empty values
+        for (var i = 1; i < 11; i++) {
+            var itemValue = getCellValueFromSheet(sheet, i, 0);
+            assertEquals("", itemValue.getStringValue());
+        }
+
+        assertEquals(expectedRows, getNumRowsInSheet(sheet));
     }
 
     private CharacterCreateRequest getCharacterCreateRequest(CharType charType) {
@@ -1311,6 +1406,15 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertNotNull(cellValue);
 
         return cellValue;
+    }
+
+    private int getNumRowsInSheet(Sheet sheet) {
+        assertNotNull(sheet);
+        assertNotNull(sheet.getData());
+        assertNotNull(sheet.getData().getFirst());
+        assertNotNull(sheet.getData().getFirst().getRowData());
+
+        return sheet.getData().getFirst().getRowData().size();
     }
 
     static Stream<Arguments> getMagicUsersAndExpectedAttributeCells() {
