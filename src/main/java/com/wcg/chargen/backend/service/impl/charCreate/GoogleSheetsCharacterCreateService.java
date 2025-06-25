@@ -82,7 +82,7 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
 
         if(characterCreateRequest.characterClass() != null &&
                 characterCreateRequest.characterClass().isMagicUser()) {
-            var spellsSheet = googleSheetBuilderService.buildSpellsSheet();
+            var spellsSheet = googleSheetBuilderService.buildSpellsSheet(characterCreateRequest);
             sheetList.add(spellsSheet);
         }
 

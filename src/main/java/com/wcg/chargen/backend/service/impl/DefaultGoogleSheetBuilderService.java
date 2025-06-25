@@ -36,6 +36,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final String SPELLS_SHEET_TITLE = "Spells";
     private static final String FEATURES_SHEET_TITLE = "Class/Species Features";
     private static final String GEAR_SHEET_TITLE = "Gear";
+    private static final String CANTRIP_NAME = "Cantrip";
     private static final int NUM_DEFAULT_GEAR_ROWS = 10;
     private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
@@ -106,6 +107,29 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         for (var charClass : CharType.values()) {
             var conditionValue = new ConditionValue();
             conditionValue.setUserEnteredValue(charClass.toCharSheetString());
+            charClassValues.add(conditionValue);
+        }
+        condition.setValues(charClassValues);
+
+        return buildDataValidationRuleWithCondition(condition);
+    }
+
+    private DataValidationRule buildSpellLevelDataValidation(CharType charType) {
+        var condition = new BooleanCondition();
+        condition.setType("ONE_OF_LIST");
+        var charClassValues = new ArrayList<ConditionValue>();
+
+        var spellLevelValuesList = new ArrayList<String>();
+        if (charType == CharType.MAGE) {
+            spellLevelValuesList.add(CANTRIP_NAME);
+        }
+        for (var i = 1; i <= 7; i++) {
+            spellLevelValuesList.add(String.valueOf(i));
+        }
+
+        for (var spellLevelValue : spellLevelValuesList) {
+            var conditionValue = new ConditionValue();
+            conditionValue.setUserEnteredValue(spellLevelValue);
             charClassValues.add(conditionValue);
         }
         condition.setValues(charClassValues);
@@ -684,8 +708,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return sheet;
     }
 
-    public Sheet buildSpellsSheet() {
+    public Sheet buildSpellsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(SPELLS_SHEET_TITLE);
+        var charClass = characterCreateRequest.characterClass();
 
         var headerRow = getRowBuilder()
                 .addSecondaryHeaderCell("Level")
@@ -696,13 +721,20 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var gridDataBuilder = getGridBuilder()
                 .addRow(headerRow);
 
-        // Do 2 rows for now: vary this by level later
         var spellRow = getRowBuilder()
-                .addCellWithText("")
+                .addCellWithText("", buildSpellLevelDataValidation(charClass))
                 .addCellWithText("")
                 .addCellWithText("")
                 .build();
-        for (int i = 0; i < 2; i++) {
+
+        // Mages get 2 cantrips and 2 level 1 spells to start; shamans just get 2 level 1 spells
+        // We then add 1 extra slot for future use
+        var numSpellRows = (charClass == CharType.MAGE) ? 5 : 3;
+
+        // For each level above 1, give 3 extra rows
+        numSpellRows += ((characterCreateRequest.level() - 1) * 3);
+
+        for (var i = 0; i < numSpellRows; i++) {
             gridDataBuilder = gridDataBuilder.addRow(spellRow);
         }
 

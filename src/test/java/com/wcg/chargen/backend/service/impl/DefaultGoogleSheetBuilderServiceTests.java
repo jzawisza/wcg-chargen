@@ -1248,13 +1248,68 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
     @Test
     public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .build();
+
         // act
-        var sheet = googleSheetBuilderService.buildSpellsSheet();
+        var sheet = googleSheetBuilderService.buildSpellsSheet(request);
 
         // assert
         assertNotNull(sheet);
         assertNotNull(sheet.getProperties());
         assertEquals("Spells", sheet.getProperties().getTitle());
+    }
+
+    @ParameterizedTest
+    @MethodSource("expectedSpellSheetRowsByCharClassAndLevel")
+    public void buildSpellsSheet_BuildsSheetWithCorrectNumberOfRowsForCharacterClassAndLevel(
+            CharType charType, int level, int expectedRows) {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(charType)
+                .withLevel(level)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildSpellsSheet(request);
+
+        // assert
+        assertEquals(expectedRows, getNumRowsInSheet(sheet));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CharType.class, names = {"MAGE", "SHAMAN"})
+    public void buildSpellsSheet_BuildsSheetWithCorrectDataValidationRules(CharType charType) {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(charType)
+                .withLevel(1)
+                .build();
+
+        var expectedSpellLevelsList = new ArrayList<String>();
+        if (charType == CharType.MAGE) {
+            expectedSpellLevelsList.add("Cantrip");
+        }
+        for (var i = 1; i <= 7; i++) {
+            expectedSpellLevelsList.add(String.valueOf(i));
+        }
+
+        // act
+        var sheet = googleSheetBuilderService.buildSpellsSheet(request);
+
+        // assert
+        var numRows = getNumRowsInSheet(sheet);
+        // Skip header row
+        for (var i = 1; i < numRows; i++) {
+            var levelCellData = getCellDataFromSheet(sheet, i, 0);
+            assertConditionValueListHasAllValuesFromList(levelCellData.getDataValidation(),
+                    expectedSpellLevelsList);;
+        }
     }
 
     @Test
@@ -1421,6 +1476,25 @@ public class DefaultGoogleSheetBuilderServiceTests {
         return Stream.of(
                 Arguments.arguments(CharType.MAGE, "B12"),
                 Arguments.arguments(CharType.SHAMAN, "B14")
+        );
+    }
+
+    static Stream<Arguments> expectedSpellSheetRowsByCharClassAndLevel() {
+        return Stream.of(
+                Arguments.arguments(CharType.MAGE, 1, 6),
+                Arguments.arguments(CharType.MAGE, 2, 9),
+                Arguments.arguments(CharType.MAGE, 3, 12),
+                Arguments.arguments(CharType.MAGE, 4, 15),
+                Arguments.arguments(CharType.MAGE, 5, 18),
+                Arguments.arguments(CharType.MAGE, 6, 21),
+                Arguments.arguments(CharType.MAGE, 7, 24),
+                Arguments.arguments(CharType.SHAMAN, 1, 4),
+                Arguments.arguments(CharType.SHAMAN, 2, 7),
+                Arguments.arguments(CharType.SHAMAN, 3, 10),
+                Arguments.arguments(CharType.SHAMAN, 4, 13),
+                Arguments.arguments(CharType.SHAMAN, 5, 16),
+                Arguments.arguments(CharType.SHAMAN, 6, 19),
+                Arguments.arguments(CharType.SHAMAN, 7, 22)
         );
     }
 }

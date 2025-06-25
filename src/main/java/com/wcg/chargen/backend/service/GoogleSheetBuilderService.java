@@ -6,7 +6,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 public interface GoogleSheetBuilderService {
     Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest);
 
-    Sheet buildSpellsSheet();
+    Sheet buildSpellsSheet(CharacterCreateRequest request);
 
     Sheet buildFeaturesSheet(CharacterCreateRequest characterCreateRequest);
 
