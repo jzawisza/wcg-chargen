@@ -3,6 +3,10 @@ import { CreateCharacterRequest } from "./CreateCharacterRequest";
 
 let emptyStringArray: string[] = [];
 
+let emptyFeaturesType = {
+    tier1: emptyStringArray,
+    tier2: emptyStringArray}
+
 export class CreateCharacterRequestBuilder {
     _charName = "";
     _charClass = "";
@@ -15,6 +19,7 @@ export class CreateCharacterRequestBuilder {
     _speciesSkill = "";
     _bonusSkills = emptyStringArray;
     _useQuickGear = false;
+    _features = emptyFeaturesType;
 
     withCharacterName(charName: string) {
         this._charName = charName;
@@ -80,6 +85,12 @@ export class CreateCharacterRequestBuilder {
         return this;
     }
 
+    withFeatures(features: { tier1: string[], tier2: string[] }) {
+        this._features = features;
+
+        return this;
+    }
+
     build() {
         const createCharacterRequest: CreateCharacterRequest = {
             "characterName": this._charName,
@@ -103,6 +114,10 @@ export class CreateCharacterRequestBuilder {
 
         if (this._speciesSkill !== "") {
             createCharacterRequest.speciesSkill = this._speciesSkill;
+        }
+
+        if (this._level > 1) {
+            createCharacterRequest.features = this._features;
         }
 
         return createCharacterRequest;

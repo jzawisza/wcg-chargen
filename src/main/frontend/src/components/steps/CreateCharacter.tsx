@@ -15,7 +15,7 @@ const CreateCharacter: React.FC = () => {
     const [charGenerated, setCharGenerated] = useState(false);
     const { charName, charClass, species, profession, level,
         attributeScoreObj, speciesStrengthAttribute, speciesWeaknessAttribute,
-        speciesSkill, bonusSkills, useQuickGear } = useContext(CharacterContext);
+        speciesSkill, bonusSkills, useQuickGear, tier1Features, tier2Features } = useContext(CharacterContext);
 
     const onRadioGroupChange = (e: RadioChangeEvent) => {
         setCharSheetType(e.target.value);
@@ -50,6 +50,13 @@ const CreateCharacter: React.FC = () => {
             }
             else {
                 createCharacterRequestBuilder.withProfession(profession);
+            }
+
+            if (level > 1) {
+                createCharacterRequestBuilder.withFeatures({
+                    tier1: tier1Features,
+                    tier2: tier2Features
+                });
             }
 
             const createCharacterRequest = createCharacterRequestBuilder.build();

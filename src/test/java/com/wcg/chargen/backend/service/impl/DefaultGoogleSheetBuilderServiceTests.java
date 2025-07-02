@@ -1315,12 +1315,121 @@ public class DefaultGoogleSheetBuilderServiceTests {
     @Test
     public void buildFeaturesSheet_BuildsSheetWithExpectedTitle() {
         // act
-        var sheet = googleSheetBuilderService.buildFeaturesSheet(null);
+        var request = CharacterCreateRequestBuilder.getBuilder().build();
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
 
         // assert
         assertNotNull(sheet);
         assertNotNull(sheet.getProperties());
         assertEquals("Class/Species Features", sheet.getProperties().getTitle());
+    }
+
+    @Test
+    public void buildFeaturesSheet_BuildsSheetWithExpectedTier1andTier2PlaceholdersIfCharacterHasNoFeatures() {
+        // arrange
+        var expectedTier1RedValue = 0.576f;
+        var expectedTier2RedValue = 0.463f;
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        var tier1CellData = getCellDataFromSheet(sheet, 6, 0);
+        var tier1CellFormat = tier1CellData.getUserEnteredFormat();
+        assertNotNull(tier1CellFormat);
+        assertNotNull(tier1CellFormat.getBackgroundColor());
+        assertEquals(expectedTier1RedValue, tier1CellFormat.getBackgroundColor().getRed());
+        var tier1Value = tier1CellData.getUserEnteredValue();
+        assertNotNull(tier1Value);
+        assertEquals("Tier I features in this color", tier1Value.getStringValue());
+
+        var tier2CellData = getCellDataFromSheet(sheet, 7, 0);
+        var tier2CellFormat = tier2CellData.getUserEnteredFormat();
+        assertNotNull(tier2CellFormat);
+        assertNotNull(tier2CellFormat.getBackgroundColor());
+        assertEquals(expectedTier2RedValue, tier2CellFormat.getBackgroundColor().getRed());
+        var tier2Value = tier2CellData.getUserEnteredValue();
+        assertNotNull(tier2Value);
+        assertEquals("Tier II features in this color", tier2Value.getStringValue());
+    }
+
+    @Test
+    public void buildFeaturesSheet_BuildsSheetWithExpectedTier2PlaceholdersIfCharacterHasEmptyTier2FeatureList() {
+        // arrange
+        var expectedTier2RedValue = 0.463f;
+        var featuresRequest = new FeaturesRequest(List.of("test"), Collections.emptyList());
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        var tier2CellData = getCellDataFromSheet(sheet, 7, 0);
+        var tier2CellFormat = tier2CellData.getUserEnteredFormat();
+        assertNotNull(tier2CellFormat);
+        assertNotNull(tier2CellFormat.getBackgroundColor());
+        assertEquals(expectedTier2RedValue, tier2CellFormat.getBackgroundColor().getRed());
+        var tier2Value = tier2CellData.getUserEnteredValue();
+        assertNotNull(tier2Value);
+        assertEquals("Tier II features in this color", tier2Value.getStringValue());
+    }
+
+    @Test
+    public void buildFeaturesSheet_BuildsSheetWithExpectedTier1andTier2Features() {
+        // arrange
+        var expectedTier1RedValue = 0.576f;
+        var expectedTier2RedValue = 0.463f;
+        // Feature names consist of "test" followed by the row index where they appear,
+        // to simplify the assertions below
+        var featuresRequest = new FeaturesRequest(List.of("test6", "test7", "test8"),
+                List.of("test9", "test10", "test11"));
+        // The expected values below are based on the number of Tier I and Tier II features
+        // specified in the featuresRequest variable
+        var expectedTier1FeatureRowsStart = 6;
+        var expectedTier2FeatureRowsStart = 9;
+        var expectedNumFeatureRows = 3;
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(4)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        for (var i = expectedTier1FeatureRowsStart;
+             i < expectedTier1FeatureRowsStart + expectedNumFeatureRows;
+             i++) {
+            var expectedTier1Value = "test" + i;
+            var tier1CellData = getCellDataFromSheet(sheet, i, 0);
+            var tier1CellFormat = tier1CellData.getUserEnteredFormat();
+            assertNotNull(tier1CellFormat);
+            assertNotNull(tier1CellFormat.getBackgroundColor());
+            assertEquals(expectedTier1RedValue, tier1CellFormat.getBackgroundColor().getRed());
+            var tier1Value = tier1CellData.getUserEnteredValue();
+            assertNotNull(tier1Value);
+            assertEquals(expectedTier1Value, tier1Value.getStringValue());
+        }
+
+        for (var j = expectedTier2FeatureRowsStart;
+             j < expectedTier2FeatureRowsStart + expectedNumFeatureRows;
+             j++) {
+            var expectedTier2Value = "test" + j;
+            var tier2CellData = getCellDataFromSheet(sheet, j, 0);
+            var tier2CellFormat = tier2CellData.getUserEnteredFormat();
+            assertNotNull(tier2CellFormat);
+            assertNotNull(tier2CellFormat.getBackgroundColor());
+            assertEquals(expectedTier2RedValue, tier2CellFormat.getBackgroundColor().getRed());
+            var tier2Value = tier2CellData.getUserEnteredValue();
+            assertNotNull(tier2Value);
+            assertEquals(expectedTier2Value, tier2Value.getStringValue());
+        }
     }
 
     @Test

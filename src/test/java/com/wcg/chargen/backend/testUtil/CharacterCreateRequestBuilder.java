@@ -4,6 +4,7 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.FeaturesRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class CharacterCreateRequestBuilder {
     private List<String> bonusSkills = new ArrayList<>();
     private boolean useNullAttributes = false;
     private Boolean useQuickGear = false;
+    private FeaturesRequest features = null;
 
     // Private constructor to disallow direct instantiation
     private CharacterCreateRequestBuilder() {}
@@ -106,6 +108,12 @@ public class CharacterCreateRequestBuilder {
         return this;
     }
 
+    public CharacterCreateRequestBuilder withFeatures(FeaturesRequest features) {
+        this.features = features;
+
+        return this;
+    }
+
     public CharacterCreateRequest build() {
         // If the attributes map is null, provide something valid by default so the unit tests pass,
         // but allow for the attributes to be deliberately null as well
@@ -113,7 +121,7 @@ public class CharacterCreateRequestBuilder {
             attributes = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0,0, 0);
         }
         return new CharacterCreateRequest(characterName, characterType, speciesType, profession, level,
-                attributes, speciesStrength, speciesWeakness, speciesSkill, bonusSkills, useQuickGear);
+                attributes, speciesStrength, speciesWeakness, speciesSkill, bonusSkills, useQuickGear, features);
     }
 
     public static Map<String, Integer> getAttributesMap(int strVal, int corVal, int staVal, int perVal,

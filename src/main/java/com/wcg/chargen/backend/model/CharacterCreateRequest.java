@@ -19,7 +19,8 @@ public record CharacterCreateRequest(@NotEmpty String characterName,
                                      String speciesWeakness,
                                      String speciesSkill,
                                      List<String> bonusSkills,
-                                     Boolean useQuickGear) {
+                                     Boolean useQuickGear,
+                                     FeaturesRequest features) {
     public Integer getAttributeValue(AttributeType attributeType) {
         // The request validation will guarantee that this value exists
         var attributeValue = attributes().get(attributeType.toString());

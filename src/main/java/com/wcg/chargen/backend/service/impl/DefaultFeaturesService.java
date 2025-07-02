@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DefaultFeaturesService implements FeaturesService {
-    private static final int[] CUMULATIVE_TIER_1_FEATURES_PER_LEVEL = {0, 1, 3, 3, 3, 4, 5};
+    public static final int[] CUMULATIVE_TIER_1_FEATURES_PER_LEVEL = {0, 1, 3, 3, 3, 4, 5};
 
-    private static final int[] CUMULATIVE_TIER_2_FEATURES_PER_LEVEL = {0, 0, 0, 1, 2, 3, 4};
+    public static final int[] CUMULATIVE_TIER_2_FEATURES_PER_LEVEL = {0, 0, 0, 1, 2, 3, 4};
 
     Logger logger = LoggerFactory.getLogger(DefaultFeaturesService.class);
 

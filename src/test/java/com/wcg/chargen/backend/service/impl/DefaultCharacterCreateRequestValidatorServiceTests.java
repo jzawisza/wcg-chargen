@@ -3,7 +3,8 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
-import com.wcg.chargen.backend.model.Species;
+import com.wcg.chargen.backend.model.*;
+import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.SkillsProvider;
 import com.wcg.chargen.backend.service.SpeciesService;
@@ -18,10 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,12 +29,17 @@ import static org.mockito.ArgumentMatchers.any;
 public class DefaultCharacterCreateRequestValidatorServiceTests {
     private static final int RANDOM_STRING_LENGTH = 16;
     private static final String VALID_PROFESSION = "Forester";
+    private static final String TIER1_FEATURE = "Tier I Feature";
+    private static final String TIER2_FEATURE = "Tier II Feature";
+
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
     @MockBean
     SpeciesService speciesService;
     @Autowired
     SkillsProvider skillsProvider;
+    @MockBean
+    CharClassesService charClassesService;
 
     @BeforeEach
     public void setup() {
@@ -46,6 +49,14 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
         var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, dwarfSkills);
 
         Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+
+        var tier1Feature = new Feature(TIER1_FEATURE, null);
+        var tier2Feature = new Feature(TIER2_FEATURE, null);
+        var features = new Features(List.of(tier1Feature), List.of(tier2Feature));
+        var charClass = new CharClass(null, null, null, null, null,
+                null, null, features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
     }
 
     @Test
@@ -618,6 +629,267 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
         assertNotNull(status);
         assertTrue(status.isSuccess());
     }
+
+    @Test
+    public void validate_ReturnsFailureIfFeaturesSpecifiedForCommonerCharacter() {
+        var featuresRequest = new FeaturesRequest(Collections.emptyList(), Collections.emptyList());
+
+        var requestCommoner = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withProfession(VALID_PROFESSION)
+                .withLevel(0)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(requestCommoner);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Features cannot be specified for commoner or Level 1 characters", status.message());
+    }
+
+    @Test
+    public void validate_ReturnsFailureIfFeaturesSpecifiedForLevel1Character() {
+        var featuresRequest = new FeaturesRequest(Collections.emptyList(), Collections.emptyList());
+
+        var requestLevel1 = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(1)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(requestLevel1);
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Features cannot be specified for commoner or Level 1 characters", status.message());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {2, 3, 4, 5, 6, 7})
+    public void validate_ReturnsFailureIfFeaturesInformationIsNullForClassCharactersLevel2AndAbove(int level) {
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(null)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Features must be specified for characters Level 2 and above", status.message());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {2, 3, 4, 5, 6, 7})
+    public void validate_ReturnsFailureIfTier1FeaturesAreNullForClassCharactersLevel2AndAbove(int level) {
+        var featuresRequest = new FeaturesRequest(null, Collections.emptyList());
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Tier I features for characters level 2 and above cannot be null", status.message());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {2, 3, 4, 5, 6, 7})
+    public void validate_ReturnsFailureIfTier2FeaturesAreNullForClassCharactersLevel2AndAbove(int level) {
+        var featuresRequest = new FeaturesRequest(Collections.emptyList(), null);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals("Tier II features for characters level 2 and above cannot be null", status.message());
+    }
+
+    @ParameterizedTest
+    @MethodSource("levelsAndExpectedNumberOfTier1AndTier2Features")
+    public void validate_ReturnsFailureIfIncorrectNumberOfTier1FeaturesForClassCharactersLevel2AndAbove(
+            int level, int expectedNumTier1Features) {
+        var featuresRequest = new FeaturesRequest(List.of("feature1", "feature2"),
+                Collections.emptyList());
+        var expectedMsg = String.format("Expected %d tier I features for level %d, got 2",
+                expectedNumTier1Features, level);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @ParameterizedTest
+    @MethodSource("levelsAndExpectedNumberOfTier1AndTier2Features")
+    public void validate_ReturnsFailureIfIncorrectNumberOfTier2FeaturesForClassCharactersLevel2AndAbove(
+            int level, int expectedNumTier1Features, int expectedNumTier2Features) {
+        var tier1FeatureList = new ArrayList<>(Collections.nCopies(expectedNumTier1Features, "tier1feature"));
+        var invalidNumTier2Features = 5;
+        var tier2FeatureList = new ArrayList<>(Collections.nCopies(invalidNumTier2Features, "tier2feature"));
+        var featuresRequest = new FeaturesRequest(tier1FeatureList, tier2FeatureList);
+        var expectedMsg = String.format("Expected %d tier II features for level %d, got %d",
+                expectedNumTier2Features, level, invalidNumTier2Features);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @ParameterizedTest
+    @MethodSource("levelsAndExpectedNumberOfTier1AndTier2Features")
+    public void validate_ReturnsFailureIfTier1FeatureIsInvalidForClassCharactersLevel2AndAbove(
+            int level, int expectedNumTier1Features, int expectedNumTier2Features) {
+        var invalidFeature = "Invalid feature";
+        var tier1FeatureList = new ArrayList<>(Collections.nCopies(expectedNumTier1Features - 1,
+                TIER1_FEATURE));
+        tier1FeatureList.add(invalidFeature);
+        var tier2FeatureList = new ArrayList<>(Collections.nCopies(expectedNumTier2Features, TIER2_FEATURE));
+        var featuresRequest = new FeaturesRequest(tier1FeatureList, tier2FeatureList);
+        var expectedMsg = String.format("Tier I feature %s is not valid for class %s",
+                invalidFeature, CharType.BERZERKER);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    @ParameterizedTest
+    @MethodSource("levelsAndExpectedNumberOfTier1AndTier2Features")
+    public void validate_ReturnsFailureIfTier2FeatureIsInvalidForClassCharactersLevel2AndAbove(
+            int level, int expectedNumTier1Features, int expectedNumTier2Features) {
+        if (expectedNumTier2Features == 0) {
+            // Skip this test if we have no Tier II features for this level
+            return;
+        }
+
+        var invalidFeature = "Invalid feature";
+        var tier1FeatureList = new ArrayList<>(Collections.nCopies(expectedNumTier1Features, TIER1_FEATURE));
+        var tier2FeatureList = new ArrayList<>(Collections.nCopies(expectedNumTier2Features - 1,
+                TIER2_FEATURE));
+        tier2FeatureList.add(invalidFeature);
+        var featuresRequest = new FeaturesRequest(tier1FeatureList, tier2FeatureList);
+        var expectedMsg = String.format("Tier II feature %s is not valid for class %s",
+                invalidFeature, CharType.BERZERKER);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterName(getRandomString())
+                .withLevel(level)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("LUC")
+                .withSpeciesSkill("Appraisal")
+                .withBonusSkills(List.of("Healing"))
+                .withFeatures(featuresRequest)
+                .build();
+
+        var status = characterCreateRequestValidatorService.validate(request);
+
+        assertNotNull(status);
+        assertFalse(status.isSuccess());
+        assertEquals(expectedMsg, status.message());
+    }
+
+    static Stream<Arguments> levelsAndExpectedNumberOfTier1AndTier2Features() {
+        return Stream.of(
+                Arguments.arguments(2, 1, 0),
+                Arguments.arguments(3, 3, 0),
+                Arguments.arguments(4, 3, 1),
+                Arguments.arguments(5, 3, 2),
+                Arguments.arguments(6, 4, 3),
+                Arguments.arguments(7, 5, 4)
+        );
+    }
+
 
     private String getRandomString() {
         return RandomStringUtils.random(RANDOM_STRING_LENGTH);

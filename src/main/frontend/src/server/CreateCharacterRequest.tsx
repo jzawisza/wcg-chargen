@@ -1,5 +1,10 @@
 import { AttributeScoreObject } from "../constants/AttributeScoreObject";
 
+export type featuresType = {
+    tier1: string[],
+    tier2: string[]
+}
+
 export interface CreateCharacterRequest {
     characterName: string,
     characterClass?: string,
@@ -11,5 +16,6 @@ export interface CreateCharacterRequest {
     speciesWeakness?: string,
     speciesSkill?: string,
     bonusSkills?: string[],
-    useQuickGear?: boolean
+    useQuickGear?: boolean,
+    features?: featuresType
 }

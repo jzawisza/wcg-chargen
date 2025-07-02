@@ -3,6 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
+import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static com.wcg.chargen.backend.service.impl.DefaultFeaturesService.CUMULATIVE_TIER_1_FEATURES_PER_LEVEL;
+import static com.wcg.chargen.backend.service.impl.DefaultFeaturesService.CUMULATIVE_TIER_2_FEATURES_PER_LEVEL;
 
 @Service
 public class DefaultCharacterCreateRequestValidatorService implements CharacterCreateRequestValidatorService {
@@ -19,6 +23,8 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
     SpeciesService speciesService;
     @Autowired
     SkillsProvider skillsProvider;
+    @Autowired
+    CharClassesService charClassesService;
 
     private static final List<Integer> CHALLENGING_ATTRIBUTE_VALUES =
             Arrays.asList(-2, -1, 0, 0, 1, 1, 2);
@@ -167,6 +173,62 @@ public class DefaultCharacterCreateRequestValidatorService implements CharacterC
 
             if (characterCreateRequest.useQuickGear() == null) {
                 return failedStatus("Use quick gear field must be specified for class characters");
+            }
+        }
+
+        if (characterCreateRequest.level() <= 1 && characterCreateRequest.features() != null) {
+            return failedStatus("Features cannot be specified for commoner or Level 1 characters");
+        }
+        else if (characterCreateRequest.level() > 1) {
+            if (characterCreateRequest.features() == null) {
+                return failedStatus("Features must be specified for characters Level 2 and above");
+            }
+            if (characterCreateRequest.features().tier1() == null) {
+                return failedStatus("Tier I features for characters level 2 and above cannot be null");
+            }
+            if (characterCreateRequest.features().tier2() == null) {
+                return failedStatus("Tier II features for characters level 2 and above cannot be null");
+            }
+
+            // Make sure we have the correct number of Tier I and Tier II features
+            var numAllowedTier1Features =
+                    CUMULATIVE_TIER_1_FEATURES_PER_LEVEL[characterCreateRequest.level() - 1];
+            if (characterCreateRequest.features().tier1().size() != numAllowedTier1Features) {
+                return failedStatus(String.format("Expected %d tier I features for level %d, got %d",
+                        numAllowedTier1Features,
+                        characterCreateRequest.level(),
+                        characterCreateRequest.features().tier1().size()));
+            }
+
+            var numAllowedTier2Features =
+                    CUMULATIVE_TIER_2_FEATURES_PER_LEVEL[characterCreateRequest.level() - 1];
+            if (characterCreateRequest.features().tier2().size() != numAllowedTier2Features) {
+                return failedStatus(String.format("Expected %d tier II features for level %d, got %d",
+                        numAllowedTier2Features,
+                        characterCreateRequest.level(),
+                        characterCreateRequest.features().tier2().size()));
+            }
+
+            // Check that the features are valid for the character class
+            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+            var tier1FeatureDescriptions = charClass.features().tier1().stream()
+                    .map(Feature::description)
+                    .toList();
+            for (var featureDesc : characterCreateRequest.features().tier1()) {
+                if (!tier1FeatureDescriptions.contains(featureDesc)) {
+                    return failedStatus(String.format("Tier I feature %s is not valid for class %s",
+                            featureDesc, characterCreateRequest.characterClass()));
+                }
+            }
+
+            var tier2FeatureDescriptions = charClass.features().tier2().stream()
+                    .map(Feature::description)
+                    .toList();
+            for (var featureDesc : characterCreateRequest.features().tier2()) {
+                if (!tier2FeatureDescriptions.contains(featureDesc)) {
+                    return failedStatus(String.format("Tier II feature %s is not valid for class %s",
+                            featureDesc, characterCreateRequest.characterClass()));
+                }
             }
         }
 

@@ -768,21 +768,42 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var tier2FeaturesRow = getRowBuilder().addTier2FeatureCell("Tier II features in this color").build();
 
-        var gridData = getGridBuilder()
+        var gridDataBuilder = getGridBuilder()
                 .withNumColumns(3)
                 .addRow(speciesLanguageHeaderRow)
                 .addRow(speciesLanguageRow)
                 .addRow(speciesRow)
                 .addEmptyRow()
                 .addRow(classFeaturesHeaderRow)
-                .addRow(baseFeaturesRow)
-                .addRow(tier1FeaturesRow)
-                .addRow(tier2FeaturesRow)
-                .setColumnWidth(0, 450)
-                .setColumnWidth(2, 200)
-                .build();
+                .addRow(baseFeaturesRow);
 
-        sheet.setData(Collections.singletonList(gridData));
+        var features = characterCreateRequest.features();
+        // If a character has features, then it's guaranteed to have at least one tier I feature
+        if (features == null) {
+            gridDataBuilder.addRow(tier1FeaturesRow);
+        }
+        else {
+            for (var tier1Feature : features.tier1()) {
+                var tier1Row = getRowBuilder().addTier1FeatureCell(tier1Feature).build();
+                gridDataBuilder.addRow(tier1Row);
+            }
+        }
+
+        if (features == null || features.tier2().isEmpty()) {
+            gridDataBuilder.addRow(tier2FeaturesRow);
+        }
+        else {
+            for (var tier2Feature : features.tier2()) {
+                var tier2Row = getRowBuilder().addTier2FeatureCell(tier2Feature).build();
+                gridDataBuilder.addRow(tier2Row);
+            }
+        }
+
+        gridDataBuilder
+                .setColumnWidth(0, 450)
+                .setColumnWidth(2, 200);
+
+        sheet.setData(Collections.singletonList(gridDataBuilder.build()));
 
         return sheet;
     }
