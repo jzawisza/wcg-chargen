@@ -5,6 +5,7 @@ import com.google.api.services.sheets.v4.model.DataValidationRule;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.*;
 import com.wcg.chargen.backend.service.*;
@@ -60,6 +61,8 @@ public class DefaultGoogleSheetBuilderServiceTests {
     private static final String ITEM_4_NAME = "Item4";
     private static final String ITEM_5_NAME = "Item5";
     private static final String ITEM_6_NAME = "Item6";
+    private static final String TIER_1_FEATURE_NAME = "Tier I feature";
+    private static final String TIER_2_FEATURE_NAME = "Tier II feature";
 
     @BeforeEach
     public void beforeTest() {
@@ -1245,6 +1248,89 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(20, getNumRowsInSheet(sheet));
     }
 
+    @ParameterizedTest
+    @MethodSource("shamanAndBonusSkillsAndFeatureAttributes")
+    public void buildStatsSheet_FeaturesWithAdvorDadvDisplayCorrectly(
+            String skillName, FeatureAttributeType featureAttributeType, int rowIndex) {
+        // arrange
+        var bonusSkills = List.of("Alchemy", "Stealth");
+        var featureName = "Test Feature";
+        var shamanSkills = List.of("Animal Expertise", "Arcana", "Healing",
+                "Nature", "Religion", "Survival");
+        var featureAttribute = new FeatureAttribute(featureAttributeType, skillName);
+        var feature = new Feature(featureName, List.of(featureAttribute));
+
+        Features features;
+        FeaturesRequest featuresRequest;
+        float expectedRedColorValue;
+        String expectedNote;
+        if (featureAttributeType == FeatureAttributeType.ADV) {
+            features = new Features(List.of(feature), Collections.emptyList());
+            featuresRequest = new FeaturesRequest(List.of(featureName), Collections.emptyList());
+            expectedRedColorValue = 0.576f;
+            expectedNote = "Roll with Advantage";
+        }
+        else {
+            features = new Features(Collections.emptyList(), List.of(feature));
+            featuresRequest = new FeaturesRequest(Collections.emptyList(), List.of(featureName));
+            expectedRedColorValue = 0.463f;
+            expectedNote = "Roll with Double Advantage";
+        }
+
+        var charClass = new CharClass(CharType.SHAMAN.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                shamanSkills,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(5)
+                .withBonusSkills(bonusSkills)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var skillCellData = getCellDataFromSheet(sheet, rowIndex, 3);
+        assertNotNull(skillCellData.getUserEnteredValue());
+        assertEquals(skillName, skillCellData.getUserEnteredValue().getStringValue());
+
+        assertNotNull(skillCellData.getUserEnteredFormat());
+        assertNotNull(skillCellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(expectedRedColorValue, skillCellData.getUserEnteredFormat().getBackgroundColor().getRed());
+
+        assertEquals(expectedNote, skillCellData.getNote());
+    }
+
+    static Stream<Arguments> shamanAndBonusSkillsAndFeatureAttributes() {
+        return Stream.of(
+                Arguments.of("Alchemy", FeatureAttributeType.ADV, 8),
+                Arguments.of("Alchemy", FeatureAttributeType.DADV, 8),
+                Arguments.of("Animal Expertise", FeatureAttributeType.ADV, 9),
+                Arguments.of("Animal Expertise", FeatureAttributeType.DADV, 9),
+                Arguments.of("Arcana", FeatureAttributeType.ADV, 10),
+                Arguments.of("Arcana", FeatureAttributeType.DADV, 10),
+                Arguments.of("Healing", FeatureAttributeType.ADV, 11),
+                Arguments.of("Healing", FeatureAttributeType.DADV, 11),
+                Arguments.of("Nature", FeatureAttributeType.ADV, 12),
+                Arguments.of("Nature", FeatureAttributeType.DADV, 12),
+                Arguments.of("Religion", FeatureAttributeType.ADV, 13),
+                Arguments.of("Religion", FeatureAttributeType.DADV, 13),
+                Arguments.of("Stealth", FeatureAttributeType.ADV, 14),
+                Arguments.of("Stealth", FeatureAttributeType.DADV, 14),
+                Arguments.of("Survival", FeatureAttributeType.ADV, 15),
+                Arguments.of("Survival", FeatureAttributeType.DADV, 15)
+        );
+    }
 
     @Test
     public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {

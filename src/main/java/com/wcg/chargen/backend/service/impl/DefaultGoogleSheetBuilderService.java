@@ -3,8 +3,10 @@ package com.wcg.chargen.backend.service.impl;
 import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -411,6 +413,59 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return (index < gear.weapons().size()) ? gear.weapons().get(index).damage() : "";
     }
 
+    /**
+     * Returns the ADV or DADV type for a given modifier string, if it exists in the character's features.
+     * If no matching feature is found, returns null.
+     */
+    private FeatureAttributeType getAdvOrDadvByModifier(CharacterCreateRequest request,
+                                                        String modifierStr) {
+        if (request.features() == null) {
+            return null;
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+
+        for (var tier1FeatureName : request.features().tier1()) {
+            var tier1FeatureAttributes = charClass.features().tier1().stream()
+                    .filter(f -> f.description().equals(tier1FeatureName))
+                    .findFirst();
+
+            if (tier1FeatureAttributes.isPresent()) {
+                for (var attribute : tier1FeatureAttributes.get().attributes()) {
+                    if (attribute.type() == FeatureAttributeType.ADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        return FeatureAttributeType.ADV;
+                    }
+                    else if (attribute.type() == FeatureAttributeType.DADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        return FeatureAttributeType.DADV;
+                    }
+                }
+            }
+        }
+
+        for (var tier2FeatureName : request.features().tier2()) {
+            var tier2FeatureAttributes = charClass.features().tier2().stream()
+                    .filter(f -> f.description().equals(tier2FeatureName))
+                    .findFirst();
+
+            if (tier2FeatureAttributes.isPresent()) {
+                for (var attribute : tier2FeatureAttributes.get().attributes()) {
+                    if (attribute.type() == FeatureAttributeType.ADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        return FeatureAttributeType.ADV;
+                    }
+                    else if (attribute.type() == FeatureAttributeType.DADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        return FeatureAttributeType.DADV;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -506,11 +561,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithFormula("=SUM(B5,B9)")
                 .build();
 
+        var skillName = getSkillNameText(skillsList, 0);
         var row8 = getRowBuilder()
                 .addHighlightedCellWithText("Strength (STR)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.STR)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 0))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 0),
                         getSkillAttributeDataValidation(skillsList, 0))
                 .addCellWithFormula(generateTotalModifierFormula(0))
@@ -519,61 +575,67 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithFormula("=SUM(B5,B10)")
                 .build();
 
+        skillName = getSkillNameText(skillsList, 1);
         var row9Builder = getRowBuilder()
                 .addHighlightedCellWithText("Coordination (COR)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.COR)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 1))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 1),
                         getSkillAttributeDataValidation(skillsList, 1))
                 .addCellWithFormula(generateTotalModifierFormula(1))
                 .addEmptyCell();
 
+        skillName = getSkillNameText(skillsList, 2);
         var row10Builder = getRowBuilder()
                 .addHighlightedCellWithText("Stamina (STA)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.STA)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 2))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 2),
                         getSkillAttributeDataValidation(skillsList, 2))
                 .addCellWithFormula(generateTotalModifierFormula(2))
                 .addEmptyCell();
 
+        skillName = getSkillNameText(skillsList, 3);
         var row11Builder = getRowBuilder()
                 .addHighlightedCellWithText("Intellect (INT)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.INT)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 3))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 3),
                         getSkillAttributeDataValidation(skillsList, 3))
                 .addCellWithFormula(generateTotalModifierFormula(3))
                 .addEmptyCell();
 
+        skillName = getSkillNameText(skillsList, 4);
         var row12Builder = getRowBuilder()
                 .addHighlightedCellWithText("Perception (PER)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.PER)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 4))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 4),
                         getSkillAttributeDataValidation(skillsList, 4))
                 .addCellWithFormula(generateTotalModifierFormula(4))
                 .addEmptyCell();
 
+        skillName = getSkillNameText(skillsList, 5);
         var row13Builder = getRowBuilder()
                 .addHighlightedCellWithText("Presence (PRS)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.PRS)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 5))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 5),
                         getSkillAttributeDataValidation(skillsList, 5))
                 .addCellWithFormula(generateTotalModifierFormula(5))
                 .addEmptyCell();
 
+        skillName = getSkillNameText(skillsList, 6);
         var row14 = getRowBuilder()
                 .addHighlightedCellWithText("Luck (LUC)")
                 .addCellWithAttributeValue(characterCreateRequest, AttributeType.LUC)
                 .addEmptyCell()
-                .addCellWithText(getSkillNameText(skillsList, 6))
+                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 6),
                         getSkillAttributeDataValidation(skillsList, 6))
                 .addCellWithFormula(generateTotalModifierFormula(6))
@@ -661,11 +723,13 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var numRemainingSkillRowsNeeded = skillsList.size() - NUM_DEFAULT_SKILL_ROWS;
         for (var j = 0; j < numRemainingSkillRowsNeeded; j++) {
             var index = j + NUM_DEFAULT_SKILL_ROWS;
+            skillName = getSkillNameText(skillsList, index);
+
             var row15 = getRowBuilder()
                     .addEmptyCell()
                     .addEmptyCell()
                     .addEmptyCell()
-                    .addCellWithText(getSkillNameText(skillsList, index))
+                    .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
                     .addCellWithText(getSkillAttributeText(skillsList, index),
                             getSkillAttributeDataValidation(skillsList, index))
                     .addCellWithFormula(generateTotalModifierFormula(index))

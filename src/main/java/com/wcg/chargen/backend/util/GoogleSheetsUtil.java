@@ -2,7 +2,9 @@ package com.wcg.chargen.backend.util;
 
 import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.FeaturesRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +54,8 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_BOLD);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    cellFormat, null, null);
 
             return this;
         }
@@ -63,37 +66,66 @@ public class GoogleSheetsUtil {
             cellFormat.setTextFormat(COMMON_TEXT_FORMAT_BOLD);
             cellFormat.setWrapStrategy(WRAP_TEXT);
 
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    cellFormat,null, null);
 
             return this;
         }
 
         public RowBuilder addCellWithText(String cellText) {
-            addCellToList(new ExtendedValue().setStringValue(cellText), null, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    null, null, null);
 
             return this;
         }
 
         public RowBuilder addCellWithText(String cellText, DataValidationRule dataValidationRule) {
-            addCellToList(new ExtendedValue().setStringValue(cellText), null, dataValidationRule);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    null, dataValidationRule, null);
+
+            return this;
+        }
+
+        public RowBuilder addCellWithText(String cellText, FeatureAttributeType featureAttributeType) {
+            if (featureAttributeType == null) {
+                return addCellWithText(cellText);
+            }
+
+            switch (featureAttributeType) {
+                case ADV:
+                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                        getCellFormatWithColor(LIGHT_GREEN_1),
+                        null, "Roll with Advantage");
+                    break;
+                case DADV:
+                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                        getCellFormatWithColor(LIGHT_CYAN_1),
+                        null, "Roll with Double Advantage");
+                    break;
+                default:
+                    return addCellWithText(cellText);
+            }
 
             return this;
         }
 
         public RowBuilder addCellWithNumber(double cellNumber) {
-            addCellToList(new ExtendedValue().setNumberValue(cellNumber), null, null);
+            addCellToList(new ExtendedValue().setNumberValue(cellNumber),
+                    null, null, null);
 
             return this;
         }
 
         public RowBuilder addCellWithNumber(double cellNumber, DataValidationRule dataValidationRule) {
-            addCellToList(new ExtendedValue().setNumberValue(cellNumber), null, dataValidationRule);
+            addCellToList(new ExtendedValue().setNumberValue(cellNumber),
+                    null, dataValidationRule, null);
 
             return this;
         }
 
         public RowBuilder addCellWithFormula(String formula) {
-            addCellToList(new ExtendedValue().setFormulaValue(formula), null, null);
+            addCellToList(new ExtendedValue().setFormulaValue(formula),
+                    null, null, null);
 
             return this;
         }
@@ -118,45 +150,33 @@ public class GoogleSheetsUtil {
         }
 
         public RowBuilder addHighlightedCellWithText(String cellText) {
-            var cellFormat = new CellFormat().setBackgroundColor(LIGHT_YELLOW_3);
-            cellFormat.setBorders(ALL_BORDERS);
-            cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
-            cellFormat.setWrapStrategy(WRAP_TEXT);
-
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    getCellFormatWithColor(LIGHT_YELLOW_3),
+                    null, null);
 
             return this;
         }
 
         public RowBuilder addBaseFeatureCell(String cellText) {
-            var cellFormat = new CellFormat().setBackgroundColor(LIGHT_YELLOW_2);
-            cellFormat.setBorders(ALL_BORDERS);
-            cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
-            cellFormat.setWrapStrategy(WRAP_TEXT);
-
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    getCellFormatWithColor(LIGHT_YELLOW_2),
+                    null, null);
 
             return this;
         }
 
         public RowBuilder addTier1FeatureCell(String cellText) {
-            var cellFormat = new CellFormat().setBackgroundColor(LIGHT_GREEN_1);
-            cellFormat.setBorders(ALL_BORDERS);
-            cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
-            cellFormat.setWrapStrategy(WRAP_TEXT);
-
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    getCellFormatWithColor(LIGHT_GREEN_1),
+                    null, null);
 
             return this;
         }
 
         public RowBuilder addTier2FeatureCell(String cellText) {
-            var cellFormat = new CellFormat().setBackgroundColor(LIGHT_CYAN_1);
-            cellFormat.setBorders(ALL_BORDERS);
-            cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
-            cellFormat.setWrapStrategy(WRAP_TEXT);
-
-            addCellToList(new ExtendedValue().setStringValue(cellText), cellFormat, null);
+            addCellToList(new ExtendedValue().setStringValue(cellText),
+                    getCellFormatWithColor(LIGHT_CYAN_1),
+                    null, null);
 
             return this;
         }
@@ -167,8 +187,18 @@ public class GoogleSheetsUtil {
             return this;
         }
 
+        private CellFormat getCellFormatWithColor(Color color) {
+            var cellFormat = new CellFormat();
+            cellFormat.setBackgroundColor(color);
+            cellFormat.setBorders(ALL_BORDERS);
+            cellFormat.setTextFormat(COMMON_TEXT_FORMAT_REGULAR);
+            cellFormat.setWrapStrategy(WRAP_TEXT);
+
+            return cellFormat;
+        }
+
         private void addCellToList(ExtendedValue cellValue, CellFormat cellFormat,
-                                   DataValidationRule dataValidationRule) {
+                                   DataValidationRule dataValidationRule, String note) {
             var newCell = new CellData().setUserEnteredValue(cellValue);
 
             CellFormat formatToApply;
@@ -185,6 +215,7 @@ public class GoogleSheetsUtil {
 
             newCell.setUserEnteredFormat(formatToApply);
             newCell.setDataValidation(dataValidationRule);
+            newCell.setNote(note);
 
             rowCells.add(newCell);
         }

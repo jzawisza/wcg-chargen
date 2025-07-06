@@ -3,11 +3,14 @@ package com.wcg.chargen.backend.util;
 import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.GridBuilder.getGridBuilder;
@@ -302,6 +305,77 @@ public class GoogleSheetsUtilTest {
         assertNotNull(rowData.getValues().getFirst());
         assertNotNull(rowData.getValues().getFirst().getUserEnteredValue());
         assertEquals(expectedFormula, rowData.getValues().getFirst().getUserEnteredValue().getFormulaValue());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(value = FeatureAttributeType.class, names = {"ATTR_PLUS_1", "BONUS_HP", "EV_PLUS_1", "DA_PLUS_1", "SKILL"})
+    public void RowBuilder_addCellWithTextFeatureAttributeTypeActsLikeRegularTextCellIfAttributeTypeIsNotAdvOrDadv
+            (FeatureAttributeType featureAttributeType) {
+        // arrange
+        var expectedText = "Test";
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithText(expectedText, featureAttributeType)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+
+        var cellData = rowData.getValues().getFirst();
+        assertNotNull(cellData.getUserEnteredValue());
+        assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
+        assertNull(cellData.getUserEnteredFormat().getBackgroundColor());
+        assertNull(cellData.getNote());
+    }
+
+    @Test
+    public void RowBuilder_addCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeAdv() {
+        // arrange
+        var expectedText = "Test";
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithText(expectedText, FeatureAttributeType.ADV)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+
+        var cellData = rowData.getValues().getFirst();
+        assertNotNull(cellData.getUserEnteredValue());
+        assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
+        assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(0.576f, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
+        assertEquals("Roll with Advantage", cellData.getNote());
+    }
+
+    @Test
+    public void RowBuilder_addCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeDadv() {
+        // arrange
+        var expectedText = "Test";
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithText(expectedText, FeatureAttributeType.DADV)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+
+        var cellData = rowData.getValues().getFirst();
+        assertNotNull(cellData.getUserEnteredValue());
+        assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
+        assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(0.463f, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
+        assertEquals("Roll with Double Advantage", cellData.getNote());
     }
 
     @Test
