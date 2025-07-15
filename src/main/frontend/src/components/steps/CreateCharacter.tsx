@@ -54,8 +54,8 @@ const CreateCharacter: React.FC = () => {
 
             if (level > 1) {
                 createCharacterRequestBuilder.withFeatures({
-                    tier1: tier1Features,
-                    tier2: tier2Features
+                    tier1: Array.isArray(tier1Features) ? tier1Features : [tier1Features],
+                    tier2: Array.isArray(tier2Features) ? tier2Features : [tier2Features]
                 });
             }
 
