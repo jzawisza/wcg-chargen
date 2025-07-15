@@ -9,9 +9,9 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.*;
+
+import java.util.stream.Stream;
 
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.GridBuilder.getGridBuilder;
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.RowBuilder.getRowBuilder;
@@ -332,14 +332,16 @@ public class GoogleSheetsUtilTest {
         assertNull(cellData.getNote());
     }
 
-    @Test
-    public void RowBuilder_addCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeAdv() {
+    @ParameterizedTest
+    @MethodSource("featureAttributeRedColorAndNote")
+    public void RowBuilder_addCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeAdvOrDadv(
+            FeatureAttributeType featureAttributeType, float expectedRedValue, String expectedNote) {
         // arrange
         var expectedText = "Test";
 
         // act
         var rowData = getRowBuilder()
-                .addCellWithText(expectedText, FeatureAttributeType.ADV)
+                .addCellWithText(expectedText, featureAttributeType)
                 .build();
 
         // assert
@@ -351,18 +353,29 @@ public class GoogleSheetsUtilTest {
         assertNotNull(cellData.getUserEnteredValue());
         assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
         assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
-        assertEquals(0.576f, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
-        assertEquals("Roll with Advantage", cellData.getNote());
+        assertEquals(expectedRedValue, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
+        assertEquals(expectedNote, cellData.getNote());
     }
 
-    @Test
-    public void RowBuilder_addCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeDadv() {
+    static Stream<Arguments> featureAttributeRedColorAndNote() {
+        return Stream.of(
+                Arguments.of(FeatureAttributeType.ADV, 0.576f, "Roll with Advantage"),
+                Arguments.of(FeatureAttributeType.DADV, 0.463f, "Roll with Double Advantage")
+        );
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(value = FeatureAttributeType.class, names = {"ATTR_PLUS_1", "BONUS_HP", "EV_PLUS_1", "DA_PLUS_1", "SKILL"})
+    public void RowBuilder_addHighlightedCellWithTextFeatureAttributeTypeActsLikeRegularTextCellIfAttributeTypeIsNotAdvOrDadv
+            (FeatureAttributeType featureAttributeType) {
         // arrange
         var expectedText = "Test";
+        var expectedGreenValue = 0.949f;
 
         // act
         var rowData = getRowBuilder()
-                .addCellWithText(expectedText, FeatureAttributeType.DADV)
+                .addHighlightedCellWithText(expectedText, featureAttributeType)
                 .build();
 
         // assert
@@ -374,8 +387,33 @@ public class GoogleSheetsUtilTest {
         assertNotNull(cellData.getUserEnteredValue());
         assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
         assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
-        assertEquals(0.463f, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
-        assertEquals("Roll with Double Advantage", cellData.getNote());
+        assertEquals(expectedGreenValue, cellData.getUserEnteredFormat().getBackgroundColor().getGreen());
+        assertNull(cellData.getNote());
+    }
+
+    @ParameterizedTest
+    @MethodSource("featureAttributeRedColorAndNote")
+    public void RowBuilder_addHighlightedCellWithTextFeatureAttributeTypeGeneratesCorrectCellForAttributeTypeAdvOrDadv(
+            FeatureAttributeType featureAttributeType, float expectedRedValue, String expectedNote) {
+        // arrange
+        var expectedText = "Test";
+
+        // act
+        var rowData = getRowBuilder()
+                .addHighlightedCellWithText(expectedText, featureAttributeType)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+
+        var cellData = rowData.getValues().getFirst();
+        assertNotNull(cellData.getUserEnteredValue());
+        assertEquals(expectedText, cellData.getUserEnteredValue().getStringValue());
+        assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(expectedRedValue, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
+        assertEquals(expectedNote, cellData.getNote());
     }
 
     @Test

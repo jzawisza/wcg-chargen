@@ -157,6 +157,30 @@ public class GoogleSheetsUtil {
             return this;
         }
 
+        public RowBuilder addHighlightedCellWithText(String cellText, FeatureAttributeType featureAttributeType) {
+            // TODO: refactor to avoid code duplication with addCellWithText above
+            if (featureAttributeType == null) {
+                return addHighlightedCellWithText(cellText);
+            }
+
+            switch (featureAttributeType) {
+                case ADV:
+                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                            getCellFormatWithColor(LIGHT_GREEN_1),
+                            null, "Roll with Advantage");
+                    break;
+                case DADV:
+                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                            getCellFormatWithColor(LIGHT_CYAN_1),
+                            null, "Roll with Double Advantage");
+                    break;
+                default:
+                    return addHighlightedCellWithText(cellText);
+            }
+
+            return this;
+        }
+
         public RowBuilder addBaseFeatureCell(String cellText) {
             addCellToList(new ExtendedValue().setStringValue(cellText),
                     getCellFormatWithColor(LIGHT_YELLOW_2),

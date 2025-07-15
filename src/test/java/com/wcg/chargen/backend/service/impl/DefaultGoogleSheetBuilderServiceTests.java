@@ -4,6 +4,7 @@ import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.DataValidationRule;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.Sheet;
+import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
@@ -1329,6 +1330,83 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 Arguments.of("Stealth", FeatureAttributeType.DADV, 14),
                 Arguments.of("Survival", FeatureAttributeType.ADV, 15),
                 Arguments.of("Survival", FeatureAttributeType.DADV, 15)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("attributesFeatureAttributesAndRowIndexes")
+    public void buildStatsSheet_AttributesWithAdvorDadvDisplayCorrectly(
+            AttributeType attributeType, String expectedCellText,
+            FeatureAttributeType featureAttributeType, int rowIndex) {
+        // arrange
+        var featureName = "Test Feature";
+        var featureAttribute = new FeatureAttribute(featureAttributeType, attributeType.name());
+        var feature = new Feature(featureName, List.of(featureAttribute));
+
+        Features features;
+        FeaturesRequest featuresRequest;
+        float expectedRedColorValue;
+        String expectedNote;
+        if (featureAttributeType == FeatureAttributeType.ADV) {
+            features = new Features(List.of(feature), Collections.emptyList());
+            featuresRequest = new FeaturesRequest(List.of(featureName), Collections.emptyList());
+            expectedRedColorValue = 0.576f;
+            expectedNote = "Roll with Advantage";
+        }
+        else {
+            features = new Features(Collections.emptyList(), List.of(feature));
+            featuresRequest = new FeaturesRequest(Collections.emptyList(), List.of(featureName));
+            expectedRedColorValue = 0.463f;
+            expectedNote = "Roll with Double Advantage";
+        }
+
+        var charClass = new CharClass(CharType.SHAMAN.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                List.of("Arcana"),
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var skillCellData = getCellDataFromSheet(sheet, rowIndex, 0);
+
+        assertNotNull(skillCellData.getUserEnteredFormat());
+        assertNotNull(skillCellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(expectedRedColorValue, skillCellData.getUserEnteredFormat().getBackgroundColor().getRed());
+
+        assertEquals(expectedNote, skillCellData.getNote());
+    }
+
+    static Stream<Arguments> attributesFeatureAttributesAndRowIndexes() {
+        return Stream.of(
+                Arguments.of(AttributeType.STR, "Strength (STR)", FeatureAttributeType.ADV, 8),
+                Arguments.of(AttributeType.STR, "Strength (STR)", FeatureAttributeType.DADV, 8),
+                Arguments.of(AttributeType.COR, "Coordination (COR)", FeatureAttributeType.ADV, 9),
+                Arguments.of(AttributeType.COR, "Coordination (COR)", FeatureAttributeType.DADV, 9),
+                Arguments.of(AttributeType.STA, "Stamina (STA)", FeatureAttributeType.ADV, 10),
+                Arguments.of(AttributeType.STA, "Stamina (STA)", FeatureAttributeType.DADV, 10),
+                Arguments.of(AttributeType.INT, "Intellect (INT)", FeatureAttributeType.ADV, 11),
+                Arguments.of(AttributeType.INT, "Intellect (INT)", FeatureAttributeType.DADV, 11),
+                Arguments.of(AttributeType.PER, "Perception (PER)", FeatureAttributeType.ADV, 12),
+                Arguments.of(AttributeType.PER, "Perception (PER)", FeatureAttributeType.DADV, 12),
+                Arguments.of(AttributeType.PRS, "Presence (PRS)", FeatureAttributeType.ADV, 13),
+                Arguments.of(AttributeType.PRS, "Presence (PRS)", FeatureAttributeType.DADV, 13),
+                Arguments.of(AttributeType.LUC, "Luck (LUC)", FeatureAttributeType.ADV, 14),
+                Arguments.of(AttributeType.LUC, "Luck (LUC)", FeatureAttributeType.DADV, 14)
         );
     }
 
