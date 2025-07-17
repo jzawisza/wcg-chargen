@@ -62,8 +62,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
     private static final String ITEM_4_NAME = "Item4";
     private static final String ITEM_5_NAME = "Item5";
     private static final String ITEM_6_NAME = "Item6";
-    private static final String TIER_1_FEATURE_NAME = "Tier I feature";
-    private static final String TIER_2_FEATURE_NAME = "Tier II feature";
 
     @BeforeEach
     public void beforeTest() {
@@ -1455,6 +1453,63 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(expectedDadvRedColorValue, skillCellData.getUserEnteredFormat().getBackgroundColor().getRed());
 
         assertEquals(expectedDadvNote, skillCellData.getNote());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
+    public void buildStatsSheet_InitiativeWithAdvorDadvDisplaysCorrectly(
+            FeatureAttributeType featureAttributeType) {
+        // arrange
+        var featureName = "Test Feature";
+        var featureAttribute = new FeatureAttribute(featureAttributeType, "Initiative");
+        var feature = new Feature(featureName, List.of(featureAttribute));
+
+        Features features;
+        FeaturesRequest featuresRequest;
+        float expectedRedColorValue;
+        String expectedNote;
+        if (featureAttributeType == FeatureAttributeType.ADV) {
+            features = new Features(List.of(feature), Collections.emptyList());
+            featuresRequest = new FeaturesRequest(List.of(featureName), Collections.emptyList());
+            expectedRedColorValue = 0.576f;
+            expectedNote = "Roll with Advantage";
+        }
+        else {
+            features = new Features(Collections.emptyList(), List.of(feature));
+            featuresRequest = new FeaturesRequest(Collections.emptyList(), List.of(featureName));
+            expectedRedColorValue = 0.463f;
+            expectedNote = "Roll with Double Advantage";
+        }
+
+        var charClass = new CharClass(CharType.SHAMAN.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                List.of("Arcana"),
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var initiativeCellData = getCellDataFromSheet(sheet, 4, 0);
+
+        assertNotNull(initiativeCellData.getUserEnteredFormat());
+        assertNotNull(initiativeCellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(expectedRedColorValue, initiativeCellData.getUserEnteredFormat().getBackgroundColor().getRed());
+
+        assertEquals(expectedNote, initiativeCellData.getNote());
     }
 
     @Test

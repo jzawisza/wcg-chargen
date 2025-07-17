@@ -4,10 +4,10 @@ import com.google.api.services.sheets.v4.model.*;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.model.FeaturesRequest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Utility methods for building rows and columns of a Google Sheets spreadsheet.
@@ -87,26 +87,10 @@ public class GoogleSheetsUtil {
         }
 
         public RowBuilder addCellWithText(String cellText, FeatureAttributeType featureAttributeType) {
-            if (featureAttributeType == null) {
-                return addCellWithText(cellText);
-            }
-
-            switch (featureAttributeType) {
-                case ADV:
-                    addCellToList(new ExtendedValue().setStringValue(cellText),
-                        getCellFormatWithColor(LIGHT_GREEN_1),
-                        null, "Roll with Advantage");
-                    break;
-                case DADV:
-                    addCellToList(new ExtendedValue().setStringValue(cellText),
-                        getCellFormatWithColor(LIGHT_CYAN_1),
-                        null, "Roll with Double Advantage");
-                    break;
-                default:
-                    return addCellWithText(cellText);
-            }
-
-            return this;
+            return addCellWithFeatureAttributeType(cellText,
+                    featureAttributeType,
+                    this::addCellWithText,
+                    text -> new ExtendedValue().setStringValue(text));
         }
 
         public RowBuilder addCellWithNumber(double cellNumber) {
@@ -128,6 +112,13 @@ public class GoogleSheetsUtil {
                     null, null, null);
 
             return this;
+        }
+
+        public RowBuilder addCellWithFormula(String formula, FeatureAttributeType featureAttributeType) {
+            return addCellWithFeatureAttributeType(formula,
+                    featureAttributeType,
+                    this::addCellWithFormula,
+                    text -> new ExtendedValue().setFormulaValue(text));
         }
 
         public RowBuilder addCellWithAttributeValue(CharacterCreateRequest request,
@@ -158,24 +149,33 @@ public class GoogleSheetsUtil {
         }
 
         public RowBuilder addHighlightedCellWithText(String cellText, FeatureAttributeType featureAttributeType) {
-            // TODO: refactor to avoid code duplication with addCellWithText above
+            return addCellWithFeatureAttributeType(cellText,
+                    featureAttributeType,
+                    this::addHighlightedCellWithText,
+                    text -> new ExtendedValue().setStringValue(text));
+        }
+
+        private RowBuilder addCellWithFeatureAttributeType(String cellText,
+                                                           FeatureAttributeType featureAttributeType,
+                                                           Function<String, RowBuilder> noFeatureAttributeFunc,
+                                                           Function<String, ExtendedValue> cellValueFunc) {
             if (featureAttributeType == null) {
-                return addHighlightedCellWithText(cellText);
+                return noFeatureAttributeFunc.apply(cellText);
             }
 
             switch (featureAttributeType) {
                 case ADV:
-                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                    addCellToList(cellValueFunc.apply(cellText),
                             getCellFormatWithColor(LIGHT_GREEN_1),
                             null, "Roll with Advantage");
                     break;
                 case DADV:
-                    addCellToList(new ExtendedValue().setStringValue(cellText),
+                    addCellToList(cellValueFunc.apply(cellText),
                             getCellFormatWithColor(LIGHT_CYAN_1),
                             null, "Roll with Double Advantage");
                     break;
                 default:
-                    return addHighlightedCellWithText(cellText);
+                    return noFeatureAttributeFunc.apply(cellText);
             }
 
             return this;

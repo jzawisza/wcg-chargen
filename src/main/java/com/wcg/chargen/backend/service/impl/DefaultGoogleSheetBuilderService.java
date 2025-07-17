@@ -6,7 +6,6 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +41,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final int NUM_DEFAULT_GEAR_ROWS = 10;
     private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
+    private static final String INITIATIVE_NAME = "Initiative";
 
 
     private static Sheet buildSheetWithTitle(String title)
@@ -519,7 +519,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .build();
 
         var row4 = getRowBuilder()
-                .addSecondaryHeaderCell("Initiative")
+                .addSecondaryHeaderCell(INITIATIVE_NAME)
                 .addSecondaryHeaderCell("Attack")
                 .addSecondaryHeaderCell("Evasion")
                 .addSecondaryHeaderCell("Fortune Points")
@@ -532,7 +532,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var hitPoints = getHitPoints(characterCreateRequest);
         var row5 = getRowBuilder()
-                .addCellWithFormula("=MAX(B10,B13)")
+                .addCellWithFormula("=MAX(B10,B13)",
+                        getAdvOrDadvByModifier(characterCreateRequest, INITIATIVE_NAME))
                 .addCellWithNumber(getAttack(characterCreateRequest))
                 .addCellWithFormula(getEvasionFormula(characterCreateRequest))
                 .addCellWithNumber(getFortunePoints(characterCreateRequest))

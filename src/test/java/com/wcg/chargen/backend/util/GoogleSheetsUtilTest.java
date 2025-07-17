@@ -5,7 +5,6 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
-import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -414,6 +413,31 @@ public class GoogleSheetsUtilTest {
         assertNotNull(cellData.getUserEnteredFormat().getBackgroundColor());
         assertEquals(expectedRedValue, cellData.getUserEnteredFormat().getBackgroundColor().getRed());
         assertEquals(expectedNote, cellData.getNote());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(value = FeatureAttributeType.class, names = {"ATTR_PLUS_1", "BONUS_HP", "EV_PLUS_1", "DA_PLUS_1", "SKILL"})
+    public void RowBuilder_addCellWithFormulaFeatureAttributeTypeActsLikeRegularTextCellIfAttributeTypeIsNotAdvOrDadv
+            (FeatureAttributeType featureAttributeType) {
+        // arrange
+        var expectedFormula = "=SUM(1,1)";
+
+        // act
+        var rowData = getRowBuilder()
+                .addCellWithFormula(expectedFormula, featureAttributeType)
+                .build();
+
+        // assert
+        assertNotNull(rowData);
+        assertNotNull(rowData.getValues());
+        assertNotNull(rowData.getValues().getFirst());
+
+        var cellData = rowData.getValues().getFirst();
+        assertNotNull(cellData.getUserEnteredValue());
+        assertEquals(expectedFormula, cellData.getUserEnteredValue().getFormulaValue());
+        assertNull(cellData.getUserEnteredFormat().getBackgroundColor());
+        assertNull(cellData.getNote());
     }
 
     @Test
