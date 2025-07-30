@@ -1512,6 +1512,69 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(expectedNote, initiativeCellData.getNote());
     }
 
+    @ParameterizedTest
+    @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
+    public void buildStatsSheet_UnarmedDamageWithAdvOrDadvDisplaysCorrectly(
+            FeatureAttributeType featureAttributeType) {
+        // arrange
+        var featureName = "Test Feature";
+        var featureAttribute = new FeatureAttribute(featureAttributeType, "Unarmed");
+        var feature = new Feature(featureName, List.of(featureAttribute));
+        var expectedUnarmedDamage = "1d6";
+        var unarmedWeapon = new Weapon("Fists", "Unarmed", expectedUnarmedDamage);
+        var gear = new Gear(Collections.emptyList(), List.of(unarmedWeapon),0, 0, null);
+
+        Features features;
+        FeaturesRequest featuresRequest;
+        float expectedRedColorValue;
+        String expectedNote;
+        if (featureAttributeType == FeatureAttributeType.ADV) {
+            features = new Features(List.of(feature), Collections.emptyList());
+            featuresRequest = new FeaturesRequest(List.of(featureName), Collections.emptyList());
+            expectedRedColorValue = 0.576f;
+            expectedNote = "Roll with Advantage";
+        }
+        else {
+            features = new Features(Collections.emptyList(), List.of(feature));
+            featuresRequest = new FeaturesRequest(Collections.emptyList(), List.of(featureName));
+            expectedRedColorValue = 0.463f;
+            expectedNote = "Roll with Double Advantage";
+        }
+
+        var charClass = new CharClass(CharType.MYSTIC.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                List.of("Arcana"),
+                gear,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var unarmedDamageCellData = getCellDataFromSheet(sheet, 18, 7);
+        assertNotNull(unarmedDamageCellData.getUserEnteredValue());
+        assertEquals(expectedUnarmedDamage, unarmedDamageCellData.getUserEnteredValue().getStringValue());
+
+        assertNotNull(unarmedDamageCellData.getUserEnteredFormat());
+        assertNotNull(unarmedDamageCellData.getUserEnteredFormat().getBackgroundColor());
+        assertEquals(expectedRedColorValue, unarmedDamageCellData.getUserEnteredFormat().getBackgroundColor().getRed());
+
+        assertEquals(expectedNote, unarmedDamageCellData.getNote());
+    }
+
     @Test
     public void buildSpellsSheet_BuildsSheetWithExpectedTitle() {
         // arrange

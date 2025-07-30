@@ -27,7 +27,7 @@ public class DefaultCharClassesService implements CharClassesService {
 
     private static final String SKALD_FORGOTTEN_LORE = "Forgotten Lore";
 
-    private static final String MYSTIC_UNARMED_DAMAGE = "Unarmed Damage";
+    private static final String MYSTIC_UNARMED = "Unarmed";
 
     private static final String ROGUE_ANY = "Any";
 
@@ -319,8 +319,8 @@ public class DefaultCharClassesService implements CharClassesService {
             return null;
         }
 
-        // For mystics, "Unarmed Damage" is a valid modifier
-        if (charType == CharType.MYSTIC && modifier.equals(MYSTIC_UNARMED_DAMAGE)) {
+        // For mystics, "Unarmed" is a valid modifier
+        if (charType == CharType.MYSTIC && modifier.equals(MYSTIC_UNARMED)) {
             return null;
         }
 

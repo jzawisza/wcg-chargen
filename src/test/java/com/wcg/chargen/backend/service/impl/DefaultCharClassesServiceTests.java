@@ -140,11 +140,11 @@ public class DefaultCharClassesServiceTests {
             ),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierUnarmedDamage()),
-                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Unarmed Damage found for ADV/DADV value type"
+                    "Character class type berzerker has invalid Tier I feature data: Unexpected modifier Unarmed found for ADV/DADV value type"
             ),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDadvModifierUnarmedDamage()),
-                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Unarmed Damage found for ADV/DADV value type"
+                    "Character class type berzerker has invalid Tier II feature data: Unexpected modifier Unarmed found for ADV/DADV value type"
             ),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAdvModifierAny()),

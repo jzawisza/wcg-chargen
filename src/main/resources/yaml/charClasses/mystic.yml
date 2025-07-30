@@ -42,7 +42,7 @@ features:
     - description: "Dragon Breath: Unarmed attack damages creatures hurt only by magic or silver"
       attributes: [ ]
     - description: "Dragon Force: Unarmed damage dice roll with ADV"
-      attributes: [ { type: 'ADV', modifier: 'Unarmed Damage'} ]
+      attributes: [ { type: 'ADV', modifier: 'Unarmed'} ]
     - description: "Ninety Nine Steps: Advantage on Athletics checks"
       attributes: [ { type: 'ADV', modifier: 'Athletics'} ]
     - description: "Iron Body: Natural DA +1. Cumulative with armor."

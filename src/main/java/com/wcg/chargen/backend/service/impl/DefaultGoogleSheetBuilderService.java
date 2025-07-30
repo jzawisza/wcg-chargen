@@ -765,15 +765,18 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         // Add rows for armor and weapons
         var numArmorAndWeaponsRows = getNumArmorAndWeaponsRows(characterCreateRequest);
         for (var k = 0; k < numArmorAndWeaponsRows; k++) {
+            var weaponType = getWeaponType(characterCreateRequest, k);
+
             var armorWeaponRow = getRowBuilder()
                     .addCellWithText(getArmorName(characterCreateRequest, k))
                     .addCellWithText(getArmorType(characterCreateRequest, k))
                     .addCellWithText(getArmorDa(characterCreateRequest, k))
                     .addEmptyCell()
                     .addCellWithText(getWeaponName(characterCreateRequest, k))
-                    .addCellWithText(getWeaponType(characterCreateRequest, k))
+                    .addCellWithText(weaponType)
                     .addCellWithText("")
-                    .addCellWithText(getWeaponDamage(characterCreateRequest, k))
+                    .addCellWithText(getWeaponDamage(characterCreateRequest, k),
+                            getAdvOrDadvByModifier(characterCreateRequest, weaponType))
                     .build();
 
             gridDataBuilder.addRow(armorWeaponRow);

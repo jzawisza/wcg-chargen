@@ -53,7 +53,7 @@ features:
     - description: "Two melee strikes per round"
       attributes: []
     - description: "Tough: +4 Extra HP & Double ADV with STA checks"
-      attributes: [{type: 'BONUS_HP', modifier: '4'}, {type: 'DADV', modifier: 'Unarmed Damage' }]
+      attributes: [{type: 'BONUS_HP', modifier: '4'}, {type: 'DADV', modifier: 'Unarmed' }]
     - description: "Natural DA +1. Cumulative with any other bonuses"
       attributes: [ { type: 'DA_PLUS_1', modifier: 'ANY' } ]
     - description: "Critical Hit on Natural 19 or 20"

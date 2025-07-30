@@ -46,7 +46,7 @@ features:
     - description: "Very Alert: Avoid surprise & bonus backstab damage"
       attributes: []
     - description: "Advantage on Survival checks"
-      attributes: [ { type: 'ADV', modifier: 'Unarmed Damage' } ]
+      attributes: [ { type: 'ADV', modifier: 'Unarmed' } ]
     - description: "Double running speed when not wearing heavy armor"
       attributes: []
   tier2:
