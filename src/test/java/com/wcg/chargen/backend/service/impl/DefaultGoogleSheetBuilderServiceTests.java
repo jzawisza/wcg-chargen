@@ -346,25 +346,22 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @ParameterizedTest
-    @CsvSource({
-        "true, '=SUM(11,B10,1)'",
-        "false, '=SUM(11,B10)'"
-    })
-    public void buildStatsSheet_EvasionIsPopulatedCorrectlyForCharactersWhoseQuickGearIncludesShield(
-            boolean useQuickGear, String expectedEvasionFormula) {
+    @MethodSource("conditionsForEvasion")
+    public void buildStatsSheet_EvasionIsPopulatedCorrectlyBasedOnQuickGearAndFeatures(
+            boolean useQuickGear, boolean hasTier1EvasionFeature, boolean hasTier2EvasionFeature,
+            String expectedEvasionFormula) {
         // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(2)
-                .withSpeciesStrength("INT")
-                .withBonusSkills(List.of("Healing", "Negotiation"))
-                .withUseQuickGear(useQuickGear)
-                .build();
-
         var armor = new Armor("Hoplite Shield", "Shield", "+1 Evasion");
         var gear = new Gear(List.of(armor), Collections.emptyList(), MAX_CLASS_COPPER, MAX_CLASS_SILVER, Collections.emptyList());
+
+        var evasionFeatureName = "Evasion test";
+        var evasionFeatureAttribute = new FeatureAttribute(FeatureAttributeType.EV_PLUS_1, "");
+        var evasionFeature = new Feature(evasionFeatureName, List.of(evasionFeatureAttribute));
+        var evasionFeatureList = List.of(evasionFeature);
+        var features = new Features(
+                hasTier1EvasionFeature ? evasionFeatureList : Collections.emptyList(),
+                hasTier2EvasionFeature ? evasionFeatureList : Collections.emptyList()
+        );
 
         var charClass = new CharClass(CharType.WARRIOR.toString(),
                 Arrays.asList(1, 2, 3, 4, 5, 6, 7),
@@ -373,9 +370,24 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
-                null);
+                features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                hasTier1EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList(),
+                hasTier2EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList()
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(2)
+                .withSpeciesStrength("INT")
+                .withBonusSkills(List.of("Healing", "Negotiation"))
+                .withUseQuickGear(useQuickGear)
+                .withFeatures(featuresRequest)
+                .build();
 
         // act
         var sheet = googleSheetBuilderService.buildStatsSheet(request);
@@ -383,6 +395,19 @@ public class DefaultGoogleSheetBuilderServiceTests {
         // assert
         var evasionValue = getCellValueFromSheet(sheet, 4, 2);
         assertEquals(expectedEvasionFormula, evasionValue.getFormulaValue());
+    }
+
+    static Stream<Arguments> conditionsForEvasion() {
+        return Stream.of(
+                Arguments.arguments(false, false, false, "=SUM(11,B10)"),
+                Arguments.arguments(true, false, false, "=SUM(11,B10,1)"),
+                Arguments.arguments(false, true, false, "=SUM(11,B10,1)"),
+                Arguments.arguments(false, false, true, "=SUM(11,B10,1)"),
+                Arguments.arguments(true, true, false, "=SUM(11,B10,2)"),
+                Arguments.arguments(true, false, true, "=SUM(11,B10,2)"),
+                Arguments.arguments(false, true, true, "=SUM(11,B10,2)"),
+                Arguments.arguments(true, true, true, "=SUM(11,B10,3)")
+        );
     }
 
     private void assertConditionValueListHasAllValuesFromList(DataValidationRule dataValidationRule,

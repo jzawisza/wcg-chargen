@@ -6,6 +6,7 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -159,21 +160,53 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
     private String getEvasionFormula(CharacterCreateRequest characterCreateRequest) {
         var evasion = -1;
-        var hasShield = false;
+        var bonusEvasion = 0;
         if (!characterCreateRequest.isCommoner()) {
             var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
             evasion = charClass.evasionModifiers().get(characterCreateRequest.level() - 1);
 
             // If a character has a shield, they get a +1 bonus to evasion
-            hasShield = characterCreateRequest.useQuickGear() &&
+            if(characterCreateRequest.useQuickGear() &&
                     charClass.gear().armor().stream()
-                    .anyMatch(a -> a.type().equals("Shield"));
+                    .anyMatch(a -> a.type().equals("Shield"))) {
+                bonusEvasion += 1;
+            };
+
+            // If a character has a feature that gives them a bonus to evasion,
+            // take that into account
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier1() != null) {
+                var tier1BonusEvasionFeatureNames = charClass.features().tier1().stream()
+                        .filter(f -> f.attributes().stream()
+                                .anyMatch(a -> a.type() == FeatureAttributeType.EV_PLUS_1))
+                        .map(Feature::description)
+                        .toList();
+                for (var tier1Feature : characterCreateRequest.features().tier1()) {
+                    if (tier1BonusEvasionFeatureNames.contains(tier1Feature)) {
+                        bonusEvasion += 1;
+                    }
+                }
+            }
+
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier2() != null) {
+                var tier2BonusEvasionFeatureNames = charClass.features().tier2().stream()
+                        .filter(f -> f.attributes().stream()
+                                .anyMatch(a -> a.type() == FeatureAttributeType.EV_PLUS_1))
+                        .map(Feature::description)
+                        .toList();
+                for (var tier2Feature : characterCreateRequest.features().tier2()) {
+                    if (tier2BonusEvasionFeatureNames.contains(tier2Feature)) {
+                        bonusEvasion += 1;
+                    }
+                }
+            }
         }
         else {
             evasion = commonerService.getInfo().evasion();
         }
 
-        return hasShield ? String.format("=SUM(%d,B10,1)", evasion) :
+        return (bonusEvasion > 0) ? String.format("=SUM(%d,B10,%d)", evasion, bonusEvasion) :
                 String.format("=SUM(%d,B10)", evasion);
     }
 
