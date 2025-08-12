@@ -837,6 +837,67 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @Test
+    public void buildStatsSheet_HitPointBonusIsAppliedProperlyIfBonusHpFeaturesAreSelected() {
+        // arrange
+        var staValue = 1;
+        var bonusTier1HitPoints = 2;
+        var bonusTier2HitPoints = 3;
+        var expectedHitPoints = TEST_LEVEL_1_HP + staValue + bonusTier1HitPoints + bonusTier2HitPoints;
+
+        var bonusHpTier1FeatureName = "Tier I bonus HP test";
+        var bonusHpTier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.BONUS_HP,
+                Integer.toString(bonusTier1HitPoints));
+        var bonusHpTier1Feature = new Feature(bonusHpTier1FeatureName,
+                List.of(bonusHpTier1FeatureAttribute));
+        var bonusHpTier2FeatureName = "Tier II bonus HP test";
+        var bonusHpTier2FeatureAttribute = new FeatureAttribute(FeatureAttributeType.BONUS_HP,
+                Integer.toString(bonusTier2HitPoints));
+        var bonusHpTier2Feature = new Feature(bonusHpTier2FeatureName,
+                List.of(bonusHpTier2FeatureAttribute));
+        var features = new Features(
+                List.of(bonusHpTier1Feature),
+                List.of(bonusHpTier2Feature)
+        );
+
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                List.of(""),
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var featuresRequest = new FeaturesRequest(
+                List.of(bonusHpTier1FeatureName),
+                List.of(bonusHpTier2FeatureName)
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var currentHpValue = getCellValueFromSheet(sheet, 4, 4);
+        assertEquals(expectedHitPoints, currentHpValue.getNumberValue());
+
+        var maxHpValue = getCellValueFromSheet(sheet, 4, 5);
+        assertEquals(expectedHitPoints, maxHpValue.getNumberValue());
+    }
+
+    @Test
     public void buildStatsSheet_ContainsExpectedSkillsAndSkillAttributesForNonHumanCharacter() {
         // arrange
         var request = CharacterCreateRequestBuilder.getBuilder()

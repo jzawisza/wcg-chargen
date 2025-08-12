@@ -7,22 +7,24 @@ import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Feature;
+import com.wcg.chargen.backend.model.FeatureAttribute;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.GridBuilder.getGridBuilder;
 import static com.wcg.chargen.backend.util.GoogleSheetsUtil.RowBuilder.getRowBuilder;
 
 @Service
 public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderService {
+    private final Logger logger = LoggerFactory.getLogger(DefaultGoogleSheetBuilderService.class);
+
     @Autowired
     ProfessionsService professionsService;
     @Autowired
@@ -176,11 +178,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             // take that into account
             if (characterCreateRequest.features() != null &&
                     characterCreateRequest.features().tier1() != null) {
-                var tier1BonusEvasionFeatureNames = charClass.features().tier1().stream()
-                        .filter(f -> f.attributes().stream()
-                                .anyMatch(a -> a.type() == FeatureAttributeType.EV_PLUS_1))
-                        .map(Feature::description)
-                        .toList();
+                var tier1BonusEvasionFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier1(), FeatureAttributeType.EV_PLUS_1);
                 for (var tier1Feature : characterCreateRequest.features().tier1()) {
                     if (tier1BonusEvasionFeatureNames.contains(tier1Feature)) {
                         bonusEvasion += 1;
@@ -190,11 +189,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
             if (characterCreateRequest.features() != null &&
                     characterCreateRequest.features().tier2() != null) {
-                var tier2BonusEvasionFeatureNames = charClass.features().tier2().stream()
-                        .filter(f -> f.attributes().stream()
-                                .anyMatch(a -> a.type() == FeatureAttributeType.EV_PLUS_1))
-                        .map(Feature::description)
-                        .toList();
+                var tier2BonusEvasionFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier2(), FeatureAttributeType.EV_PLUS_1);
                 for (var tier2Feature : characterCreateRequest.features().tier2()) {
                     if (tier2BonusEvasionFeatureNames.contains(tier2Feature)) {
                         bonusEvasion += 1;
@@ -221,7 +217,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
     private int getHitPoints(CharacterCreateRequest characterCreateRequest) {
         var staminaScore = characterCreateRequest.getAttributeValue(AttributeType.STA);
-        if (characterCreateRequest.level() == 0) {
+        if (characterCreateRequest.isCommoner()) {
             var d4Roll = randomNumberService.getIntFromRange(1, 4);
 
             return d4Roll + 1 + staminaScore;
@@ -237,8 +233,78 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 hitPoints += randomNumberService.getIntFromRange(1, charClass.maxHpAtLevelUp());
             }
 
+            // Check for features that increase hit points
+            logger.info("Hit points before checking for BONUS_HP features: {}", hitPoints);
+
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier1() != null) {
+                var tier1BonusHpFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier1(), FeatureAttributeType.BONUS_HP);
+
+                for (var tier1Feature : characterCreateRequest.features().tier1()) {
+                    if (tier1BonusHpFeatureNames.contains(tier1Feature)) {
+                        hitPoints += getHitPointsForFeature(charClass.features().tier1(), tier1Feature);
+                    }
+                }
+            }
+
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier2() != null) {
+                var tier2BonusHpFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier2(), FeatureAttributeType.BONUS_HP);
+
+                for (var tier2Feature : characterCreateRequest.features().tier2()) {
+                    if (tier2BonusHpFeatureNames.contains(tier2Feature)) {
+                        hitPoints += getHitPointsForFeature(charClass.features().tier2(), tier2Feature);
+                    }
+                }
+            }
+
+            logger.info("Final hit points: {}", hitPoints);
+            
             return hitPoints;
         }
+    }
+
+    private List<String> getFeatureNamesByAttributeType(List<Feature> featureList,
+                                                        FeatureAttributeType attributeType) {
+        return featureList.stream()
+                .filter(f -> f.attributes().stream()
+                        .anyMatch(a -> a.type() == attributeType))
+                .map(Feature::description)
+                .toList();
+    }
+
+    private Optional<String> getAttributeModifierForFeatureAndAttributeType(List<Feature> featureList,
+            String feature, FeatureAttributeType featureAttributeType) {
+        return featureList.stream()
+                .filter(f -> f.description().equals(feature))
+                .map(Feature::attributes)
+                .flatMap(List::stream)
+                .filter(a -> a.type() == featureAttributeType)
+                .map(FeatureAttribute::modifier)
+                .findFirst();
+    }
+
+    private int getHitPointsForFeature(List<Feature> featureList, String featureName) {
+        var hitPoints = 0;
+        var hitPointsOptionalStr = getAttributeModifierForFeatureAndAttributeType
+                (featureList, featureName, FeatureAttributeType.BONUS_HP);
+
+        if (hitPointsOptionalStr.isPresent()) {
+            try {
+                hitPoints = Integer.parseInt(hitPointsOptionalStr.get());
+            }
+            catch (NumberFormatException e) {
+                logger.error("Error parsing BONUS_HP value {} for feature {}",
+                        hitPointsOptionalStr.get(), featureName, e);
+            }
+        }
+        else {
+            logger.warn("Unable to find BONUS_HP modifier for feature {}", featureName);
+        }
+
+        return hitPoints;
     }
 
     private List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {
