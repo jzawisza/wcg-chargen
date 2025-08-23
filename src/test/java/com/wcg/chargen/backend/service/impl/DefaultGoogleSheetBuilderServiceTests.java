@@ -1334,6 +1334,128 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void buildStatsSheet_BerzerkerCharactersHaveCorrectDaIfQuickGearIsEnabledTierIAndTierIIFeaturesToBoostDaAreTaken(
+            boolean shouldUseQuickGear
+    ) {
+        // arrange
+        var baseDaWithQuickGear = 3;
+        var baseDaWithQuickGearStr = Integer.toString(baseDaWithQuickGear);
+        // If quick gear isn't being used, there's no armor, so the DA should be blank
+        // If it is being used, the base DA is 3 and the features add 2 more
+        var expectedDaStr = shouldUseQuickGear ? Integer.toString(baseDaWithQuickGear + 2) : "";
+
+        var tier1FeatureName = "Tier I DA_PLUS_1";
+        var tier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.DA_PLUS_1, "NO_HEAVY_ARMOR");
+        var tier2FeatureName = "Tier II DA_PLUS_1";
+        var tier2FeatureAttribute = new FeatureAttribute(FeatureAttributeType.DA_PLUS_1, "ANY");
+        var tier1Feature = new Feature(tier1FeatureName, List.of(tier1FeatureAttribute));
+        var tier2Feature = new Feature(tier2FeatureName, List.of(tier2FeatureAttribute));
+        var features = new Features(
+                List.of(tier1Feature),
+                List.of(tier2Feature));
+
+        var armor = new Armor("Leather Armor", "Light", baseDaWithQuickGearStr);
+        var gear = new Gear(List.of(armor),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList());
+
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                Collections.emptyList(),
+                gear,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                List.of(tier1FeatureName),
+                List.of(tier2FeatureName)
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.BERZERKER)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .withUseQuickGear(shouldUseQuickGear)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var armorRowDa = getCellValueFromSheet(sheet, 18, 2);
+        assertEquals(expectedDaStr, armorRowDa.getStringValue());
+    }
+
+    @ParameterizedTest
+    @MethodSource("mysticExpectedDasWithQuickGearAndTierIFeature")
+    public void buildStatsSheet_MysticCharactersHaveCorrectDaBasedOnQuickGearStatusAndIfTierIBoostDaFeatureIsTaken(
+            boolean shouldUseQuickGear, boolean shouldUseTier1Feature, String expectedDaStr
+    ) {
+        // arrange
+        var baseDaWithQuickGearStr = "3";
+
+        var tier1FeatureName = "Tier I DA_PLUS_1";
+        var tier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.DA_PLUS_1, "WITH_ARMOR");
+        var tier1Feature = new Feature(tier1FeatureName, List.of(tier1FeatureAttribute));
+        var features = new Features(
+                List.of(tier1Feature),
+                Collections.emptyList());
+
+        var armor = new Armor("Leather Armor", "Light", baseDaWithQuickGearStr);
+        var gear = new Gear(List.of(armor),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList());
+
+        var charClass = new CharClass(CharType.MYSTIC.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                Collections.emptyList(),
+                gear,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                shouldUseTier1Feature ? List.of(tier1FeatureName) : Collections.emptyList(),
+                Collections.emptyList()
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .withUseQuickGear(shouldUseQuickGear)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var armorRowDa = getCellValueFromSheet(sheet, 18, 2);
+        assertEquals(expectedDaStr, armorRowDa.getStringValue());
+    }
+
+    static Stream<Arguments> mysticExpectedDasWithQuickGearAndTierIFeature() {
+        return Stream.of(
+                Arguments.of(true, true, "4"),
+                Arguments.of(true, false, "3"),
+                Arguments.of(false, true, "1"),
+                Arguments.of(false, false, "")
+        );
+    }
+
+    @ParameterizedTest
     @MethodSource("shamanAndBonusSkillsAndFeatureAttributes")
     public void buildStatsSheet_FeaturesWithAdvorDadvDisplayCorrectly(
             String skillName, FeatureAttributeType featureAttributeType, int rowIndex) {

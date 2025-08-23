@@ -261,7 +261,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             }
 
             logger.info("Final hit points: {}", hitPoints);
-            
+
             return hitPoints;
         }
     }
@@ -469,14 +469,69 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     }
 
     private String getArmorDa(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
+        // If mystics take the feature that gives them DA_PLUS_1, it applies regardless of whether
+        // they have armor, so it'll apply even if they don't use quick gear
+        if (characterCreateRequest.isCommoner() ||
+                (characterCreateRequest.characterClass() != CharType.MYSTIC && !characterCreateRequest.useQuickGear())) {
             return "";
         }
 
         var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
         var gear = charClass.gear();
 
-        return (index < gear.armor().size()) ? gear.armor().get(index).da() : "";
+        if (index >= gear.armor().size()) {
+            return "";
+        }
+
+        var isMysticWithoutQuickGear = characterCreateRequest.characterClass() == CharType.MYSTIC &&
+                !characterCreateRequest.useQuickGear();
+        if (isMysticWithoutQuickGear) {
+            logger.info("Getting armor DA for mystic without quick gear; feature for DA boost will be searched for");
+        }
+
+        var baseDaStr = isMysticWithoutQuickGear ? "0" : gear.armor().get(index).da();
+        logger.info("Base DA before checking for DA_PLUS_1 features: {}", baseDaStr);
+
+        try {
+            var totalDa = Integer.parseInt(baseDaStr);
+
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier1() != null) {
+                var tier1DaPlusOneFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier1(), FeatureAttributeType.DA_PLUS_1);
+
+                for (var tier1Feature : characterCreateRequest.features().tier1()) {
+                    if (tier1DaPlusOneFeatureNames.contains(tier1Feature)) {
+                        totalDa++;
+                    }
+                }
+            }
+
+            if (characterCreateRequest.features() != null &&
+                    characterCreateRequest.features().tier2() != null) {
+                var tier2DaPlusOneFeatureNames = getFeatureNamesByAttributeType(
+                        charClass.features().tier2(), FeatureAttributeType.DA_PLUS_1);
+
+                for (var tier2Feature : characterCreateRequest.features().tier2()) {
+                    if (tier2DaPlusOneFeatureNames.contains(tier2Feature)) {
+                        totalDa++;
+                    }
+                }
+            }
+
+            if (isMysticWithoutQuickGear && totalDa == 0) {
+                // If the mystic has no quick gear and didn't take the DA_PLUS_1 feature,
+                // leave the DA as the empty string
+                return "";
+            }
+
+            return String.valueOf(totalDa);
+        }
+        catch (Exception e) {
+            logger.warn("Error searching for DA_PLUS_1 features: returning unmodified base DA", e);
+
+            return baseDaStr;
+        }
     }
 
     private String getWeaponName(CharacterCreateRequest characterCreateRequest, int index) {
