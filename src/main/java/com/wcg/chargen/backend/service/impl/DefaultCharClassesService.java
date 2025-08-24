@@ -274,6 +274,12 @@ public class DefaultCharClassesService implements CharClassesService {
                                     charType);
                         }
                     }
+                    case UNARMED_BONUS -> {
+                        // Unarmed bonus modifier can vary, but must be populated
+                        if (StringUtils.isBlank(modifier)) {
+                            return "Unarmed bonus modifier cannot be null or empty";
+                        }
+                    }
                 }
             }
         }

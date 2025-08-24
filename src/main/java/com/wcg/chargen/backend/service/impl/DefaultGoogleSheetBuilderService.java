@@ -45,7 +45,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
     private static final String INITIATIVE_NAME = "Initiative";
-
+    private static final String UNARMED_WEAPON_TYPE = "Unarmed";
 
     private static Sheet buildSheetWithTitle(String title)
     {
@@ -564,7 +564,61 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
         var gear = charClass.gear();
 
-        return (index < gear.weapons().size()) ? gear.weapons().get(index).damage() : "";
+        if (index >= gear.weapons().size()) {
+            return "";
+        }
+        else {
+            var baseDamage = gear.weapons().get(index).damage();
+
+            // Check for features that boost unarmed damage, and apply them if we're generating
+            // the damage for unarmed attacks
+            String improvedDamage = null;
+            var weaponType = getWeaponType(characterCreateRequest, index);
+
+            if (UNARMED_WEAPON_TYPE.equals(weaponType)) {
+                if (characterCreateRequest.features() != null &&
+                        characterCreateRequest.features().tier1() != null) {
+                    var tier1UnarmedBonusFeatureNames = getFeatureNamesByAttributeType(
+                            charClass.features().tier1(), FeatureAttributeType.UNARMED_BONUS);
+
+                    for (var tier1Feature : characterCreateRequest.features().tier1()) {
+                        if (tier1UnarmedBonusFeatureNames.contains(tier1Feature)) {
+                            var improvedDamageOptional = getAttributeModifierForFeatureAndAttributeType
+                                    (charClass.features().tier1(),
+                                            tier1Feature,
+                                            FeatureAttributeType.UNARMED_BONUS);
+                            // This will always be true, since we check at run time to make sure
+                            // that UNARMED_BONUS features have a valid modifier
+                            if (improvedDamageOptional.isPresent()) {
+                                improvedDamage = improvedDamageOptional.get();
+                            }
+                        }
+                    }
+                }
+
+                if (characterCreateRequest.features() != null &&
+                        characterCreateRequest.features().tier2() != null) {
+                    var tier2UnarmedBonusFeatureNames = getFeatureNamesByAttributeType(
+                            charClass.features().tier2(), FeatureAttributeType.UNARMED_BONUS);
+
+                    for (var tier2Feature : characterCreateRequest.features().tier2()) {
+                        if (tier2UnarmedBonusFeatureNames.contains(tier2Feature)) {
+                            var improvedDamageOptional = getAttributeModifierForFeatureAndAttributeType
+                                    (charClass.features().tier2(),
+                                            tier2Feature,
+                                            FeatureAttributeType.UNARMED_BONUS);
+                            // This will always be true, since we check at run time to make sure
+                            // that UNARMED_BONUS features have a valid modifier
+                            if (improvedDamageOptional.isPresent()) {
+                                improvedDamage = improvedDamageOptional.get();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (improvedDamage != null) ? improvedDamage : baseDamage;
+        }
     }
 
     /**

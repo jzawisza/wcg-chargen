@@ -57,10 +57,10 @@ public class DefaultCharClassesServiceTests {
     static Stream<Arguments> yamlServicesWithBadDataProvider() {
         return Stream.of(
           Arguments.arguments(
-                  Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidCharClassDataYamlLoaderService()),
+                  Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidCharClassData()),
                   "Error loading character class YAML file invalid-data.yml"),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidCharTypeYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidCharType()),
                     "Character class type invalid found in YAML file invalid-class.yml is not valid"),
             Arguments.arguments(
                     new ArrayList<CharClassYamlLoaderService>(
@@ -71,55 +71,55 @@ public class DefaultCharClassesServiceTests {
                     "No entry for character type mage in character class type map"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoFeaturesYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoFeatures()),
                     "Character class type berzerker has null feature data"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoTier1OrTier2FeaturesYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoTier1OrTier2Features()),
                    "Character class type berzerker has invalid Tier I feature data: Null feature list"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooFewFeaturesYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooFewFeatures()),
                     "Character class type berzerker has invalid Tier I feature data: Expected between 8 and 9 features in list, but got 2"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooManyFeaturesYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.TooManyFeatures()),
                     "Character class type berzerker has invalid Tier I feature data: Expected between 8 and 9 features in list, but got 12"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.FeatureBlankDescriptionYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.FeatureBlankDescription()),
                     "Character class type berzerker has invalid Tier I feature data: Feature with blank description found"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAttrPlusOneModifierYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidAttrPlusOneModifier()),
                     "Character class type berzerker has invalid Tier I feature data: Error reading modifier INVALID for ATTR_PLUS_1 value type"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidBonusHpModifierYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidBonusHpModifier()),
                     "Character class type berzerker has invalid Tier I feature data: Modifier NOT_A_NUMBER for BONUS_HP value type must be an integer"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDaPlusOneModifierYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidDaPlusOneModifier()),
                     "Character class type berzerker has invalid Tier I feature data: Error reading modifier INVALID for DA_PLUS_1 value type"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillForSkaldYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillForSkald()),
                     "Character class type skald has invalid Tier I feature data: Expected blank string for SKILL modifier for skald, but found FOO"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillAttributeForMageYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillAttributeForMage()),
                     "Character class type mage has invalid Tier I feature data: Expected INT for SKILL modifier for mage, but found STR"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillRandomStringForMageYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillRandomStringForMage()),
                     "Character class type mage has invalid Tier I feature data: Error reading modifier FOO for SKILL value type for mage, expected INT"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillForBerzerkerYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.InvalidSkillForBerzerker()),
                     "Character class type berzerker has invalid Tier I feature data: Found SKILL attribute with unexpected character type berzerker"
             ),
             Arguments.arguments(
-                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoTier2FeaturesYamlLoaderService()),
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoTier2Features()),
                     "Character class type berzerker has invalid Tier II feature data: Null feature list"
             ),
             Arguments.arguments(
@@ -231,7 +231,10 @@ public class DefaultCharClassesServiceTests {
                     "Character class type berzerker has null or missing item information in gear"),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.GearEmptyItems()),
-                    "Character class type berzerker has null or missing item information in gear")
+                    "Character class type berzerker has null or missing item information in gear"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.MissingUnarmedBonusModifier()),
+                    "Character class type mystic has invalid Tier II feature data: Unarmed bonus modifier cannot be null or empty")
         );
     }
 }

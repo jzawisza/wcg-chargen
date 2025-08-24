@@ -59,7 +59,7 @@ features:
     - description: "Dragon Strikes: 2 unarmed attacks or 1 unarmed & 1 weapon attack/round"
       attributes: [ ]
     - description: "Dragon Might: Unarmed strike 1d8 dmg instead of 1d6"
-      attributes: [ { type: 'UNARMED_BONUS', modifier: '1d8' } ]
+      attributes: [ type: 'UNARMED_BONUS', modifier: '' ]
     - description: "Circle of the Dragon: Attack each Close zone foe once/day"
       attributes: [ ]
     - description: "Stone Body: Natural DA +1. Cumulative with all DA"
