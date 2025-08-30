@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class BaseCharacterCreateService implements CharacterCreateService {
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
+
     public CharacterCreateStatus createCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
         var status = characterCreateRequestValidatorService.validate(characterCreateRequest);
         if (!status.isSuccess()) {

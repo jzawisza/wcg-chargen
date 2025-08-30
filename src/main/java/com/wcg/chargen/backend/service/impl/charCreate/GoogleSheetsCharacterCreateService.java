@@ -1,10 +1,12 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +25,7 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
     @Autowired
     GoogleSheetBuilderService googleSheetBuilderService;
     @Autowired
-    ProfessionsService professionsService;
-    @Autowired
     CharClassesService charClassesService;
-    @Autowired
-    CommonerService commonerService;
 
     @Override
     public CharacterCreateStatus doCreateCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
@@ -80,8 +78,7 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
         var statsSheet = googleSheetBuilderService.buildStatsSheet(characterCreateRequest);
         sheetList.add(statsSheet);
 
-        if(characterCreateRequest.characterClass() != null &&
-                characterCreateRequest.characterClass().isMagicUser()) {
+        if(shouldAddSpellsSheet(characterCreateRequest)) {
             var spellsSheet = googleSheetBuilderService.buildSpellsSheet(characterCreateRequest);
             sheetList.add(spellsSheet);
         }
@@ -93,5 +90,34 @@ public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateServi
         sheetList.add(gearSheet);
 
         return sheetList;
+    }
+
+    private boolean shouldAddSpellsSheet(CharacterCreateRequest characterCreateRequest) {
+        if(characterCreateRequest.characterClass() == null) {
+            return false;
+        }
+
+        if (characterCreateRequest.characterClass().isMagicUser()) {
+            return true;
+        }
+
+        // Check if a feature has been selected that allows a character not otherwise
+        // considered a magic user to cast spells
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                characterCreateRequest.features(),
+                FeatureAttributeType.MAGIC,
+                FeatureAttributeUtil.Tier.I) != null) {
+            return true;
+        }
+
+        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                characterCreateRequest.features(),
+                FeatureAttributeType.MAGIC,
+                FeatureAttributeUtil.Tier.II) != null) {
+            return true;
+        }
+
+        return false;
     }
 }

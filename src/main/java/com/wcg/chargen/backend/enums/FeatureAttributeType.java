@@ -7,6 +7,7 @@ public enum FeatureAttributeType {
     DADV,
     DA_PLUS_1,
     EV_PLUS_1,
+    MAGIC,
     SKILL,
     UNARMED_BONUS
 }

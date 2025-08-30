@@ -10,6 +10,7 @@ import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.FeatureAttribute;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,26 +177,18 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
             // If a character has a feature that gives them a bonus to evasion,
             // take that into account
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier1() != null) {
-                var tier1BonusEvasionFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier1(), FeatureAttributeType.EV_PLUS_1);
-                for (var tier1Feature : characterCreateRequest.features().tier1()) {
-                    if (tier1BonusEvasionFeatureNames.contains(tier1Feature)) {
-                        bonusEvasion += 1;
-                    }
-                }
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.EV_PLUS_1,
+                    FeatureAttributeUtil.Tier.I) != null) {
+                bonusEvasion += 1;
             }
 
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier2() != null) {
-                var tier2BonusEvasionFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier2(), FeatureAttributeType.EV_PLUS_1);
-                for (var tier2Feature : characterCreateRequest.features().tier2()) {
-                    if (tier2BonusEvasionFeatureNames.contains(tier2Feature)) {
-                        bonusEvasion += 1;
-                    }
-                }
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.EV_PLUS_1,
+                    FeatureAttributeUtil.Tier.II) != null) {
+                bonusEvasion += 1;
             }
         }
         else {
@@ -236,28 +229,22 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             // Check for features that increase hit points
             logger.info("Hit points before checking for BONUS_HP features: {}", hitPoints);
 
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier1() != null) {
-                var tier1BonusHpFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier1(), FeatureAttributeType.BONUS_HP);
-
-                for (var tier1Feature : characterCreateRequest.features().tier1()) {
-                    if (tier1BonusHpFeatureNames.contains(tier1Feature)) {
-                        hitPoints += getHitPointsForFeature(charClass.features().tier1(), tier1Feature);
-                    }
-                }
+            var tier1BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.BONUS_HP,
+                    FeatureAttributeUtil.Tier.I);
+            if (tier1BonusHpFeatureName != null) {
+                hitPoints += getHitPointsForFeature(charClass.features().tier1(), tier1BonusHpFeatureName);
             }
 
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier2() != null) {
-                var tier2BonusHpFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier2(), FeatureAttributeType.BONUS_HP);
-
-                for (var tier2Feature : characterCreateRequest.features().tier2()) {
-                    if (tier2BonusHpFeatureNames.contains(tier2Feature)) {
-                        hitPoints += getHitPointsForFeature(charClass.features().tier2(), tier2Feature);
-                    }
-                }
+            var tier2BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.BONUS_HP,
+                    FeatureAttributeUtil.Tier.II);
+            if (tier2BonusHpFeatureName != null) {
+                hitPoints += getHitPointsForFeature(charClass.features().tier2(), tier2BonusHpFeatureName);
             }
 
             logger.info("Final hit points: {}", hitPoints);
@@ -266,42 +253,18 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
     }
 
-    private List<String> getFeatureNamesByAttributeType(List<Feature> featureList,
-                                                        FeatureAttributeType attributeType) {
-        return featureList.stream()
-                .filter(f -> f.attributes().stream()
-                        .anyMatch(a -> a.type() == attributeType))
-                .map(Feature::description)
-                .toList();
-    }
-
-    private Optional<String> getAttributeModifierForFeatureAndAttributeType(List<Feature> featureList,
-            String feature, FeatureAttributeType featureAttributeType) {
-        return featureList.stream()
-                .filter(f -> f.description().equals(feature))
-                .map(Feature::attributes)
-                .flatMap(List::stream)
-                .filter(a -> a.type() == featureAttributeType)
-                .map(FeatureAttribute::modifier)
-                .findFirst();
-    }
-
     private int getHitPointsForFeature(List<Feature> featureList, String featureName) {
         var hitPoints = 0;
-        var hitPointsOptionalStr = getAttributeModifierForFeatureAndAttributeType
-                (featureList, featureName, FeatureAttributeType.BONUS_HP);
+        var hitPointsStr = "";
 
-        if (hitPointsOptionalStr.isPresent()) {
-            try {
-                hitPoints = Integer.parseInt(hitPointsOptionalStr.get());
-            }
-            catch (NumberFormatException e) {
-                logger.error("Error parsing BONUS_HP value {} for feature {}",
-                        hitPointsOptionalStr.get(), featureName, e);
-            }
+        try {
+            hitPointsStr = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                    featureList, featureName, FeatureAttributeType.BONUS_HP);
+            hitPoints = Integer.parseInt(hitPointsStr);
         }
-        else {
-            logger.warn("Unable to find BONUS_HP modifier for feature {}", featureName);
+        catch (NumberFormatException e) {
+            logger.error("Error parsing BONUS_HP value {} for feature {}",
+                    hitPointsStr, featureName, e);
         }
 
         return hitPoints;
@@ -495,28 +458,18 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         try {
             var totalDa = Integer.parseInt(baseDaStr);
 
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier1() != null) {
-                var tier1DaPlusOneFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier1(), FeatureAttributeType.DA_PLUS_1);
-
-                for (var tier1Feature : characterCreateRequest.features().tier1()) {
-                    if (tier1DaPlusOneFeatureNames.contains(tier1Feature)) {
-                        totalDa++;
-                    }
-                }
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.DA_PLUS_1,
+                    FeatureAttributeUtil.Tier.I) != null) {
+                totalDa++;
             }
 
-            if (characterCreateRequest.features() != null &&
-                    characterCreateRequest.features().tier2() != null) {
-                var tier2DaPlusOneFeatureNames = getFeatureNamesByAttributeType(
-                        charClass.features().tier2(), FeatureAttributeType.DA_PLUS_1);
-
-                for (var tier2Feature : characterCreateRequest.features().tier2()) {
-                    if (tier2DaPlusOneFeatureNames.contains(tier2Feature)) {
-                        totalDa++;
-                    }
-                }
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.DA_PLUS_1,
+                    FeatureAttributeUtil.Tier.II) != null) {
+                totalDa++;
             }
 
             if (isMysticWithoutQuickGear && totalDa == 0) {
@@ -576,43 +529,33 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             var weaponType = getWeaponType(characterCreateRequest, index);
 
             if (UNARMED_WEAPON_TYPE.equals(weaponType)) {
-                if (characterCreateRequest.features() != null &&
-                        characterCreateRequest.features().tier1() != null) {
-                    var tier1UnarmedBonusFeatureNames = getFeatureNamesByAttributeType(
-                            charClass.features().tier1(), FeatureAttributeType.UNARMED_BONUS);
-
-                    for (var tier1Feature : characterCreateRequest.features().tier1()) {
-                        if (tier1UnarmedBonusFeatureNames.contains(tier1Feature)) {
-                            var improvedDamageOptional = getAttributeModifierForFeatureAndAttributeType
-                                    (charClass.features().tier1(),
-                                            tier1Feature,
-                                            FeatureAttributeType.UNARMED_BONUS);
-                            // This will always be true, since we check at run time to make sure
-                            // that UNARMED_BONUS features have a valid modifier
-                            if (improvedDamageOptional.isPresent()) {
-                                improvedDamage = improvedDamageOptional.get();
-                            }
-                        }
+                var tier1UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                        charClass.features(),
+                        characterCreateRequest.features(),
+                        FeatureAttributeType.UNARMED_BONUS,
+                        FeatureAttributeUtil.Tier.I);
+                if (tier1UnarmedBonusFeatureName != null) {
+                    var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                            charClass.features().tier1(),
+                            tier1UnarmedBonusFeatureName,
+                            FeatureAttributeType.UNARMED_BONUS);
+                    if (!StringUtils.isBlank(unarmedBonusModifier)) {
+                        improvedDamage = unarmedBonusModifier;
                     }
                 }
 
-                if (characterCreateRequest.features() != null &&
-                        characterCreateRequest.features().tier2() != null) {
-                    var tier2UnarmedBonusFeatureNames = getFeatureNamesByAttributeType(
-                            charClass.features().tier2(), FeatureAttributeType.UNARMED_BONUS);
-
-                    for (var tier2Feature : characterCreateRequest.features().tier2()) {
-                        if (tier2UnarmedBonusFeatureNames.contains(tier2Feature)) {
-                            var improvedDamageOptional = getAttributeModifierForFeatureAndAttributeType
-                                    (charClass.features().tier2(),
-                                            tier2Feature,
-                                            FeatureAttributeType.UNARMED_BONUS);
-                            // This will always be true, since we check at run time to make sure
-                            // that UNARMED_BONUS features have a valid modifier
-                            if (improvedDamageOptional.isPresent()) {
-                                improvedDamage = improvedDamageOptional.get();
-                            }
-                        }
+                var tier2UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                        charClass.features(),
+                        characterCreateRequest.features(),
+                        FeatureAttributeType.UNARMED_BONUS,
+                        FeatureAttributeUtil.Tier.II);
+                if (tier2UnarmedBonusFeatureName != null) {
+                    var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                            charClass.features().tier2(),
+                            tier2UnarmedBonusFeatureName,
+                            FeatureAttributeType.UNARMED_BONUS);
+                    if (!StringUtils.isBlank(unarmedBonusModifier)) {
+                        improvedDamage = unarmedBonusModifier;
                     }
                 }
             }

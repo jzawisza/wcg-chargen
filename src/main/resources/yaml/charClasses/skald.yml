@@ -41,9 +41,9 @@ features:
     - description: "+1 to one attribute which is not the character’s highest"
       attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
     - description: "Learn & cast two Cantrips"
-      attributes: [ ]
+      attributes: [ { type: 'MAGIC', modifier: ''} ]
     - description: "Learn & cast one level 1 mage or shaman spell"
-      attributes: [ ]
+      attributes: [ { type: 'MAGIC', modifier: ''} ]
     - description: "Gain proficiency in either Heavy Weapons or Bows"
       attributes: [ ]
     - description: "Advantage with Perform checks"
@@ -56,7 +56,7 @@ features:
     - description: "Lifting Song: Levitate slowly one Close <100 lb item"
       attributes: [ ]
     - description: "Use magic scroll: d20 + INT roll, T# 10 + spell level"
-      attributes: [ ]
+      attributes: [ { type: 'MAGIC', modifier: ''} ]
     - description: "+1 to any two different attributes"
       attributes: [ { type: 'ATTR_PLUS_1', modifier: 'ANY_TWO' } ]
     - description: "Advantage with Forgotten Lore checks"
