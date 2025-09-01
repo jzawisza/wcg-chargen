@@ -1333,6 +1333,29 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(20, getNumRowsInSheet(sheet));
     }
 
+    @Test
+    public void buildStatsSheet_MysticsWithoutQuickGearHaveUnarmedWeapon() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var weaponName = getCellValueFromSheet(sheet, 18, 4);
+        assertEquals("Fists", weaponName.getStringValue());
+        var weaponType = getCellValueFromSheet(sheet, 18, 5);
+        assertEquals("Unarmed", weaponType.getStringValue());
+        var weaponDamage = getCellValueFromSheet(sheet, 18, 7);
+        assertEquals("1d6", weaponDamage.getStringValue());
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void buildStatsSheet_BerzerkerCharactersHaveCorrectDaIfQuickGearIsEnabledTierIAndTierIIFeaturesToBoostDaAreTaken(
@@ -1784,9 +1807,14 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @CsvSource({
+            "true, true",
+            "false, true",
+            "true, false",
+            "false, false"
+    })
     public void buildStatsSheet_UnarmedDamageIsDisplayedCorrectlyIfBoostedByFeatures(
-            boolean tier2FeatureForUnarmedDamage) {
+            boolean tier2FeatureForUnarmedDamage, boolean hasQuickGear) {
         // arrange
         var featureName = "Test Feature";
         var boostedUnarmedDamage = "1d8";
@@ -1819,7 +1847,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 .withCharacterType(CharType.MYSTIC)
                 .withLevel(5)
                 .withFeatures(featuresRequest)
-                .withUseQuickGear(true)
+                .withUseQuickGear(hasQuickGear)
                 .build();
 
         // act
