@@ -170,7 +170,8 @@ public class DefaultSkillsServiceTests {
                 INVALID_SKILL_NAME_LIST;
         var charClass = new CharClass(CharType.SKALD.toString(), null, null,
                 null, null, classSkillList, null, null);
-        var species = new Species("test", null, null, speciesSkillsStatus.getSkillsList());
+        var species = new Species("test", null, null,
+                speciesSkillsStatus.getSkillsList(), null, null);
 
         when(charClassesServiceMock.getCharClassByType(any(CharType.class))).thenReturn(charClass);
         when(speciesServiceMock.getSpeciesByType(any(SpeciesType.class))).thenReturn(species);

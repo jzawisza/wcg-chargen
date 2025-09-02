@@ -42,6 +42,8 @@ public class DefaultGoogleSheetBuilderServiceTests {
     RandomNumberService randomNumberService;
     @Autowired
     SkillsProvider skillsProvider;
+    @MockBean
+    SpeciesService speciesService;
 
     private static final String PROFESSION_1_NAME = "Profession1";
     private static final String PROFESSION_2_NAME = "Profession2";
@@ -91,9 +93,13 @@ public class DefaultGoogleSheetBuilderServiceTests {
         var commonerInfo = new Commoner(0, 10, MAX_COMMONER_COPPER, MAX_COMMONER_SILVER,
                 List.of(ITEM_1_NAME, ITEM_2_NAME));
 
+        var species = new Species(SpeciesType.HUMAN.toCharSheetString(), null, null,
+                null, null, List.of("Common", "Other"));
+
         Mockito.when(professionsService.getAllProfessions()).thenReturn(professions);
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
         Mockito.when(commonerService.getInfo()).thenReturn(commonerInfo);
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
     }
 
     @Test
@@ -2043,6 +2049,71 @@ public class DefaultGoogleSheetBuilderServiceTests {
             assertNotNull(tier2Value);
             assertEquals(expectedTier2Value, tier2Value.getStringValue());
         }
+    }
+
+    @Test
+    public void buildFeaturesSheet_BuildsSheetWithExpectedTraitsAndLanguages() {
+        // arrange
+        var trait1 = "Lowlight Vision";
+        var trait2 = "Aura Sense";
+        var traits = List.of(trait1, trait2);
+        var language1 = "Common";
+        var language2 = "Elven";
+        var languages = List.of(language1, language2);
+        var species = new Species(SpeciesType.ELF.toString(), null, null, null,
+                traits, languages);
+
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        var trait1CellData = getCellValueFromSheet(sheet, 1, 0);
+        var language1CellData = getCellValueFromSheet(sheet, 1, 2);
+        var trait2CellData = getCellValueFromSheet(sheet, 2, 0);
+        var language2CellData = getCellValueFromSheet(sheet, 2, 2);
+
+        assertEquals(trait1, trait1CellData.getStringValue());
+        assertEquals(language1, language1CellData.getStringValue());
+        assertEquals(trait2, trait2CellData.getStringValue());
+        assertEquals(language2, language2CellData.getStringValue());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void buildFeaturesSheet_BuildsSheetWithExpectedTraitsAndLanguagesEntriesIfTraitsAreNullOrEmpty(
+            List<String> traits) {
+        // arrange
+        var language1 = "Common";
+        var language2 = "Elven";
+        var languages = List.of(language1, language2);
+        var species = new Species(SpeciesType.ELF.toString(), null, null, null,
+                traits, languages);
+
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        var trait1CellData = getCellValueFromSheet(sheet, 1, 0);
+        var language1CellData = getCellValueFromSheet(sheet, 1, 2);
+        var trait2CellData = getCellValueFromSheet(sheet, 2, 0);
+        var language2CellData = getCellValueFromSheet(sheet, 2, 2);
+
+        assertEquals("", trait1CellData.getStringValue());
+        assertEquals(language1, language1CellData.getStringValue());
+        assertEquals("", trait2CellData.getStringValue());
+        assertEquals(language2, language2CellData.getStringValue());
     }
 
     @Test

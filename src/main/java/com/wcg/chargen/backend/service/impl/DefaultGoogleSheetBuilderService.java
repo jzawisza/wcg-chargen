@@ -35,6 +35,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     RandomNumberService randomNumberService;
     @Autowired
     SkillsProvider skillsProvider;
+    @Autowired
+    SpeciesService speciesService;
 
     private static final String STATS_SHEET_TITLE = "Stats";
     private static final String SPELLS_SHEET_TITLE = "Spells";
@@ -1021,14 +1023,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addHeaderCell("LANGUAGES")
                 .build();
 
-        var speciesLanguageRow = getRowBuilder()
-                .addCellWithText("")
-                .addEmptyCell()
-                .addCellWithText("")
-                .build();
-
-        var speciesRow = getRowBuilder().addCellWithText("").build();
-
         var classFeaturesHeaderRow = getRowBuilder().addHeaderCell("CLASS FEATURES").build();
 
         var baseFeaturesRow = getRowBuilder().addBaseFeatureCell("Base features in this color").build();
@@ -1039,9 +1033,24 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         var gridDataBuilder = getGridBuilder()
                 .withNumColumns(3)
-                .addRow(speciesLanguageHeaderRow)
-                .addRow(speciesLanguageRow)
-                .addRow(speciesRow)
+                .addRow(speciesLanguageHeaderRow);
+
+        // Add species traits and languages
+        var species = speciesService.getSpeciesByType(characterCreateRequest.species());
+        var traits = species.traits();
+        var languages = species.languages();
+        // The number of species traits will always be less than or equal to the number of languages,
+        // so counting the number of languages gives us the number of rows we need
+        for (var i = 0; i < languages.size(); i++) {
+            var speciesLanguageRow = getRowBuilder()
+                    .addCellWithText(getTraitAtIndex(traits, i))
+                    .addEmptyCell()
+                    .addCellWithText(languages.get(i))
+                    .build();
+            gridDataBuilder.addRow(speciesLanguageRow);
+        }
+
+        gridDataBuilder
                 .addEmptyRow()
                 .addRow(classFeaturesHeaderRow)
                 .addRow(baseFeaturesRow);
@@ -1075,6 +1084,14 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         sheet.setData(Collections.singletonList(gridDataBuilder.build()));
 
         return sheet;
+    }
+
+    private String getTraitAtIndex(List<String> traits, int index) {
+        if (traits != null && !traits.isEmpty() && traits.size() > index) {
+            return traits.get(index);
+        }
+
+        return "";
     }
 
     public Sheet buildGearSheet(CharacterCreateRequest characterCreateRequest) {

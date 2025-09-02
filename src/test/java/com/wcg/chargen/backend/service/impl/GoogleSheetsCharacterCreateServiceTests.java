@@ -8,22 +8,19 @@ import com.wcg.chargen.backend.model.*;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.GoogleSheetsApiService;
+import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,6 +45,9 @@ public class GoogleSheetsCharacterCreateServiceTests {
     @MockBean
     private CharClassesService charClassesService;
 
+    @MockBean
+    private SpeciesService speciesService;
+
     private static final CharacterCreateRequest DEFAULT_CLASS_CHARACTER_REQUEST = CharacterCreateRequestBuilder
             .getBuilder()
             .withCharacterName("SomeName")
@@ -68,7 +68,10 @@ public class GoogleSheetsCharacterCreateServiceTests {
                 new Gear(Collections.emptyList(), Collections.emptyList(), 5, 2, Collections.emptyList()),
                 new Features(Collections.emptyList(), Collections.emptyList()));
 
+        var species = new Species(SpeciesType.HUMAN.toCharSheetString(), null, null, null, null, Collections.emptyList());
+
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
     }
 
     @Test

@@ -1,2 +1,7 @@
 type: "human"
 skills:
+traits:
+languages:
+    - "Common"
+    - "Human"
+    - "One other language of your choice"

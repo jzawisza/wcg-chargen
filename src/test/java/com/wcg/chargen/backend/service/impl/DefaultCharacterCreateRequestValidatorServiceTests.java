@@ -46,7 +46,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
         var dwarfStrengths = Arrays.asList("STR", "STA");
         var dwarfWeaknesses = Arrays.asList("PRS", "LUC");
         var dwarfSkills = Arrays.asList("Appraisal", "Athletics", "Intimidation");
-        var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, dwarfSkills);
+        var species = new Species("dwarf", dwarfStrengths, dwarfWeaknesses, dwarfSkills, null, Collections.emptyList());
 
         Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
 
