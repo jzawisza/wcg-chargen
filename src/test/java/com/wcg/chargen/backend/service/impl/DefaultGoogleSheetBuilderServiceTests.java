@@ -88,6 +88,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 skills,
                 gear,
+                null,
                 null);
 
         var commonerInfo = new Commoner(0, 10, MAX_COMMONER_COPPER, MAX_COMMONER_SILVER,
@@ -376,6 +377,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -897,6 +899,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 List.of(""),
                 null,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1246,6 +1249,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
+                null,
                 null);
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
 
@@ -1423,6 +1427,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1476,6 +1481,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1544,6 +1550,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_LEVEL_1_HP,
                 TEST_MAX_HP_AT_LEVEL_UP,
                 shamanSkills,
+                null,
                 null,
                 features);
 
@@ -1627,6 +1634,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 List.of("Arcana"),
                 null,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1693,6 +1701,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 List.of("Arcana"),
                 null,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1749,6 +1758,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_LEVEL_1_HP,
                 TEST_MAX_HP_AT_LEVEL_UP,
                 List.of("Arcana"),
+                null,
                 null,
                 features);
 
@@ -1810,6 +1820,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 List.of("Arcana"),
                 gear,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
@@ -1869,6 +1880,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 Collections.emptyList(),
                 gear,
+                null,
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);

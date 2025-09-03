@@ -54,7 +54,7 @@ public class DefaultCharacterCreateRequestValidatorServiceTests {
         var tier2Feature = new Feature(TIER2_FEATURE, null);
         var features = new Features(List.of(tier1Feature), List.of(tier2Feature));
         var charClass = new CharClass(null, null, null, null, null,
-                null, null, features);
+                null, null, null, features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
     }

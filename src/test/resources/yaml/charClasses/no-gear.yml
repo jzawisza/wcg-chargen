@@ -7,6 +7,8 @@ skills:
   - Athletics
   - Intimidation
   - Survival
+abilities:
+  - Test
 features:
   tier1:
     - description: "Fear & Horrify immunity (magical & non-magical)"

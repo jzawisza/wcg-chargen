@@ -325,4 +325,14 @@ public class TestInvalidYamlLoaderServices
         @Override
         public String getYamlFile() { return "feature-missing-unarmed-bonus-modifier.yml"; }
     }
+
+    public static class NoAbilities extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "no-abilities.yml"; }
+    }
+
+    public static class EmptyAbilities extends CharClassYamlLoaderService {
+        @Override
+        public String getYamlFile() { return "empty-abilities.yml"; }
+    }
 }

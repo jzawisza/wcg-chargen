@@ -13,6 +13,12 @@ gear:
       type: Light
       da: 3
   weapons:
+    - name: Great Axe
+      type: Heavy
+      damage: 1d10
+    - name: Hand Axe
+      type: Light/Thrown
+      damage: 1d8
   maxCopper: 12
   maxSilver: 10
   items:
@@ -24,7 +30,6 @@ gear:
     - Rations (2)
     - Waterskin
 abilities:
-  - Test
 features:
   tier1:
     - description: "Fear & Horrify immunity (magical & non-magical)"

@@ -234,7 +234,13 @@ public class DefaultCharClassesServiceTests {
                     "Character class type berzerker has null or missing item information in gear"),
             Arguments.arguments(
                     Collections.singletonList(new TestInvalidYamlLoaderServices.MissingUnarmedBonusModifier()),
-                    "Character class type mystic has invalid Tier II feature data: Unarmed bonus modifier cannot be null or empty")
+                    "Character class type mystic has invalid Tier II feature data: Unarmed bonus modifier cannot be null or empty"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.NoAbilities()),
+                    "Character class type berzerker has null or empty abilities list"),
+            Arguments.arguments(
+                    Collections.singletonList(new TestInvalidYamlLoaderServices.EmptyAbilities()),
+                    "Character class type berzerker has null or empty abilities list")
         );
     }
 }

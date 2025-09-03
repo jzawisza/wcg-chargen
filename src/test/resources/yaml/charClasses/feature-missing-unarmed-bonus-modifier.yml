@@ -31,6 +31,8 @@ gear:
     - Torches (2)
     - Rations (3)
     - Waterskin
+abilities:
+  - Test
 features:
   tier1:
     - description: "Butterfly Whirl: Far zone fall dmg 0, thereafter half"

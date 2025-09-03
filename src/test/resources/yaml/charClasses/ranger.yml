@@ -34,6 +34,11 @@ gear:
     - Torches (2)
     - Rations (2)
     - Waterskin
+abilities:
+  - "Ignore terrain movement penalties when in nature."
+  - "Gain Advantage on weather related resistance rolls when in nature."
+  - "When traveling alone in wilderness, double speed."
+  - "May use 2nd light weapon off-hand to parry (+1 to evasion) or as a thrown weapon bonus attack (no off-hand penalty)."
 features:
   tier1:
     - description: "+1 to attack and damage with bows"

@@ -22,6 +22,8 @@ gear:
   maxCopper: 12
   maxSilver: 10
   items:
+abilities:
+  - Test
 features:
   tier1:
     - description: "Fear & Horrify immunity (magical & non-magical)"

@@ -66,6 +66,7 @@ public class GoogleSheetsCharacterCreateServiceTests {
                 3,
                 Collections.emptyList(),
                 new Gear(Collections.emptyList(), Collections.emptyList(), 5, 2, Collections.emptyList()),
+                Collections.emptyList(),
                 new Features(Collections.emptyList(), Collections.emptyList()));
 
         var species = new Species(SpeciesType.HUMAN.toCharSheetString(), null, null, null, null, Collections.emptyList());
@@ -244,6 +245,7 @@ public class GoogleSheetsCharacterCreateServiceTests {
                 6,
                 3,
                 Collections.emptyList(),
+                null,
                 null,
                 features);
 

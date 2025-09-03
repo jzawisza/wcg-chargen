@@ -31,6 +31,11 @@ gear:
     - Torches (2)
     - Rations (3)
     - Waterskin
+abilities:
+  - "Unarmed attacks ignore first 3 DA."
+  - "Unarmed attack roll of 19 or above stuns foes made of flesh until the end of the next round."
+  - "Advantages to checks to resist poisons and diseases."
+  - "Immune to stun from other mystics."
 features:
   tier1:
     - description: "Butterfly Whirl: Far zone fall dmg 0, thereafter half"
@@ -59,7 +64,7 @@ features:
     - description: "Dragon Strikes: 2 unarmed attacks or 1 unarmed & 1 weapon attack/round"
       attributes: [ ]
     - description: "Dragon Might: Unarmed strike 1d8 dmg instead of 1d6"
-      attributes: [ ]
+      attributes: [ { type: 'UNARMED_BONUS', modifier: '1d8' } ]
     - description: "Circle of the Dragon: Attack each Close zone foe once/day"
       attributes: [ ]
     - description: "Stone Body: Natural DA +1. Cumulative with all DA"

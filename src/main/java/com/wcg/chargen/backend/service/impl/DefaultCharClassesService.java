@@ -88,7 +88,6 @@ public class DefaultCharClassesService implements CharClassesService {
                 if (charClass.maxHpAtLevelUp() == null || (
                         charClass.maxHpAtLevelUp() != HP_PER_LEVEL_VALUE_1
                         && charClass.maxHpAtLevelUp() != HP_PER_LEVEL_VALUE_2)) {
-                    System.out.println("Got here");
                     throw new IllegalStateException("Max HP at level up for character class type "
                         + charClass.type() + " is " + charClass.maxHpAtLevelUp()
                         + ": expected " + HP_PER_LEVEL_VALUE_1 + " or " + HP_PER_LEVEL_VALUE_2);
@@ -145,6 +144,12 @@ public class DefaultCharClassesService implements CharClassesService {
                     throw new IllegalStateException(
                             String.format("Character class type %s has null or missing item information in gear",
                                     charClass.type()));
+                }
+
+                // Validate that abilities list is not null or empty
+                if (charClass.abilities() == null || charClass.abilities().isEmpty()) {
+                    throw new IllegalStateException("Character class type " + charClass.type()
+                            + " has null or empty abilities list");
                 }
 
                 // Validate that all features have correct attribute data

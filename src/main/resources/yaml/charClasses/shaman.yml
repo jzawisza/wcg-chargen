@@ -28,6 +28,10 @@ gear:
     - Flint & Steel
     - Rations (3)
     - Waterskin
+abilities:
+  - "May cast spells of character level or less. GM assigns spells."
+  - "Animal Affinity: Advantage on reaction/social animal encounters unless animal is provoked or spellbound."
+  - "Spirit Sense: See into the spirit realm in Close zone. Religion roll for detail."
 features:
   tier1:
     - description: "Learn 1 additional spell of less than character level"

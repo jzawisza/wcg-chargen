@@ -4,6 +4,8 @@ evasionModifiers: [12, 12, 13, 14, 14, 15, 16]
 level1Hp: 10
 maxHpAtLevelUp: 4
 skills:
+abilities:
+  - Test
 features:
   tier1:
     - description: "Fear & Horrify immunity (magical & non-magical)"

@@ -31,6 +31,8 @@ gear:
     - Torches (3)
     - Rations (2)
     - Waterskin
+abilities:
+  - Test
 features:
   tier1:
     - description: "Learn 1 Cantrip & 1 Level 1 spell"

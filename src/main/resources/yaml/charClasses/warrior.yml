@@ -35,6 +35,9 @@ gear:
     - Torches (2)
     - Rations (3)
     - Waterskin
+abilities:
+  - "Second Wind: Once per day during a Quick Rest, recover 2 HP + STA (min 2) or 2 AP + STA instead of 1."
+  - "Hit Wicked Hard: On a successful melee weapon hit, may break weapon to roll damage at Double Advantage."
 features:
   tier1:
     - description: "Specialize in a melee weapon type: +1 to hit & damage"

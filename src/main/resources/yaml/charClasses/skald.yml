@@ -30,6 +30,11 @@ gear:
     - Bedroll
     - Rations (3)
     - Waterskin
+abilities:
+  - "War Song: +1 to hit and + 1 to Initiative for allies at Close range during first combat within the hour. Roll T10 Perform check outside of combat: lose song for the day if you fail."
+  - "Enthralling Performance: On success, hold Close range listener's attention for 1 hour, giving Disadvantage to PER or +2 to PRS-based checks. Roll T10 Perform check outside of combat: lose song for the day if you fail."
+  - "Forgotten Lore (d20 + level + INT): Knowledge of unique/obscure persons, places, and items."
+  - "Jack of All Trades: +2 to untrained skill rolls (still roll at Disadvantage)."
 features:
   tier1:
     - description: "Healing Song: Heal Close allies 1d3 dmg or 1 AP"
