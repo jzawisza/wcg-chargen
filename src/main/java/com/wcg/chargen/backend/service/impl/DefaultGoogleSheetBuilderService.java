@@ -1028,14 +1028,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addHeaderCell("LANGUAGES")
                 .build();
 
-        var classFeaturesHeaderRow = getRowBuilder().addHeaderCell("CLASS FEATURES").build();
-
-        var baseFeaturesRow = getRowBuilder().addBaseFeatureCell("Base features in this color").build();
-
-        var tier1FeaturesRow = getRowBuilder().addTier1FeatureCell("Tier I features in this color").build();
-
-        var tier2FeaturesRow = getRowBuilder().addTier2FeatureCell("Tier II features in this color").build();
-
         var gridDataBuilder = getGridBuilder()
                 .withNumColumns(3)
                 .addRow(speciesLanguageHeaderRow);
@@ -1055,14 +1047,25 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             gridDataBuilder.addRow(speciesLanguageRow);
         }
 
+        var classFeaturesHeaderRow = getRowBuilder().addHeaderCell("CLASS FEATURES").build();
+
         gridDataBuilder
                 .addEmptyRow()
-                .addRow(classFeaturesHeaderRow)
-                .addRow(baseFeaturesRow);
+                .addRow(classFeaturesHeaderRow);
+
+        // Add class abilities
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        for (var ability : charClass.abilities()) {
+            var baseFeatureRow = getRowBuilder().addBaseFeatureCell(ability).build();
+            gridDataBuilder.addRow(baseFeatureRow);
+        }
 
         var features = characterCreateRequest.features();
         // If a character has features, then it's guaranteed to have at least one tier I feature
         if (features == null) {
+            var tier1FeaturesRow = getRowBuilder()
+                    .addTier1FeatureCell("Tier I features in this color")
+                    .build();
             gridDataBuilder.addRow(tier1FeaturesRow);
         }
         else {
@@ -1073,6 +1076,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
 
         if (features == null || features.tier2().isEmpty()) {
+            var tier2FeaturesRow = getRowBuilder()
+                    .addTier2FeatureCell("Tier II features in this color")
+                    .build();
             gridDataBuilder.addRow(tier2FeaturesRow);
         }
         else {

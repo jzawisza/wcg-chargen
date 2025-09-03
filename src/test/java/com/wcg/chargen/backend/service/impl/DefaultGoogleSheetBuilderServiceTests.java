@@ -88,7 +88,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
                 TEST_MAX_HP_AT_LEVEL_UP,
                 skills,
                 gear,
-                null,
+                List.of("Test Ability"),
                 null);
 
         var commonerInfo = new Commoner(0, 10, MAX_COMMONER_COPPER, MAX_COMMONER_SILVER,
@@ -2151,6 +2151,36 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(language1, language1CellData.getStringValue());
         assertEquals("", trait2CellData.getStringValue());
         assertEquals(language2, language2CellData.getStringValue());
+    }
+
+    @Test
+    public void buildFeaturesSheet_BuildsSheetWithExpectedClassAbilities() {
+        // arrange
+        var ability1 = "Test Ability 1";
+        var ability2 = "Test Ability 2";
+        var charClass = new CharClass(CharType.WARRIOR.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                null,
+                null,
+                List.of(ability1, ability2),
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildFeaturesSheet(request);
+
+        // assert
+        var ability1CellValue = getCellValueFromSheet(sheet, 5, 0);
+        assertEquals(ability1, ability1CellValue.getStringValue());
+        var ability2CellValue = getCellValueFromSheet(sheet, 6, 0);
+        assertEquals(ability2, ability2CellValue.getStringValue());
     }
 
     @Test

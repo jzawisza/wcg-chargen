@@ -246,7 +246,7 @@ public class GoogleSheetsCharacterCreateServiceTests {
                 3,
                 Collections.emptyList(),
                 null,
-                null,
+                Collections.emptyList(),
                 features);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);

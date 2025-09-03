@@ -34,7 +34,7 @@ gear:
     - Rations (3)
     - Waterskin
 abilities:
-  - "May Backstab when attacking undetected. Gives Advantage on attack roll and an extra damage die which can explore. Cannot Backstab if any situation grants Disadvantage."
+  - "May Backstab when attacking undetected. Gives Advantage on attack roll and an extra damage die which can explode. Cannot Backstab if any situation grants Disadvantage."
   - "Proficient in the secret communication of burglars, Thieves' Cant."
 features:
   tier1:
