@@ -4,6 +4,7 @@ import { DefaultOptionType } from "antd/es/select";
 import Features from "../Features";
 import { CharacterContext, NextButtonEnabledContext } from "../../../Context";
 import * as features from "../../../server/ServerData";
+import exp from "constants";
 
 /**
  * Tests for the Features component that validate setting of the React context.
@@ -141,4 +142,138 @@ test('selecting appropriate number of tier I/II features sets context correctly 
 
     expect(featuresContext.setTier1Features).toHaveBeenCalledTimes(NUM_ALLOWED_TIER_1_FEATURES);
     expect(featuresContext.setTier2Features).toHaveBeenCalledTimes(NUM_ALLOWED_TIER_2_FEATURES);
+});
+
+test.each([
+    ['ATTR_PLUS_1', '', true],
+    ['SKILL', '', true],
+    ['DADV', 'Any', true],
+    ['ATTR_PLUS_1', '', false],
+    ['SKILL', '', false],
+    ['DADV', 'Any', false]
+])('tier I/II incomplete features are displayed when selected', async (attrType, attrModifier, isTier1) => {
+    const emptyStringArray: string[] = [];
+    const tierFeatureName = isTier1 ? "Tier I" : "Tier II";
+    const incompleteFeatureName = `Incomplete Feature ${tierFeatureName}`;
+    const featuresArray = [
+        { description: "Unselected Feature", attributes: [] },
+        { description: "Complete Feature", attributes: [] },
+        { description: incompleteFeatureName, attributes: [ {type: attrType, modifier: attrModifier}] }
+    ];
+    const mockFeaturesData = {
+        numAllowedTier1Features: isTier1 ? 2 : 0,
+        numAllowedTier2Features: isTier1 ? 0 : 2,
+        features: {
+            tier1: isTier1 ? featuresArray : [],
+            tier2: isTier1 ? [] : featuresArray
+        }
+    };
+
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: mockFeaturesData,
+        error: false,
+        isLoading: false
+    });
+
+    const featuresContext = {
+        level: 6,
+        tier1Features: emptyStringArray,
+        setTier1Features: jest.fn(),
+        tier2Features: emptyStringArray,
+        setTier2Features: jest.fn()
+    };
+
+    render(
+        <CharacterContext.Provider value={featuresContext}>
+            <Features />  
+        </CharacterContext.Provider>
+    );
+
+    const elementsToSelect = [incompleteFeatureName, "Complete Feature"];
+    const testId = isTier1 ? SELECT_TEST_ID_TIER_I : SELECT_TEST_ID_TIER_II;
+    const featuresSelectElt = screen.getByTestId(testId);
+
+    act(() => {
+        userEvent.selectOptions(featuresSelectElt, elementsToSelect);
+    });
+
+    const incompleteFeatureTextElt = screen.getByText("The following features will not be automatically populated on your character sheet, and must be applied by hand after the character sheet is generated.");
+    const featureHeaderElt = screen.getByText(isTier1 ? "Tier I Features:" : "Tier II Features:");
+    const missingFeatureHeaderElt = screen.queryByText(isTier1 ? "Tier II Features:" : "Tier I Features:");
+    const incompleteFeatureElt = screen.getByText(incompleteFeatureName, { selector: 'li' });
+    const completeFeatureElt = screen.queryByText('Complete Feature', { selector: 'li' });
+    const unselectedFeatureElt = screen.queryByText('Unselected Feature', { selector: 'li' });
+
+    expect(incompleteFeatureTextElt).toBeInTheDocument();
+    expect(featureHeaderElt).toBeInTheDocument();
+    expect(missingFeatureHeaderElt).not.toBeInTheDocument();
+    expect(incompleteFeatureElt).toBeInTheDocument();
+    expect(completeFeatureElt).not.toBeInTheDocument();
+    expect(unselectedFeatureElt).not.toBeInTheDocument();
+});
+
+test.each([
+    [true],
+    [false]
+])('selecting incomplete feature, un-selecting it, and then re-selecting it shows one copy of incomplete feature', async (isTier1) => {
+    const incompleteFeatureName = `Incomplete Feature ${isTier1 ? "Tier I" : "Tier II"}`;
+    const completeFeatureName = `Complete Feature`;
+
+    const emptyStringArray: string[] = [];
+    const tierFeatureName = isTier1 ? "Tier I" : "Tier II";
+    const featuresArray = [
+        { description: "Unselected Feature", attributes: [] },
+        { description: "Complete Feature", attributes: [] },
+        { description: incompleteFeatureName, attributes: [ {type: 'ATTR_PLUS_1', modifier: ''}] }
+    ];
+    const mockFeaturesData = {
+        numAllowedTier1Features: isTier1 ? 2 : 0,
+        numAllowedTier2Features: isTier1 ? 0 : 2,
+        features: {
+            tier1: isTier1 ? featuresArray : [],
+            tier2: isTier1 ? [] : featuresArray
+        }
+    };
+
+    jest.spyOn(features, 'useFeaturesData').mockReturnValue({
+        data: mockFeaturesData,
+        error: false,
+        isLoading: false
+    });
+
+    const featuresContext = {
+        level: 6,
+        tier1Features: emptyStringArray,
+        setTier1Features: jest.fn(),
+        tier2Features: emptyStringArray,
+        setTier2Features: jest.fn()
+    };
+
+    const { container } = render(
+        <CharacterContext.Provider value={featuresContext}>
+            <Features />
+        </CharacterContext.Provider>
+    );
+
+    const elementsToSelect = [incompleteFeatureName, completeFeatureName];
+    const testId = isTier1 ? SELECT_TEST_ID_TIER_I : SELECT_TEST_ID_TIER_II;
+    const featuresSelectElt = screen.getByTestId(testId);
+
+    act(() => {
+        userEvent.selectOptions(featuresSelectElt, elementsToSelect);
+    });
+
+    act(() => {
+        userEvent.deselectOptions(featuresSelectElt, [incompleteFeatureName]);
+    });
+
+    act(() => {
+        userEvent.selectOptions(featuresSelectElt, [incompleteFeatureName]);
+    });
+
+    const incompleteFeatureElt = screen.getByText(incompleteFeatureName, { selector: 'li' });
+    const completeFeatureElt = screen.queryByText(completeFeatureName, { selector: 'li' });
+
+    expect(incompleteFeatureElt).toBeInTheDocument();
+    expect(completeFeatureElt).not.toBeInTheDocument();
 });

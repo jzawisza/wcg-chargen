@@ -137,3 +137,11 @@
   justify-content: center;
   margin-top: 3%; 
 }
+
+.incompleteFeatures {
+  border-style: solid;
+  border-width: thick;
+  border-color: gray;
+  background-color: lightgray;
+  padding-left: 1em;
+}
