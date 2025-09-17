@@ -20,6 +20,7 @@
 		<jackson.dataformat.yaml.version>2.16.1</jackson.dataformat.yaml.version>
 		<commons-lang3.version>3.14.0</commons-lang3.version>
 		<google.api.services.sheets.version>v4-rev20250211-2.0.0</google.api.services.sheets.version>
+		<pdfbox.version>3.0.5</pdfbox.version>
 	</properties>
 
 	<dependencies>
@@ -44,7 +45,6 @@
 			<artifactId>jackson-dataformat-yaml</artifactId>
 			<version>${jackson.dataformat.yaml.version}</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -55,7 +55,11 @@
 			<artifactId>google-api-services-sheets</artifactId>
 			<version>${google.api.services.sheets.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>${pdfbox.version}</version>
+		</dependency>
 
 
 		<!-- Test scoped dependencies -->

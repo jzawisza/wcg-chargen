@@ -5,13 +5,14 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
+import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
+import com.wcg.chargen.backend.service.PdfCharacterCreateService;
 import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -34,6 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CharacterCreateControllerTests {
     @MockBean
     private GoogleSheetsCharacterCreateService googleSheetsCharacterCreateService;
+    @MockBean
+    private PdfCharacterCreateService pdfCharacterCreateService;
     @Autowired
     private MockMvc mockMvc;
 
@@ -73,12 +80,14 @@ public class CharacterCreateControllerTests {
                     .build();
     private static final String DUMMY_BEARER_TOKEN = "some token";
     private static final String GOOGLE_SHEETS_URL = "/api/v1/createcharacter/googlesheets";
+    private static final String PDF_URL = "/api/v1/createcharacter/pdf";
 
-    @Test
-    public void createCharacterGoogle_Returns400IfJsonIsInvalid() {
+    @ParameterizedTest
+    @ValueSource(strings = {GOOGLE_SHEETS_URL, PDF_URL})
+    public void createCharacterMethods_Return400IfJsonIsInvalid(String url) {
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content("not valid JSON")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -108,8 +117,9 @@ public class CharacterCreateControllerTests {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    public void createCharacterGoogle_Returns400IfCharacterNameIsNullOrEmpty(String characterName) {
+    @MethodSource("nullEmptyCharacterNamesAndUrls")
+    public void createCharacterMethods_Return400IfCharacterNameIsNullOrEmpty(String characterName,
+                                                                             String url) {
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName(characterName)
                 .withCharacterType(CharType.BERZERKER)
@@ -120,7 +130,7 @@ public class CharacterCreateControllerTests {
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(objectMapper.writeValueAsString(request))
                             .contentType(MediaType.APPLICATION_JSON)
@@ -133,8 +143,18 @@ public class CharacterCreateControllerTests {
         }
     }
 
-    @Test
-    public void createCharacterGoogle_Returns400IfLevelIsNull() {
+    static Stream<Arguments> nullEmptyCharacterNamesAndUrls() {
+        return Stream.of(
+                Arguments.arguments(null, GOOGLE_SHEETS_URL),
+                Arguments.arguments("", GOOGLE_SHEETS_URL),
+                Arguments.arguments(null, PDF_URL),
+                Arguments.arguments("", PDF_URL)
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {GOOGLE_SHEETS_URL, PDF_URL})
+    public void createCharacterMethods_Return400IfLevelIsNull(String url) {
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName("Test")
                 .withCharacterType(CharType.MAGE)
@@ -145,7 +165,7 @@ public class CharacterCreateControllerTests {
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(objectMapper.writeValueAsString(request))
                             .contentType(MediaType.APPLICATION_JSON)
@@ -158,8 +178,9 @@ public class CharacterCreateControllerTests {
         }
     }
 
-    @Test
-    public void createCharacterGoogle_Returns400IfSpeciesIsNull() {
+    @ParameterizedTest
+    @ValueSource(strings = {GOOGLE_SHEETS_URL, PDF_URL})
+    public void createCharacterMethods_Return400IfSpeciesIsNull(String url) {
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName("Test")
                 .withCharacterType(CharType.MAGE)
@@ -170,7 +191,7 @@ public class CharacterCreateControllerTests {
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(objectMapper.writeValueAsString(request))
                             .contentType(MediaType.APPLICATION_JSON)
@@ -184,17 +205,16 @@ public class CharacterCreateControllerTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "rogue", "Rogue", "roGUE"})
-    public void createCharacterGoogle_Returns400IfRequestCharacterClassStringCannotBeConvertedToEnumValue(String characterClass) {
+    @MethodSource("invalidCharacterClassStringsAndUrls")
+    public void createCharacterMethods_Return400IfRequestCharacterClassStringCannotBeConvertedToEnumValue(
+            String characterClass, String url) {
         var requestJson = "{\"characterName\": \"Name\", \"species\": \"ELF\", \"characterClass\": \""
                 + characterClass
                 + "\", \"level\": 1}";
 
         try {
-            System.out.println(requestJson);
-
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(requestJson)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -207,16 +227,30 @@ public class CharacterCreateControllerTests {
         }
     }
 
+    static Stream<Arguments> invalidCharacterClassStringsAndUrls() {
+        return Stream.of(
+                Arguments.arguments("", GOOGLE_SHEETS_URL),
+                Arguments.arguments("rogue", GOOGLE_SHEETS_URL),
+                Arguments.arguments("Rogue", GOOGLE_SHEETS_URL),
+                Arguments.arguments("roGUE", GOOGLE_SHEETS_URL),
+                Arguments.arguments("", PDF_URL),
+                Arguments.arguments("rogue", PDF_URL),
+                Arguments.arguments("Rogue", PDF_URL),
+                Arguments.arguments("roGUE", PDF_URL)
+        );
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"", "elf", "Elf", "eLF"})
-    public void createCharacterGoogle_Returns400IfRequestSpeciesStringCannotBeConvertedToEnumValue(String species) {
+    @MethodSource("invalidSpeciesStringsAndUrls")
+    public void createCharacterMethods_Return400IfRequestSpeciesStringCannotBeConvertedToEnumValue(
+            String species, String url) {
         var requestJson = "{\"characterName\": \"Name\", \"characterClass\": \"SKALD\", \"species\": \""
                 + species
                 + "\", \"level\": 1}";
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(requestJson)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -229,8 +263,22 @@ public class CharacterCreateControllerTests {
         }
     }
 
-    @Test
-    public void createCharacterGoogle_Returns400IfAttributesIsNull() {
+    static Stream<Arguments> invalidSpeciesStringsAndUrls() {
+        return Stream.of(
+                Arguments.arguments("", GOOGLE_SHEETS_URL),
+                Arguments.arguments("elf", GOOGLE_SHEETS_URL),
+                Arguments.arguments("Elf", GOOGLE_SHEETS_URL),
+                Arguments.arguments("eLF", GOOGLE_SHEETS_URL),
+                Arguments.arguments("", PDF_URL),
+                Arguments.arguments("elf", PDF_URL),
+                Arguments.arguments("Elf", PDF_URL),
+                Arguments.arguments("eLF", PDF_URL)
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {GOOGLE_SHEETS_URL, PDF_URL})
+    public void createCharacterMethods_Return400IfAttributesIsNull(String url) {
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName("Test")
                 .withCharacterType(CharType.MAGE)
@@ -243,7 +291,7 @@ public class CharacterCreateControllerTests {
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(objectMapper.writeValueAsString(request))
                             .contentType(MediaType.APPLICATION_JSON)
@@ -256,8 +304,9 @@ public class CharacterCreateControllerTests {
         }
     }
 
-    @Test
-    public void createCharacterGoogle_Returns400IfSpeciesStrengthIsNull() {
+    @ParameterizedTest
+    @ValueSource(strings = {GOOGLE_SHEETS_URL, PDF_URL})
+    public void createCharacterMethods_Return400IfSpeciesStrengthIsNull(String url) {
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName("Test")
                 .withCharacterType(CharType.MAGE)
@@ -269,7 +318,7 @@ public class CharacterCreateControllerTests {
 
         try {
             mockMvc.perform(MockMvcRequestBuilders
-                            .post(GOOGLE_SHEETS_URL)
+                            .post(url)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
                             .content(objectMapper.writeValueAsString(request))
                             .contentType(MediaType.APPLICATION_JSON)
@@ -309,6 +358,30 @@ public class CharacterCreateControllerTests {
     }
 
     @Test
+    public void createCharacterPdf_Returns500WithErrorMessageIfPdfServiceReturnsFailureStatus() {
+        var expectedErrMsg = "Some error message";
+        var status = PdfCharacterCreateStatus.error(expectedErrMsg);
+
+        Mockito.when(
+                pdfCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
+                .thenReturn(status);
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(PDF_URL)
+                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().string(expectedErrMsg));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
     public void createCharacterGoogle_Returns500IfGoogleServiceThrowsException() {
         Mockito.when(
             googleSheetsCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS,
@@ -319,6 +392,26 @@ public class CharacterCreateControllerTests {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isInternalServerError());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void createCharacterPdf_Returns500IfPdfServiceThrowsException() {
+        Mockito.when(
+                pdfCharacterCreateService.createCharacter(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
+                .thenThrow(new RuntimeException());
+
+        try {
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(PDF_URL)
                             .content(objectMapper.writeValueAsString(VALID_CHARACTER_CREATE_REQUEST_WITH_CLASS))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -343,6 +436,30 @@ public class CharacterCreateControllerTests {
             mockMvc.perform(MockMvcRequestBuilders
                             .post(GOOGLE_SHEETS_URL)
                             .header(HttpHeaders.AUTHORIZATION, DUMMY_BEARER_TOKEN)
+                            .content(objectMapper.writeValueAsString(validRequest))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("validCharacterCreateRequests")
+    public void createCharacterPdf_Returns200OnSuccessIfRequestIsValid(CharacterCreateRequest validRequest) {
+        var testInputStream = new ByteArrayInputStream("test".getBytes(StandardCharsets.UTF_8));
+        var pdfSuccessStatus = new PdfCharacterCreateStatus(testInputStream, "test.pdf", null);
+        Mockito.when(
+                pdfCharacterCreateService.createCharacter(validRequest))
+                .thenReturn(pdfSuccessStatus);
+
+        try {
+            System.out.println(objectMapper.writeValueAsString(validRequest));
+            mockMvc.perform(MockMvcRequestBuilders
+                            .post(PDF_URL)
                             .content(objectMapper.writeValueAsString(validRequest))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
