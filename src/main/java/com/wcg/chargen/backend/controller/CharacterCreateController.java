@@ -1,8 +1,8 @@
 package com.wcg.chargen.backend.controller;
 
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.service.GoogleSheetsCharacterCreateService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
-import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

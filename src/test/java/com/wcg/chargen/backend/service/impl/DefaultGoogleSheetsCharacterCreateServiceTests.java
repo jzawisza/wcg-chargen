@@ -5,11 +5,7 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.*;
-import com.wcg.chargen.backend.service.CharClassesService;
-import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
-import com.wcg.chargen.backend.service.GoogleSheetsApiService;
-import com.wcg.chargen.backend.service.SpeciesService;
-import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
+import com.wcg.chargen.backend.service.*;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
-public class GoogleSheetsCharacterCreateServiceTests {
+public class DefaultGoogleSheetsCharacterCreateServiceTests {
     @MockBean
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
 

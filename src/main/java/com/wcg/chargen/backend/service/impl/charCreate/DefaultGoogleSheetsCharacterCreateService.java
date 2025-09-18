@@ -18,18 +18,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class GoogleSheetsCharacterCreateService extends BaseCharacterCreateService {
-    private final Logger logger = LoggerFactory.getLogger(GoogleSheetsCharacterCreateService.class);
+public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCharacterCreateService {
+    private final Logger logger = LoggerFactory.getLogger(DefaultGoogleSheetsCharacterCreateService.class);
     @Autowired
     GoogleSheetsApiService googleSheetsApiService;
     @Autowired
     GoogleSheetBuilderService googleSheetBuilderService;
     @Autowired
     CharClassesService charClassesService;
+    @Autowired
+    CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
 
     @Override
-    public CharacterCreateStatus doCreateCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
+    public CharacterCreateStatus createCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
         try {
+            var status = characterCreateRequestValidatorService.validate(characterCreateRequest);
+            if (!status.isSuccess()) {
+                // If the request isn't valid, abort here
+                return status;
+            }
+
             var spreadsheet = buildSpreadsheet(characterCreateRequest);
             logger.debug("Spreadsheet to create = {}", spreadsheet);
             var spreadsheetId = googleSheetsApiService.createSpreadsheet(spreadsheet, bearerToken);

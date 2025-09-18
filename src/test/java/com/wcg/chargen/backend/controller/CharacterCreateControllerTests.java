@@ -6,8 +6,8 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
+import com.wcg.chargen.backend.service.GoogleSheetsCharacterCreateService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
-import com.wcg.chargen.backend.service.impl.charCreate.GoogleSheetsCharacterCreateService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,8 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
