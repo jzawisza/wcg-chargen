@@ -18,6 +18,7 @@ const PROFESSION_ENDPOINT = 'api/v1/professions/generate';
 const SKILLS_ENDPOINT = 'api/v1/skills';
 const FEATURES_ENDPOINT = 'api/v1/features';
 const GOOGLE_SHEETS_ENDPOINT = 'api/v1/createcharacter/googlesheets';
+const PDF_ENDPOINT = 'api/v1/createcharacter/pdf';
 
 export function preloadProfessionsData() {
     preload(PROFESSION_ENDPOINT, fetcher);
@@ -57,6 +58,47 @@ export async function invokeGoogleSheetsApi(tokenType : string, token : string, 
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
+  }
+  catch (error) {
+    console.error(error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function invokePdfApi(payload: CreateCharacterRequest, document: Document) {
+  try {
+    const response = await fetch(PDF_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    // Get PDF filename from headers
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let pdfFilename = "charSheet.pdf";
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename=(.*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        pdfFilename = filenameMatch[1];
+      }
+    }
+
+      // Save file from response
+    const blob = await response.blob();
+    const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+    const link = document.createElement('a');
+    link.download = pdfFilename;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
   }
   catch (error) {
     console.error(error);

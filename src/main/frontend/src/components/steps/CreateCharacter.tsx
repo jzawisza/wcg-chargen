@@ -2,7 +2,7 @@ import React, { MouseEvent, useContext, useState } from "react";
 import { Radio, RadioChangeEvent, Button, Result, Modal } from "antd";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CharacterContext } from "../../Context";
-import { invokeGoogleSheetsApi } from "../../server/ServerData";
+import { invokeGoogleSheetsApi, invokePdfApi } from "../../server/ServerData";
 import { CreateCharacterRequestBuilder } from "../../server/CreateCharacterRequestBuilder";
 import { getIsHuman } from "../../constants/SpeciesInfo";
 
@@ -17,49 +17,63 @@ const CreateCharacter: React.FC = () => {
         attributeScoreObj, speciesStrengthAttribute, speciesWeaknessAttribute,
         speciesSkill, bonusSkills, useQuickGear, tier1Features, tier2Features } = useContext(CharacterContext);
 
+    // Build character create request object to send to server
+    const generateCharacterCreateRequest = () => {
+        const createCharacterRequestBuilder = new CreateCharacterRequestBuilder()
+            .withCharacterName(charName)
+            .withSpecies(species)
+            .withLevel(level)
+            .withAttributes(attributeScoreObj)
+            .withSpeciesStrength(speciesStrengthAttribute);
+        
+        if (!getIsHuman(species)) {
+            createCharacterRequestBuilder.withSpeciesWeakness(speciesWeaknessAttribute);
+        }
+
+        if (level > 0) {
+            createCharacterRequestBuilder.withCharacterClass(charClass);
+            createCharacterRequestBuilder.withBonusSkills(bonusSkills);
+            createCharacterRequestBuilder.withUseQuickGear(useQuickGear);
+            if (!getIsHuman(species)) {
+                createCharacterRequestBuilder.withSpeciesSkill(speciesSkill);
+            }
+        }
+        else {
+            createCharacterRequestBuilder.withProfession(profession);
+        }
+
+        if (level > 1) {
+            createCharacterRequestBuilder.withFeatures({
+                tier1: Array.isArray(tier1Features) ? tier1Features : [tier1Features],
+                tier2: Array.isArray(tier2Features) ? tier2Features : [tier2Features]
+            });
+        }
+
+        return createCharacterRequestBuilder.build();
+    };
+
     const onRadioGroupChange = (e: RadioChangeEvent) => {
         setCharSheetType(e.target.value);
     };
 
     const onClickPdf = (e: MouseEvent<HTMLElement>) => {
-        // placeholder method for when PDF character sheet generation is ready
+        const createCharacterRequest = generateCharacterCreateRequest();
+
+        invokePdfApi(createCharacterRequest, document).then(status => {
+            setCharGenerated(status);
+            if (!status) {
+                Modal.error({
+                    title: 'Error creating character sheet',
+                    content: 'Please retry this operation later.  If you get the same error, contact <CONTACT_INFO>.',
+                });
+            }
+        });
     };
 
     const googleLogin = useGoogleLogin({
         scope: GOOGLE_SHEETS_SCOPE,
         onSuccess: (codeResponse) => {
-            // Build object to send to server
-            const createCharacterRequestBuilder = new CreateCharacterRequestBuilder()
-                .withCharacterName(charName)
-                .withSpecies(species)
-                .withLevel(level)
-                .withAttributes(attributeScoreObj)
-                .withSpeciesStrength(speciesStrengthAttribute);
-            
-            if (!getIsHuman(species)) {
-                createCharacterRequestBuilder.withSpeciesWeakness(speciesWeaknessAttribute);
-            }
-
-            if (level > 0) {
-                createCharacterRequestBuilder.withCharacterClass(charClass);
-                createCharacterRequestBuilder.withBonusSkills(bonusSkills);
-                createCharacterRequestBuilder.withUseQuickGear(useQuickGear);
-                if (!getIsHuman(species)) {
-                    createCharacterRequestBuilder.withSpeciesSkill(speciesSkill);
-                }
-            }
-            else {
-                createCharacterRequestBuilder.withProfession(profession);
-            }
-
-            if (level > 1) {
-                createCharacterRequestBuilder.withFeatures({
-                    tier1: Array.isArray(tier1Features) ? tier1Features : [tier1Features],
-                    tier2: Array.isArray(tier2Features) ? tier2Features : [tier2Features]
-                });
-            }
-
-            const createCharacterRequest = createCharacterRequestBuilder.build();
+            const createCharacterRequest = generateCharacterCreateRequest();
 
             invokeGoogleSheetsApi(codeResponse.token_type, codeResponse.access_token, createCharacterRequest)
                 .then(status => {
@@ -103,10 +117,9 @@ const CreateCharacter: React.FC = () => {
         <div>
             <div className="charSheetSelectorArea">
             <p>Choose the type of character sheet you want to create, and then click on the Create Character button to generate your character.</p>
-            <p>PDF character sheet generation will be supported in a future version of this application.</p>
                 <div className="charSheetButtonCenter">
                     <Radio.Group buttonStyle="solid" onChange={onRadioGroupChange} value={charSheetType}>
-                        <Radio.Button value={PDF_SHEET_TYPE} disabled>PDF</Radio.Button>
+                        <Radio.Button value={PDF_SHEET_TYPE}>PDF</Radio.Button>
                         <Radio.Button value={GOOGLE_SHEETS_SHEET_TYPE}>Google Sheet</Radio.Button>
                     </Radio.Group>
                     {charSheetType === PDF_SHEET_TYPE && (
