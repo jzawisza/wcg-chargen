@@ -75,6 +75,25 @@ public class DefaultPdfCharacterCreateServiceTests {
     }
 
     @Test
+    public void createCharacter_ReturnsExpectedPdfNameOnSuccess() {
+        // arrange
+        // File name should be SomeName_HUMAN_MYSTIC_yyyyMMddHHmmss.pdf
+        var expectedFileNameLength = 40;
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(DEFAULT_CLASS_CHARACTER_REQUEST);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.fileName());
+        assertEquals(expectedFileNameLength, status.fileName().length());
+        assertTrue(status.fileName().startsWith("SomeName_HUMAN_MYSTIC_"));
+        var timestampStr = status.fileName().substring(22, 36);
+        assertTrue(timestampStr.matches("[0-9]+"));
+        assertTrue(status.fileName().endsWith(".pdf"));
+    }
+
+    @Test
     public void createCharacter_ReturnsPdfWithCorrectCharacterName() throws Exception {
         // act
         var status = pdfCharacterCreateService.createCharacter(DEFAULT_CLASS_CHARACTER_REQUEST);

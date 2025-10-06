@@ -5,6 +5,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
+import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.PdfUtil;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
@@ -45,7 +46,8 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            return new PdfCharacterCreateStatus(returnInputStream, "charSheet.pdf", null);
+            var pdfFileName = CharacterSheetUtil.generateName(request) + ".pdf";
+            return new PdfCharacterCreateStatus(returnInputStream, pdfFileName, null);
         }
         catch (Exception e) {
             logger.error("Error creating PDF character sheet", e);

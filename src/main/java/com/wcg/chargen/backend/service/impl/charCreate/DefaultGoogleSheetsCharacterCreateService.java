@@ -6,6 +6,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,17 +61,7 @@ public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCh
     }
 
     private Spreadsheet buildSpreadsheet(CharacterCreateRequest characterCreateRequest) {
-        var currentDateTime = LocalDateTime.now();
-        var dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-
-        var classOrProfession = (characterCreateRequest.level() > 0) ?
-                characterCreateRequest.characterClass().toString().toUpperCase() :
-                characterCreateRequest.profession().toUpperCase();
-        var title = String.format("%s_%s_%s_%s",
-                characterCreateRequest.characterName(),
-                characterCreateRequest.species().toString().toUpperCase(),
-                classOrProfession,
-                currentDateTime.format(dateTimeFormatter));
+        var title = CharacterSheetUtil.generateName(characterCreateRequest);
 
         var spreadsheet = new Spreadsheet()
                 .setProperties(new SpreadsheetProperties()
