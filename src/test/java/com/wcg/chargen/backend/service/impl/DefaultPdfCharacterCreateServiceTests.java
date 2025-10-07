@@ -1,6 +1,7 @@
 package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.constants.PdfFieldConstants;
+import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
@@ -148,6 +149,48 @@ public class DefaultPdfCharacterCreateServiceTests {
             var actualSpecies = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.SPECIES);
 
             assertEquals(speciesType.toCharSheetString(), actualSpecies);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsPdfWithCorrectAttributeValues() throws Exception {
+        // arrange
+        var speciesStrength = "STR";
+        var speciesWeakness = "PRS";
+
+        var request = CharacterCreateRequestBuilder
+                .getBuilder()
+                .withCharacterType(CharType.BERZERKER)
+                .withSpeciesType(SpeciesType.DWARF)
+                .withLevel(CHARACTER_LEVEL)
+                .withAttributes(CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP)
+                .withSpeciesStrength(speciesStrength)
+                .withSpeciesWeakness(speciesWeakness)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            for (var attribute : AttributeType.values()) {
+                var attributeName = attribute.name();
+                var expectedValue = CharacterCreateRequestBuilder.VALID_ATTRIBUTES_MAP.get(
+                        attributeName);
+                // Adjust expected value for species strength or weakness
+                if (attributeName.equals(speciesStrength)) {
+                    expectedValue += 1;
+                }
+                else if (attributeName.equals(speciesWeakness)) {
+                    expectedValue -= 1;
+                }
+                var actualValue = PdfUtil.getFieldValue(pdfDocument, attributeName);
+
+                assertEquals(String.valueOf(expectedValue), actualValue);
+            }
         }
     }
 }
