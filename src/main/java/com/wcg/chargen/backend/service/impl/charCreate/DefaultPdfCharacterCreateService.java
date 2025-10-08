@@ -10,8 +10,6 @@ import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.PdfUtil;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +43,14 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CHARACTER_NAME, request.characterName());
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.LEVEL, String.valueOf(request.level()));
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SPECIES, request.species().toCharSheetString());
+
+            if (request.isCommoner()) {
+                PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.PROFESSION, request.profession());
+            }
+            else {
+                PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CHARACTER_CLASS,
+                        request.characterClass().toCharSheetString());
+            }
 
             var attributeScores = calculateAttributeScores(request);
             for (var attributeType : AttributeType.values()) {

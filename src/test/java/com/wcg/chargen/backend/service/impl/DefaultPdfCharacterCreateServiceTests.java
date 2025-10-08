@@ -193,4 +193,58 @@ public class DefaultPdfCharacterCreateServiceTests {
             }
         }
     }
+
+    @Test
+    public void createCharacter_ReturnsPdfWithProfessionAndNotCharacterClassForCommonerCharacters()
+            throws Exception {
+        // arrange
+        var expectedProfession = "Farmer";
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withProfession(expectedProfession)
+                .withLevel(0)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualProfession = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.PROFESSION);
+            assertEquals(expectedProfession, actualProfession);
+
+            var charClass = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.CHARACTER_CLASS);
+            assertEquals("", charClass);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsPdfWithCharacterClassAndNotProfessionForClassCharacters()
+            throws Exception {
+        // arrange
+        var expectedCharClass = CharType.BERZERKER;
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(expectedCharClass)
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualCharClass = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.CHARACTER_CLASS);
+            assertEquals(expectedCharClass.toCharSheetString(), actualCharClass);
+
+            var profession = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.PROFESSION);
+            assertEquals("", profession);
+        }
+    }
 }
