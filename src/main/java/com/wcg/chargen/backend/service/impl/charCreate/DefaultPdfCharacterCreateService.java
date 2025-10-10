@@ -6,6 +6,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
+import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.PdfUtil;
 import org.apache.pdfbox.Loader;
@@ -17,8 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DefaultPdfCharacterCreateService implements PdfCharacterCreateService {
@@ -28,6 +31,9 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
+
+    @Autowired
+    SpeciesService speciesService;
 
     @Override
     public PdfCharacterCreateStatus createCharacter(CharacterCreateRequest request) {
@@ -51,6 +57,9 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
                 PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CHARACTER_CLASS,
                         request.characterClass().toCharSheetString());
             }
+
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SPECIES_TRAITS,
+                    getSpeciesTraits(request));
 
             var attributeScores = calculateAttributeScores(request);
             for (var attributeType : AttributeType.values()) {
@@ -76,10 +85,26 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
         for (var attributeType : AttributeType.values()) {
             var attributeValue = request.getAttributeValue(attributeType);
-            System.out.println("Attribute " + attributeType + " has value " + attributeValue);
             attributeScores.put(attributeType, attributeValue);
         }
 
         return attributeScores;
+    }
+
+    private String getSpeciesTraits(CharacterCreateRequest request) {
+        var species = speciesService.getSpeciesByType(request.species());
+        // We need to add an entry to the species traits list for languages,
+        // so make a mutable copy of the traits list
+        var speciesTraitsList = species.traits() != null ?
+                new ArrayList<>(species.traits()) :
+                new ArrayList<String>();
+
+        // Generate list of languages as a species trait, since there isn't a section
+        // on the character sheet specifically for languages
+        var languages = species.languages().stream()
+                .collect(Collectors.joining(",", "Languages: ", ""));
+        speciesTraitsList.add(languages);
+
+        return String.join("\n", speciesTraitsList);
     }
 }

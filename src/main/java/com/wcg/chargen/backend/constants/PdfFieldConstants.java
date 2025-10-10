@@ -6,4 +6,5 @@ public class PdfFieldConstants {
     public static final String SPECIES = "Species";
     public static final String PROFESSION = "Profession";
     public static final String CHARACTER_CLASS = "CharClass";
+    public static final String SPECIES_TRAITS = "SpeciesTraits";
 }

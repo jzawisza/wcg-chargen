@@ -6,8 +6,10 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
+import com.wcg.chargen.backend.model.Species;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
+import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import com.wcg.chargen.backend.util.PdfUtil;
 import org.apache.pdfbox.Loader;
@@ -21,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -30,6 +35,8 @@ public class DefaultPdfCharacterCreateServiceTests {
     private PdfCharacterCreateService pdfCharacterCreateService;
     @MockBean
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
+    @MockBean
+    private SpeciesService speciesService;
 
     private static final String CHARACTER_NAME = "SomeName";
     private static final int CHARACTER_LEVEL = 1;
@@ -45,8 +52,11 @@ public class DefaultPdfCharacterCreateServiceTests {
 
     @BeforeEach
     public void beforeTest() {
+        var species = new Species(SpeciesType.HUMAN.toCharSheetString(), null, null, null, null, Collections.emptyList());
+
         Mockito.when(characterCreateRequestValidatorService.validate(any()))
                 .thenReturn(CharacterCreateStatus.SUCCESS);
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
     }
 
     @Test
@@ -247,4 +257,66 @@ public class DefaultPdfCharacterCreateServiceTests {
             assertEquals("", profession);
         }
     }
+
+    @Test
+    public void createCharacter_ReturnsLanguagesAsOnlySpeciesTraitIfNoOtherTraitsExist() throws Exception {
+        // arrange
+        var expectedSpeciesTraitString = "Languages: Human,Common";
+        var languages = List.of("Human", "Common");
+        var species = new Species(SpeciesType.HUMAN.toCharSheetString(), null, null,
+                null, null, languages);
+
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(0)
+                .withProfession("Profession")
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualSpeciesTraitString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.SPECIES_TRAITS);
+            assertEquals(expectedSpeciesTraitString, actualSpeciesTraitString);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsSpeciesTraitsPlusLanguageInformationIfSpeciesTraitsExist() throws Exception {
+        // arrange
+        var expectedSpeciesTraitString = "Lowlight Vision\nAura Sense\nLanguages: Elven,Common";
+        var traits = List.of("Lowlight Vision", "Aura Sense");
+        var languages = List.of("Elven", "Common");
+        var species = new Species(SpeciesType.ELF.toCharSheetString(), null, null,
+                null, traits, languages);
+
+        Mockito.when(speciesService.getSpeciesByType(any())).thenReturn(species);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.ELF)
+                .withLevel(1)
+                .withCharacterType(CharType.RANGER)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualSpeciesTraitString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.SPECIES_TRAITS);
+            assertEquals(expectedSpeciesTraitString, actualSpeciesTraitString);
+        }
+    }
+
 }
