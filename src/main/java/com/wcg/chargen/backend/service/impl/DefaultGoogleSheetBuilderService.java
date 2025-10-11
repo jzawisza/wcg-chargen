@@ -9,6 +9,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -198,20 +199,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         return (bonusEvasion > 0) ? String.format("=SUM(%d,B10,%d)", evasion, bonusEvasion) :
                 String.format("=SUM(%d,B10)", evasion);
-    }
-
-    private int getFortunePoints(CharacterCreateRequest characterCreateRequest) {
-        var luckScore = characterCreateRequest.getAttributeValue(AttributeType.LUC);
-        // Level 1 characters start with 1 fortune point, and you get 1 more per level
-        var fortunePoints = characterCreateRequest.level();
-
-        // Halflings get 1 extra fortune point
-        if (characterCreateRequest.species() == SpeciesType.HALFLING) {
-            fortunePoints++;
-        }
-
-        // Fortune points can never go below 0
-        return Math.max(0, fortunePoints + luckScore);
     }
 
     private int getHitPoints(CharacterCreateRequest characterCreateRequest) {
@@ -726,7 +713,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                         getAdvOrDadvByModifier(characterCreateRequest, INITIATIVE_NAME))
                 .addCellWithNumber(getAttack(characterCreateRequest))
                 .addCellWithFormula(getEvasionFormula(characterCreateRequest))
-                .addCellWithNumber(getFortunePoints(characterCreateRequest))
+                .addCellWithNumber(CharacterSheetUtil.getFortunePoints(characterCreateRequest))
                 .addCellWithNumber(hitPoints)
                 .addCellWithNumber(hitPoints)
                 .build();

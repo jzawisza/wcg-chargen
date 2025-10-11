@@ -1,5 +1,7 @@
 package com.wcg.chargen.backend.util;
 
+import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 
 import java.time.LocalDateTime;
@@ -33,5 +35,19 @@ public class CharacterSheetUtil {
                 request.species().toString().toUpperCase(),
                 classOrProfession,
                 currentDateTime.format(dateTimeFormatter));
+    }
+
+    public static int getFortunePoints(CharacterCreateRequest request) {
+        var luckScore = request.getAttributeValue(AttributeType.LUC);
+        // Level 1 characters start with 1 fortune point, and you get 1 more per level
+        var fortunePoints = request.level();
+
+        // Halflings get 1 extra fortune point
+        if (request.species() == SpeciesType.HALFLING) {
+            fortunePoints++;
+        }
+
+        // Fortune points can never go below 0
+        return Math.max(0, fortunePoints + luckScore);
     }
 }

@@ -67,6 +67,9 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
                 PdfUtil.setFieldValue(pdfDocument, attributeType.name(), attributeValue);
             }
 
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.FORTUNE_POINTS,
+                    String.valueOf(CharacterSheetUtil.getFortunePoints(request)));
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());

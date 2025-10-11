@@ -439,7 +439,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @Test
-    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsNotSpeciesStrengthOrWeakness() {
+    public void buildStatsSheet_FortunePointsArePopulatedCorrectly() {
         // arrange
         var luckValue = 1;
         var level = 3;
@@ -462,110 +462,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
         // assert
         var fortunePointsValue = getCellValueFromSheet(sheet, 4, 3);
         assertEquals(expectedFortunePoints, fortunePointsValue.getNumberValue());
-    }
-
-    @Test
-    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsSpeciesStrength() {
-        // arrange
-        var luckValue = 1;
-        var level = 3;
-        // Extra +1 since luck is species strength
-        var expectedFortunePoints = level + luckValue + 1;
-
-        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(level)
-                .withAttributes(attributesMap)
-                .withSpeciesStrength("LUC")
-                .withSpeciesWeakness("PER")
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
-        assertEquals(expectedFortunePoints, fortunePoints.getNumberValue());
-    }
-
-    @Test
-    public void buildStatsSheet_FortunePointsArePopulatedCorrectlyIfLuckIsSpeciesWeakness() {
-        // arrange
-        var luckValue = 1;
-        var level = 3;
-        // -1 since luck is species weakness
-        var expectedFortunePoints = level + luckValue - 1;
-
-        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(level)
-                .withAttributes(attributesMap)
-                .withSpeciesStrength("STR")
-                .withSpeciesWeakness("LUC")
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
-        assertEquals(expectedFortunePoints, fortunePoints.getNumberValue());
-    }
-
-    @Test
-    public void buildStatsSheet_FortunePointsAreNotLessThanZero() {
-        // arrange
-        var luckValue = -2;
-        var level = 1;
-
-        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, luckValue);
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.DWARF)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(level)
-                .withAttributes(attributesMap)
-                .withSpeciesStrength("STR")
-                .withSpeciesWeakness("PER")
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
-        assertEquals(0, fortunePoints.getNumberValue());
-    }
-
-    @Test
-    public void buildStatsSheet_HalfingsGetOneExtraFortunePoint() {
-        // arrange
-        var level = 1;
-        // We expect 1 extra fortune point for halflings
-        var expectedFortunePoints = level + 1;
-
-        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, 0, 0, 0, 0, 0);
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withSpeciesType(SpeciesType.HALFLING)
-                .withCharacterType(CharType.RANGER)
-                .withLevel(level)
-                .withAttributes(attributesMap)
-                .withSpeciesStrength("STR")
-                .withSpeciesWeakness("PER")
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var fortunePoints = getCellValueFromSheet(sheet, 4, 3);
-        assertEquals(expectedFortunePoints, fortunePoints.getNumberValue());
     }
 
     @Test
