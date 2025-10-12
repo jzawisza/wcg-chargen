@@ -8,4 +8,5 @@ public class PdfFieldConstants {
     public static final String CHARACTER_CLASS = "CharClass";
     public static final String SPECIES_TRAITS = "SpeciesTraits";
     public static final String FORTUNE_POINTS = "FortunePoints";
+    public static final String EVASION = "Evasion";
 }

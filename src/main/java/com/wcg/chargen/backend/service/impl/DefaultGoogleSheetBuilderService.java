@@ -9,8 +9,8 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
-import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
+import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +38,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     SkillsProvider skillsProvider;
     @Autowired
     SpeciesService speciesService;
+    @Autowired
+    CharacterSheetWorker characterSheetWorker;
 
     private static final String STATS_SHEET_TITLE = "Stats";
     private static final String SPELLS_SHEET_TITLE = "Spells";
@@ -164,40 +166,10 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     }
 
     private String getEvasionFormula(CharacterCreateRequest characterCreateRequest) {
-        var evasion = -1;
-        var bonusEvasion = 0;
-        if (!characterCreateRequest.isCommoner()) {
-            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-            evasion = charClass.evasionModifiers().get(characterCreateRequest.level() - 1);
+        var evasion = characterSheetWorker.getBaseEvasion(characterCreateRequest);
+        var evasionBonus = characterSheetWorker.getEvasionBonus(characterCreateRequest);
 
-            // If a character has a shield, they get a +1 bonus to evasion
-            if(characterCreateRequest.useQuickGear() &&
-                    charClass.gear().armor().stream()
-                    .anyMatch(a -> a.type().equals("Shield"))) {
-                bonusEvasion += 1;
-            }
-
-            // If a character has a feature that gives them a bonus to evasion,
-            // take that into account
-            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.EV_PLUS_1,
-                    FeatureAttributeUtil.Tier.I) != null) {
-                bonusEvasion += 1;
-            }
-
-            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.EV_PLUS_1,
-                    FeatureAttributeUtil.Tier.II) != null) {
-                bonusEvasion += 1;
-            }
-        }
-        else {
-            evasion = commonerService.getInfo().evasion();
-        }
-
-        return (bonusEvasion > 0) ? String.format("=SUM(%d,B10,%d)", evasion, bonusEvasion) :
+        return (evasionBonus > 0) ? String.format("=SUM(%d,B10,%d)", evasion, evasionBonus) :
                 String.format("=SUM(%d,B10)", evasion);
     }
 
@@ -713,7 +685,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                         getAdvOrDadvByModifier(characterCreateRequest, INITIATIVE_NAME))
                 .addCellWithNumber(getAttack(characterCreateRequest))
                 .addCellWithFormula(getEvasionFormula(characterCreateRequest))
-                .addCellWithNumber(CharacterSheetUtil.getFortunePoints(characterCreateRequest))
+                .addCellWithNumber(characterSheetWorker.getFortunePoints(characterCreateRequest))
                 .addCellWithNumber(hitPoints)
                 .addCellWithNumber(hitPoints)
                 .build();

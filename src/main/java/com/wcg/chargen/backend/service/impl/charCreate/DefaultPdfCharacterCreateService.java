@@ -7,8 +7,8 @@ import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
 import com.wcg.chargen.backend.service.SpeciesService;
-import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.PdfUtil;
+import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.slf4j.Logger;
@@ -31,9 +31,10 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
-
     @Autowired
     SpeciesService speciesService;
+    @Autowired
+    CharacterSheetWorker characterSheetWorker;
 
     @Override
     public PdfCharacterCreateStatus createCharacter(CharacterCreateRequest request) {
@@ -68,12 +69,15 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             }
 
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.FORTUNE_POINTS,
-                    String.valueOf(CharacterSheetUtil.getFortunePoints(request)));
+                    String.valueOf(characterSheetWorker.getFortunePoints(request)));
+
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.EVASION,
+                    getEvasion(request));
 
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            var pdfFileName = CharacterSheetUtil.generateName(request) + ".pdf";
+            var pdfFileName = characterSheetWorker.generateName(request) + ".pdf";
 
             return new PdfCharacterCreateStatus(returnInputStream, pdfFileName, null);
         }
@@ -109,5 +113,12 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         speciesTraitsList.add(languages);
 
         return String.join("\n", speciesTraitsList);
+    }
+
+    private String getEvasion(CharacterCreateRequest request) {
+        var baseEvasion = characterSheetWorker.getBaseEvasion(request);
+        var evasionBonus = characterSheetWorker.getEvasionBonus(request);
+
+        return String.valueOf(baseEvasion + evasionBonus);
     }
 }

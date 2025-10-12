@@ -12,6 +12,7 @@ import com.wcg.chargen.backend.service.PdfCharacterCreateService;
 import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import com.wcg.chargen.backend.util.PdfUtil;
+import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,8 @@ public class DefaultPdfCharacterCreateServiceTests {
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
     @MockBean
     private SpeciesService speciesService;
+    @MockBean
+    CharacterSheetWorker characterSheetWorker;
 
     private static final String CHARACTER_NAME = "SomeName";
     private static final int CHARACTER_LEVEL = 1;
@@ -88,8 +91,7 @@ public class DefaultPdfCharacterCreateServiceTests {
     @Test
     public void createCharacter_ReturnsExpectedPdfNameOnSuccess() {
         // arrange
-        // File name should be SomeName_HUMAN_MYSTIC_yyyyMMddHHmmss.pdf
-        var expectedFileNameLength = 40;
+        Mockito.when(characterSheetWorker.generateName(any())).thenReturn("test");
 
         // act
         var status = pdfCharacterCreateService.createCharacter(DEFAULT_CLASS_CHARACTER_REQUEST);
@@ -97,10 +99,6 @@ public class DefaultPdfCharacterCreateServiceTests {
         // assert
         assertNotNull(status);
         assertNotNull(status.fileName());
-        assertEquals(expectedFileNameLength, status.fileName().length());
-        assertTrue(status.fileName().startsWith("SomeName_HUMAN_MYSTIC_"));
-        var timestampStr = status.fileName().substring(22, 36);
-        assertTrue(timestampStr.matches("[0-9]+"));
         assertTrue(status.fileName().endsWith(".pdf"));
     }
 
@@ -319,4 +317,48 @@ public class DefaultPdfCharacterCreateServiceTests {
         }
     }
 
+    @Test
+    public void createCharacter_ReturnsExpectedEvasion() throws Exception {
+        // arrange
+        Mockito.when(characterSheetWorker.getBaseEvasion(any())).thenReturn(10);
+        Mockito.when(characterSheetWorker.getEvasionBonus(any())).thenReturn(2);
+        var expectedEvasionString = "12"; // 10 base + 2 bonus
+
+        // act
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withLevel(2)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualEvasionString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.EVASION);
+            assertEquals(expectedEvasionString, actualEvasionString);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsErrorStatusIfExceptionIsThrown() {
+        // arrange
+        Mockito.when(characterCreateRequestValidatorService.validate(any()))
+                .thenReturn(CharacterCreateStatus.SUCCESS);
+        Mockito.when(speciesService.getSpeciesByType(any()))
+                .thenThrow(new RuntimeException("Some exception"));
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(DEFAULT_CLASS_CHARACTER_REQUEST);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.errMsg());
+        assertTrue(status.errMsg().contains("Error creating PDF character sheet"));
+    }
 }

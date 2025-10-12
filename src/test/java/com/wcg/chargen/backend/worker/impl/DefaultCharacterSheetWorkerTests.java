@@ -1,19 +1,41 @@
-package com.wcg.chargen.backend.util;
+package com.wcg.chargen.backend.worker.impl;
 
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
+import com.wcg.chargen.backend.model.*;
+import com.wcg.chargen.backend.service.CharClassesService;
+import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
+import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
-public class CharacterSheetUtilTest {
+@SpringBootTest
+public class DefaultCharacterSheetWorkerTests {
+    @Autowired
+    CharacterSheetWorker characterSheetWorker;
+    @MockBean
+    private CharClassesService charClassesService;
+    @Autowired
+    CommonerService commonerService;
+
     @Test
     public void generateName_ReturnsExpectedNameForClassCharacters() {
         // arrange
@@ -29,7 +51,7 @@ public class CharacterSheetUtilTest {
                 .build();
 
         // act
-        var name = CharacterSheetUtil.generateName(request);
+        var name = characterSheetWorker.generateName(request);
 
         // assert
         assertNotNull(name);
@@ -57,7 +79,7 @@ public class CharacterSheetUtilTest {
                 .build();
 
         // act
-        var name = CharacterSheetUtil.generateName(request);
+        var name = characterSheetWorker.generateName(request);
 
         // assert
         assertNotNull(name);
@@ -92,7 +114,7 @@ public class CharacterSheetUtilTest {
                 .build();
 
         // act
-        var name = CharacterSheetUtil.generateName(request);
+        var name = characterSheetWorker.generateName(request);
 
         // assert
         assertNotNull(name);
@@ -118,7 +140,7 @@ public class CharacterSheetUtilTest {
                 .build();
 
         // act
-        var actualFortunePoints = CharacterSheetUtil.getFortunePoints(request);
+        var actualFortunePoints = characterSheetWorker.getFortunePoints(request);
 
         assertEquals(expectedFortunePoints, actualFortunePoints);
     }
@@ -141,6 +163,118 @@ public class CharacterSheetUtilTest {
                 Arguments.of(5, -1, SpeciesType.HALFLING, "COR", "STR", 5),
                 Arguments.of(1, -2, SpeciesType.HUMAN, "INT", null, 0),
                 Arguments.of(1, -2, SpeciesType.HALFLING, "COR", "STR", 0)
+        );
+    }
+
+    @Test
+    public void getBaseEvasion_ReturnsExpectedEvasionForCommonerCharacters() {
+        // arrange
+        var expectedEvasion = commonerService.getInfo().evasion();
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var actualEvasion = characterSheetWorker.getBaseEvasion(request);
+
+        // assert
+        assertEquals(expectedEvasion, actualEvasion);
+    }
+
+    @Test
+    public void getBaseEvasion_ReturnsExpectedEvasionForClassCharacters() {
+        // arrange
+        var expectedEvasion = 5;
+        var evasionModifiers = List.of(expectedEvasion, 6, 7, 8, 9, 10, 11);
+        var charClass = new CharClass("Skald", Collections.emptyList(),
+                evasionModifiers, 1, 1, null, null, null, null);
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withCharacterType(CharType.SKALD)
+                .build();
+
+        // act
+        var actualEvasion = characterSheetWorker.getBaseEvasion(request);
+
+        // assert
+        assertEquals(expectedEvasion, actualEvasion);
+    }
+
+    @Test
+    public void getEvasionBonus_ReturnsZeroForCommonerCharacters() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var evasionBonus = characterSheetWorker.getEvasionBonus(request);
+
+        // assert
+        assertEquals(0, evasionBonus);
+    }
+
+    @ParameterizedTest
+    @MethodSource("conditionsForEvasionBonus")
+    public void getEvasionBonus_ReturnsExpectedBonusForClassCharactersBasedOnQuickGearAndFeatures(
+            boolean useQuickGear, boolean hasTier1EvasionFeature, boolean hasTier2EvasionFeature,
+            int expectedEvasionBonus) {
+        // arrange
+        var armor = new Armor("Hoplite Shield", "Shield", "+1 Evasion");
+        var gear = new Gear(List.of(armor), Collections.emptyList(), 0, 0, Collections.emptyList());
+
+        var evasionFeatureName = "Evasion test";
+        var evasionFeatureAttribute = new FeatureAttribute(FeatureAttributeType.EV_PLUS_1, "");
+        var evasionFeature = new Feature(evasionFeatureName, List.of(evasionFeatureAttribute));
+        var evasionFeatureList = List.of(evasionFeature);
+        var features = new Features(
+                hasTier1EvasionFeature ? evasionFeatureList : Collections.emptyList(),
+                hasTier2EvasionFeature ? evasionFeatureList : Collections.emptyList()
+        );
+
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList(),
+                gear,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                hasTier1EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList(),
+                hasTier2EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList()
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(4)
+                .withUseQuickGear(useQuickGear)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var actualEvasionBonus = characterSheetWorker.getEvasionBonus(request);
+
+        // assert
+        assertEquals(expectedEvasionBonus, actualEvasionBonus);
+    }
+
+    static Stream<Arguments> conditionsForEvasionBonus() {
+        return Stream.of(
+                Arguments.arguments(false, false, false, 0),
+                Arguments.arguments(true, false, false, 1),
+                Arguments.arguments(false, true, false, 1),
+                Arguments.arguments(false, false, true, 1),
+                Arguments.arguments(true, true, false, 2),
+                Arguments.arguments(true, false, true, 2),
+                Arguments.arguments(false, true, true, 2),
+                Arguments.arguments(true, true, true, 3)
         );
     }
 }

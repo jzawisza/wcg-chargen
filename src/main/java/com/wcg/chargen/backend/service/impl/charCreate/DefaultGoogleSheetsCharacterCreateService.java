@@ -6,15 +6,13 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
 import com.wcg.chargen.backend.service.*;
-import com.wcg.chargen.backend.util.CharacterSheetUtil;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
+import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +27,8 @@ public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCh
     CharClassesService charClassesService;
     @Autowired
     CharacterCreateRequestValidatorService characterCreateRequestValidatorService;
+    @Autowired
+    CharacterSheetWorker characterSheetWorker;
 
     @Override
     public CharacterCreateStatus createCharacter(CharacterCreateRequest characterCreateRequest, String bearerToken) {
@@ -61,7 +61,7 @@ public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCh
     }
 
     private Spreadsheet buildSpreadsheet(CharacterCreateRequest characterCreateRequest) {
-        var title = CharacterSheetUtil.generateName(characterCreateRequest);
+        var title = characterSheetWorker.generateName(characterCreateRequest);
 
         var spreadsheet = new Spreadsheet()
                 .setProperties(new SpreadsheetProperties()
