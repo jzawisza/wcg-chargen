@@ -1,4 +1,4 @@
-package com.wcg.chargen.backend.service;
+package com.wcg.chargen.backend.worker;
 
 import com.wcg.chargen.backend.model.Skill;
 

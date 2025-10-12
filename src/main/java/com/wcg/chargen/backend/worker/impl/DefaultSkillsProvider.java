@@ -1,9 +1,9 @@
-package com.wcg.chargen.backend.service.impl;
+package com.wcg.chargen.backend.worker.impl;
 
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.model.Skills;
-import com.wcg.chargen.backend.service.SkillsProvider;
 import com.wcg.chargen.backend.service.YamlLoaderService;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

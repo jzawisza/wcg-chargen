@@ -11,6 +11,8 @@ import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     @Autowired
     CommonerService commonerService;
     @Autowired
-    RandomNumberService randomNumberService;
+    RandomNumberWorker randomNumberWorker;
     @Autowired
     SkillsProvider skillsProvider;
     @Autowired
@@ -176,7 +178,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private int getHitPoints(CharacterCreateRequest characterCreateRequest) {
         var staminaScore = characterCreateRequest.getAttributeValue(AttributeType.STA);
         if (characterCreateRequest.isCommoner()) {
-            var d4Roll = randomNumberService.getIntFromRange(1, 4);
+            var d4Roll = randomNumberWorker.getIntFromRange(1, 4);
 
             return d4Roll + 1 + staminaScore;
         }
@@ -188,7 +190,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             var hitPoints = charClass.level1Hp() + staminaScore;
             // Add hit points for each level above 1
             for (int i = 1; i < characterCreateRequest.level(); i++) {
-                hitPoints += randomNumberService.getIntFromRange(1, charClass.maxHpAtLevelUp());
+                hitPoints += randomNumberWorker.getIntFromRange(1, charClass.maxHpAtLevelUp());
             }
 
             // Check for features that increase hit points
@@ -327,13 +329,13 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         if (characterCreateRequest.characterClass() == CharType.SHAMAN) {
             // Shamans are a special case where we roll 2d12 for copper instead of a single die
-            var firstDie = randomNumberService.getIntFromRange(1, 12);
-            var secondDie = randomNumberService.getIntFromRange(1, 12);
+            var firstDie = randomNumberWorker.getIntFromRange(1, 12);
+            var secondDie = randomNumberWorker.getIntFromRange(1, 12);
 
             return firstDie + secondDie;
         }
         else {
-            return maxCopper > 1 ? randomNumberService.getIntFromRange(1, maxCopper) : maxCopper;
+            return maxCopper > 1 ? randomNumberWorker.getIntFromRange(1, maxCopper) : maxCopper;
         }
     }
 
@@ -354,7 +356,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             }
         }
 
-        return maxSilver > 1 ? randomNumberService.getIntFromRange(1, maxSilver) : maxSilver;
+        return maxSilver > 1 ? randomNumberWorker.getIntFromRange(1, maxSilver) : maxSilver;
     }
 
     private int getNumArmorAndWeaponsRows(CharacterCreateRequest characterCreateRequest) {

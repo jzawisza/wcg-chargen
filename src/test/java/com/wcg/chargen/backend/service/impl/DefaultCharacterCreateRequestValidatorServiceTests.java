@@ -6,9 +6,10 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.*;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
-import com.wcg.chargen.backend.service.SkillsProvider;
 import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
+import com.wcg.chargen.backend.worker.SkillsProvider;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

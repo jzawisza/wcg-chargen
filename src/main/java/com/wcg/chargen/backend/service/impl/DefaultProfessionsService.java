@@ -3,9 +3,8 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.model.Profession;
 import com.wcg.chargen.backend.model.Professions;
 import com.wcg.chargen.backend.service.ProfessionsService;
-import com.wcg.chargen.backend.service.RandomNumberService;
 import com.wcg.chargen.backend.service.YamlLoaderService;
-
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +20,13 @@ public class DefaultProfessionsService implements ProfessionsService {
     Logger logger = LoggerFactory.getLogger(DefaultProfessionsService.class);
 
     private final YamlLoaderService<Professions> yamlLoaderService;
-    private final RandomNumberService randomNumberService;
+    private final RandomNumberWorker randomNumberWorker;
 
     @Autowired
     public DefaultProfessionsService(YamlLoaderService<Professions> yamlLoaderService,
-                                     RandomNumberService randomNumberService) {
+                                     RandomNumberWorker randomNumberWorker) {
         this.yamlLoaderService = yamlLoaderService;
-        this.randomNumberService = randomNumberService;
+        this.randomNumberWorker = randomNumberWorker;
     }
 
     private Professions professions;
@@ -73,7 +72,7 @@ public class DefaultProfessionsService implements ProfessionsService {
     @Override
     public Professions generateRandomProfessions() {
         var professionList = new ArrayList<Profession>();
-        int professionRoll = randomNumberService.getIntFromRange(1, 99);
+        int professionRoll = randomNumberWorker.getIntFromRange(1, 99);
         logger.info("Rolled {} for professions roll", professionRoll);
 
         if (isPalindromeNumber(professionRoll)) {

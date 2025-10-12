@@ -4,6 +4,7 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.SkillsResponse;
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

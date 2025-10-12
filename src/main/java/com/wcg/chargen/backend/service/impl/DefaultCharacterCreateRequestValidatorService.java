@@ -5,6 +5,7 @@ import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.service.*;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

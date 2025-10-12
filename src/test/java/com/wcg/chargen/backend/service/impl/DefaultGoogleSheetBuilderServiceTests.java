@@ -11,6 +11,8 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.*;
 import com.wcg.chargen.backend.service.*;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
     @MockBean
     CommonerService commonerService;
     @Autowired
-    RandomNumberService randomNumberService;
+    RandomNumberWorker randomNumberWorker;
     @Autowired
     SkillsProvider skillsProvider;
     @MockBean

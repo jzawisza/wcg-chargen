@@ -1,6 +1,6 @@
-package com.wcg.chargen.backend.service.impl;
+package com.wcg.chargen.backend.worker.impl;
 
-import com.wcg.chargen.backend.service.RandomNumberService;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
@@ -11,10 +11,10 @@ import java.util.Random;
  * By making this a class, it can be mocked in unit tests, allowing for certain test cases to be run.
  */
 @Component
-public class DefaultRandomNumberService implements RandomNumberService {
+public class DefaultRandomNumberWorker implements RandomNumberWorker {
     private final Random rng;
 
-    public DefaultRandomNumberService() {
+    public DefaultRandomNumberWorker() {
         rng = new Random();
     }
 

@@ -4,6 +4,7 @@ import com.wcg.chargen.backend.model.Skills;
 import com.wcg.chargen.backend.service.YamlLoaderService;
 import com.wcg.chargen.backend.testUtil.PostConstructUtil;
 import com.wcg.chargen.backend.testUtil.SkillsProviderUtil;
+import com.wcg.chargen.backend.worker.impl.DefaultSkillsProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

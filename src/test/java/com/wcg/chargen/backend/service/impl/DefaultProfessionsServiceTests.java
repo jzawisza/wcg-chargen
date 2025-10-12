@@ -1,10 +1,10 @@
 package com.wcg.chargen.backend.service.impl;
 
 import com.wcg.chargen.backend.model.Professions;
-import com.wcg.chargen.backend.service.RandomNumberService;
 import com.wcg.chargen.backend.service.YamlLoaderService;
-
 import com.wcg.chargen.backend.testUtil.PostConstructUtil;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class DefaultProfessionsServiceTests {
     @Mock
-    RandomNumberService randomNumberServiceMock;
+    RandomNumberWorker randomNumberWorkerMock;
 
     /**
      * Class to load YAML file with invalid profession data
@@ -78,7 +78,7 @@ public class DefaultProfessionsServiceTests {
     @MethodSource("yamlServicesWithBadDataProvider")
     void test_yamlFile_Without_Valid_Profession_Data_Throws_Exception(YamlLoaderService<Professions> yamlLoaderService,
                                                            String expectedMsg) {
-        var defaultProfessionService = new DefaultProfessionsService(yamlLoaderService, randomNumberServiceMock);
+        var defaultProfessionService = new DefaultProfessionsService(yamlLoaderService, randomNumberWorkerMock);
         // When reflection is used, the top-level exception is InvocationTargetException
         var exception = assertThrows(InvocationTargetException.class, () -> {
             PostConstructUtil.invokeMethod(DefaultProfessionsService.class, defaultProfessionService);
@@ -93,7 +93,7 @@ public class DefaultProfessionsServiceTests {
     void test_generateRandomProfessions_PalindromeNumber_Returns_Three_Processions() {
         var defaultProfessionService = getValidDefaultProfessionService();
 
-        when(randomNumberServiceMock.getIntFromRange(1, 99)).thenReturn(77);
+        when(randomNumberWorkerMock.getIntFromRange(1, 99)).thenReturn(77);
 
         var professions = defaultProfessionService.generateRandomProfessions();
         var professionList = professions.professions();
@@ -108,7 +108,7 @@ public class DefaultProfessionsServiceTests {
     void test_generateRandomProfessions_Number_Less_Than_10_Returns_Correct_Inverse() {
         var defaultProfessionService = getValidDefaultProfessionService();
 
-        when(randomNumberServiceMock.getIntFromRange(1, 99)).thenReturn(9);
+        when(randomNumberWorkerMock.getIntFromRange(1, 99)).thenReturn(9);
 
         var professions = defaultProfessionService.generateRandomProfessions();
         var professionList = professions.professions();
@@ -122,7 +122,7 @@ public class DefaultProfessionsServiceTests {
     void test_generateRandomProfessions_Number_Divisible_By_10_Returns_Correct_Inverse() {
         var defaultProfessionService = getValidDefaultProfessionService();
 
-        when(randomNumberServiceMock.getIntFromRange(1, 99)).thenReturn(40);
+        when(randomNumberWorkerMock.getIntFromRange(1, 99)).thenReturn(40);
 
         var professions = defaultProfessionService.generateRandomProfessions();
         var professionList = professions.professions();
@@ -136,7 +136,7 @@ public class DefaultProfessionsServiceTests {
     void test_generateRandomProfessions_Number_Greater_Than_10_Not_Divisible_By_10_Returns_Correct_Inverse() {
         var defaultProfessionService = getValidDefaultProfessionService();
 
-        when(randomNumberServiceMock.getIntFromRange(1, 99)).thenReturn(28);
+        when(randomNumberWorkerMock.getIntFromRange(1, 99)).thenReturn(28);
 
         var professions = defaultProfessionService.generateRandomProfessions();
         var professionList = professions.professions();
@@ -148,7 +148,7 @@ public class DefaultProfessionsServiceTests {
 
     private DefaultProfessionsService getValidDefaultProfessionService() {
         var defaultProfessionService = new DefaultProfessionsService(new ValidDataYamlLoaderService(),
-                randomNumberServiceMock);
+                randomNumberWorkerMock);
 
         // Invoke PostConstruct method to populate professions data
         try {

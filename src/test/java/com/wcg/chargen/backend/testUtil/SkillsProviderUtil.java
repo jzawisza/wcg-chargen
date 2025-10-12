@@ -1,9 +1,9 @@
 package com.wcg.chargen.backend.testUtil;
 
 import com.wcg.chargen.backend.model.Skills;
-import com.wcg.chargen.backend.service.SkillsProvider;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import com.wcg.chargen.backend.service.YamlLoaderService;
-import com.wcg.chargen.backend.service.impl.DefaultSkillsProvider;
+import com.wcg.chargen.backend.worker.impl.DefaultSkillsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
