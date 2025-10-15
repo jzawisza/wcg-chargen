@@ -1,5 +1,6 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
+import com.wcg.chargen.backend.constants.CharacterSheetConstants;
 import com.wcg.chargen.backend.constants.PdfFieldConstants;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
@@ -74,6 +75,11 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.EVASION,
                     getEvasion(request));
 
+            var initiativeStr = getInitiative(request);
+            initiativeStr += getAdvOrDadvModifierString(request, CharacterSheetConstants.INITIATIVE);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.INITIATIVE,
+                    initiativeStr);
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -120,5 +126,27 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         var evasionBonus = characterSheetWorker.getEvasionBonus(request);
 
         return String.valueOf(baseEvasion + evasionBonus);
+    }
+
+    private String getInitiative(CharacterCreateRequest request) {
+        var corScore = request.getAttributeValue(AttributeType.COR);
+        var perScore = request.getAttributeValue(AttributeType.PER);
+        var initiative = Math.max(corScore, perScore);
+
+        return String.valueOf(initiative);
+    }
+
+    private String getAdvOrDadvModifierString(CharacterCreateRequest request, String modifier) {
+        var advOrDadv = characterSheetWorker.getAdvOrDadvByModifier(request, modifier);
+
+        if (advOrDadv == null) {
+            return "";
+        }
+
+        return switch (advOrDadv) {
+            case ADV -> " (ADV)";
+            case DADV -> " (DADV)";
+            default -> "";
+        };
     }
 }

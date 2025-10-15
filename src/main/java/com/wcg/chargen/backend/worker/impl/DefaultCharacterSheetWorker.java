@@ -114,4 +114,61 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
 
         return bonusEvasion;
     }
+
+    /**
+     * Returns the ADV or DADV type for a given modifier string, if it exists in the character's features.
+     * If no matching feature is found, returns null.
+     */
+    public FeatureAttributeType getAdvOrDadvByModifier(CharacterCreateRequest request,
+                                                        String modifierStr) {
+        if (request.features() == null) {
+            return null;
+        }
+
+        FeatureAttributeType featureAttributeType = null;
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+
+        // Process Tier I and then Tier II features to account for the fact that some classes
+        // may give ADV to something as a Tier I feature and DADV as a Tier II feature
+        // (e.g. Healing for a shaman), and we want to show DADV in that case
+        for (var tier1FeatureName : request.features().tier1()) {
+            var tier1FeatureAttributes = charClass.features().tier1().stream()
+                    .filter(f -> f.description().equals(tier1FeatureName))
+                    .findFirst();
+
+            if (tier1FeatureAttributes.isPresent()) {
+                for (var attribute : tier1FeatureAttributes.get().attributes()) {
+                    if (attribute.type() == FeatureAttributeType.ADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        featureAttributeType = FeatureAttributeType.ADV;
+                    }
+                    else if (attribute.type() == FeatureAttributeType.DADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        featureAttributeType = FeatureAttributeType.DADV;
+                    }
+                }
+            }
+        }
+
+        for (var tier2FeatureName : request.features().tier2()) {
+            var tier2FeatureAttributes = charClass.features().tier2().stream()
+                    .filter(f -> f.description().equals(tier2FeatureName))
+                    .findFirst();
+
+            if (tier2FeatureAttributes.isPresent()) {
+                for (var attribute : tier2FeatureAttributes.get().attributes()) {
+                    if (attribute.type() == FeatureAttributeType.ADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        featureAttributeType = FeatureAttributeType.ADV;
+                    }
+                    else if (attribute.type() == FeatureAttributeType.DADV &&
+                            attribute.modifier().equals(modifierStr)) {
+                        featureAttributeType = FeatureAttributeType.DADV;
+                    }
+                }
+            }
+        }
+
+        return featureAttributeType;
+    }
 }

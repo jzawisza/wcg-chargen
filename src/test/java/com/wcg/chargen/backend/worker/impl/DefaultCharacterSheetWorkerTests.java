@@ -7,6 +7,7 @@ import com.wcg.chargen.backend.model.*;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
+import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,9 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
@@ -35,6 +34,8 @@ public class DefaultCharacterSheetWorkerTests {
     private CharClassesService charClassesService;
     @Autowired
     CommonerService commonerService;
+
+    private static final String TEST_MODIFIER = "Test Modifier";
 
     @Test
     public void generateName_ReturnsExpectedNameForClassCharacters() {
@@ -276,5 +277,126 @@ public class DefaultCharacterSheetWorkerTests {
                 Arguments.arguments(false, true, true, 2),
                 Arguments.arguments(true, true, true, 3)
         );
+    }
+
+    @Test
+    public void getAdvOrDadvByModifier_ReturnsNullWhenNoMatchingFeature() {
+        // arrange
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList(),
+                null,
+                null,
+                new Features(Collections.emptyList(), Collections.emptyList()));
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.BERZERKER)
+                .withLevel(1)
+                .withFeatures(new FeaturesRequest(Collections.emptyList(), Collections.emptyList()))
+                .build();
+
+        // act
+        var advOrDadv = characterSheetWorker.getAdvOrDadvByModifier(request, TEST_MODIFIER);
+
+        // assert
+        assertNull(advOrDadv);
+    }
+
+    @ParameterizedTest
+    @MethodSource("advDadvScenarios")
+    public void getAdvOrDadvByModifier_ReturnsExpectedAdvOrDadvBasedOnFeatures(
+            FeatureAttributeUtil.Tier tier, FeatureAttributeType expectedAdvDadv) {
+        // arrange
+        var featureName = "Test Feature";
+        var featureAttribute = new FeatureAttribute(expectedAdvDadv, TEST_MODIFIER);
+        var feature = new Feature(featureName, List.of(featureAttribute));
+
+        var features = new Features(
+                tier == FeatureAttributeUtil.Tier.I ? List.of(feature) : Collections.emptyList(),
+                tier == FeatureAttributeUtil.Tier.II ? List.of(feature) : Collections.emptyList()
+        );
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList(),
+                null,
+                null,
+                features);
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                tier == FeatureAttributeUtil.Tier.I ? List.of(featureName) : Collections.emptyList(),
+                tier == FeatureAttributeUtil.Tier.II ? List.of(featureName) : Collections.emptyList()
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.BERZERKER)
+                .withLevel(1)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var actualAdvDadv = characterSheetWorker.getAdvOrDadvByModifier(request, TEST_MODIFIER);
+
+        // assert
+        assertEquals(expectedAdvDadv, actualAdvDadv);
+    }
+
+    static Stream<Arguments> advDadvScenarios() {
+        return Stream.of(
+                Arguments.arguments(FeatureAttributeUtil.Tier.I,
+                        FeatureAttributeType.ADV),
+                Arguments.arguments(FeatureAttributeUtil.Tier.I,
+                        FeatureAttributeType.DADV),
+                Arguments.arguments(FeatureAttributeUtil.Tier.II,
+                        FeatureAttributeType.ADV),
+                Arguments.arguments(FeatureAttributeUtil.Tier.II,
+                        FeatureAttributeType.ADV)
+        );
+    }
+
+    @Test
+    public void getAdvOrDadvByModifier_ReturnsDadvForModifierWithAdvAsTier1AndDadvAsTier2() {
+        // arrange
+        var advFeatureName = "Adv Feature";
+        var advFeatureAttribute = new FeatureAttribute(FeatureAttributeType.ADV, TEST_MODIFIER);
+        var advFeature = new Feature(advFeatureName, List.of(advFeatureAttribute));
+
+        var dadvFeatureName = "Dadv Feature";
+        var dadvFeatureAttribute = new FeatureAttribute(FeatureAttributeType.DADV, TEST_MODIFIER);
+        var dadvFeature = new Feature(dadvFeatureName, List.of(dadvFeatureAttribute));
+
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList(),
+                null,
+                null,
+                new Features(List.of(advFeature), List.of(dadvFeature)));
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.BERZERKER)
+                .withLevel(1)
+                .withFeatures(new FeaturesRequest(
+                        List.of(advFeatureName),
+                        List.of(dadvFeatureName)))
+                .build();
+
+        // act
+        var advOrDadv = characterSheetWorker.getAdvOrDadvByModifier(request, TEST_MODIFIER);
+
+        // assert
+        assertEquals(FeatureAttributeType.DADV, advOrDadv);
     }
 }

@@ -3,6 +3,7 @@ package com.wcg.chargen.backend.service.impl;
 import com.wcg.chargen.backend.constants.PdfFieldConstants;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
+import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
@@ -18,6 +19,8 @@ import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -360,5 +364,71 @@ public class DefaultPdfCharacterCreateServiceTests {
         assertNotNull(status);
         assertNotNull(status.errMsg());
         assertTrue(status.errMsg().contains("Error creating PDF character sheet"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "2, 1, 2",
+            "1, 3, 3",
+            "1, 1, 1"
+    })
+    public void createCharacter_ReturnsPdfWithExpectedInitiative(int corScore, int perScore,
+                                                                 int expectedInitiative)
+            throws Exception {
+        // arrange
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, corScore, 0, perScore, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withAttributes(attributeMap)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualInitiativeString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.INITIATIVE);
+            assertEquals(Integer.toString(expectedInitiative), actualInitiativeString);
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
+    public void createCharacter_DisplaysAdvOrDadvCorrectlyForInitiative(
+            FeatureAttributeType featureAttributeType) throws Exception {
+        // arrange
+        var perScore = 1;
+        var expectedInitiativeString = Integer.toString(perScore) + " (" +
+                featureAttributeType.name() + ")";
+
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, 0, 0, perScore, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withAttributes(attributeMap)
+                .build();
+
+        Mockito.when(characterSheetWorker.getAdvOrDadvByModifier(any(), any()))
+                .thenReturn(featureAttributeType);
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualInitiativeString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.INITIATIVE);
+            assertEquals(expectedInitiativeString, actualInitiativeString);
+        }
     }
 }

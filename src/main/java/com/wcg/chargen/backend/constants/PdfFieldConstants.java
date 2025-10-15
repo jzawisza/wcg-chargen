@@ -9,4 +9,5 @@ public class PdfFieldConstants {
     public static final String SPECIES_TRAITS = "SpeciesTraits";
     public static final String FORTUNE_POINTS = "FortunePoints";
     public static final String EVASION = "Evasion";
+    public static final String INITIATIVE = "Initiative";
 }

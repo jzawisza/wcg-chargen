@@ -1510,54 +1510,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
         );
     }
 
-    @Test
-    public void buildStatsSheet_DadvIsChosenIfAGivenItemHasFeaturesThatGiveBothAdvAndDadvToIt() {
-        // arrange
-        var expectedDadvRedColorValue = 0.463f;
-        var expectedDadvNote = "Roll with Double Advantage";
-
-        var attributeType = AttributeType.STR;
-        var featureAdvName = "Test Feature ADV";
-        var featureDadvName = "Test Feature DADV";
-        var featureAdvAttribute = new FeatureAttribute(FeatureAttributeType.ADV, attributeType.name());
-        var featureDadvAttribute = new FeatureAttribute(FeatureAttributeType.DADV, attributeType.name());
-        var featureAdv = new Feature(featureAdvName, List.of(featureAdvAttribute));
-        var featureDadv = new Feature(featureDadvName, List.of(featureDadvAttribute));
-        var features = new Features(List.of(featureAdv), List.of(featureDadv));
-        var featuresRequest = new FeaturesRequest(List.of(featureAdvName), List.of(featureDadvName));
-
-        var charClass = new CharClass(CharType.SHAMAN.toString(),
-                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
-                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
-                TEST_LEVEL_1_HP,
-                TEST_MAX_HP_AT_LEVEL_UP,
-                List.of("Arcana"),
-                null,
-                null,
-                features);
-
-        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.SHAMAN)
-                .withLevel(5)
-                .withFeatures(featuresRequest)
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var skillCellData = getCellDataFromSheet(sheet, 8, 0);
-
-        assertNotNull(skillCellData.getUserEnteredFormat());
-        assertNotNull(skillCellData.getUserEnteredFormat().getBackgroundColor());
-        assertEquals(expectedDadvRedColorValue, skillCellData.getUserEnteredFormat().getBackgroundColor().getRed());
-
-        assertEquals(expectedDadvNote, skillCellData.getNote());
-    }
-
     @ParameterizedTest
     @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
     public void buildStatsSheet_InitiativeWithAdvorDadvDisplaysCorrectly(

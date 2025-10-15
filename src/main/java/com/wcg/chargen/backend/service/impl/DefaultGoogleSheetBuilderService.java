@@ -1,6 +1,7 @@
 package com.wcg.chargen.backend.service.impl;
 
 import com.google.api.services.sheets.v4.model.*;
+import com.wcg.chargen.backend.constants.CharacterSheetConstants;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
@@ -51,7 +52,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final int NUM_DEFAULT_GEAR_ROWS = 10;
     private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
-    private static final String INITIATIVE_NAME = "Initiative";
     private static final String UNARMED_WEAPON_TYPE = "Unarmed";
 
     private static Sheet buildSheetWithTitle(String title)
@@ -564,63 +564,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return (improvedDamage != null) ? improvedDamage : baseDamage;
     }
 
-    /**
-     * Returns the ADV or DADV type for a given modifier string, if it exists in the character's features.
-     * If no matching feature is found, returns null.
-     */
-    private FeatureAttributeType getAdvOrDadvByModifier(CharacterCreateRequest request,
-                                                        String modifierStr) {
-        if (request.features() == null) {
-            return null;
-        }
-
-        FeatureAttributeType featureAttributeType = null;
-        var charClass = charClassesService.getCharClassByType(request.characterClass());
-
-        // Process Tier I and then Tier II features to account for the fact that some classes
-        // may give ADV to something as a Tier I feature and DADV as a Tier II feature
-        // (e.g. Healing for a shaman), and we want to show DADV in that case
-        for (var tier1FeatureName : request.features().tier1()) {
-            var tier1FeatureAttributes = charClass.features().tier1().stream()
-                    .filter(f -> f.description().equals(tier1FeatureName))
-                    .findFirst();
-
-            if (tier1FeatureAttributes.isPresent()) {
-                for (var attribute : tier1FeatureAttributes.get().attributes()) {
-                    if (attribute.type() == FeatureAttributeType.ADV &&
-                            attribute.modifier().equals(modifierStr)) {
-                        featureAttributeType = FeatureAttributeType.ADV;
-                    }
-                    else if (attribute.type() == FeatureAttributeType.DADV &&
-                            attribute.modifier().equals(modifierStr)) {
-                        featureAttributeType = FeatureAttributeType.DADV;
-                    }
-                }
-            }
-        }
-
-        for (var tier2FeatureName : request.features().tier2()) {
-            var tier2FeatureAttributes = charClass.features().tier2().stream()
-                    .filter(f -> f.description().equals(tier2FeatureName))
-                    .findFirst();
-
-            if (tier2FeatureAttributes.isPresent()) {
-                for (var attribute : tier2FeatureAttributes.get().attributes()) {
-                    if (attribute.type() == FeatureAttributeType.ADV &&
-                            attribute.modifier().equals(modifierStr)) {
-                        featureAttributeType = FeatureAttributeType.ADV;
-                    }
-                    else if (attribute.type() == FeatureAttributeType.DADV &&
-                            attribute.modifier().equals(modifierStr)) {
-                        featureAttributeType = FeatureAttributeType.DADV;
-                    }
-                }
-            }
-        }
-
-        return featureAttributeType;
-    }
-
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -670,7 +613,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .build();
 
         var row4 = getRowBuilder()
-                .addSecondaryHeaderCell(INITIATIVE_NAME)
+                .addSecondaryHeaderCell(CharacterSheetConstants.INITIATIVE)
                 .addSecondaryHeaderCell("Attack")
                 .addSecondaryHeaderCell("Evasion")
                 .addSecondaryHeaderCell("Fortune Points")
@@ -684,7 +627,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var hitPoints = getHitPoints(characterCreateRequest);
         var row5 = getRowBuilder()
                 .addCellWithFormula("=MAX(B10,B13)",
-                        getAdvOrDadvByModifier(characterCreateRequest, INITIATIVE_NAME))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                CharacterSheetConstants.INITIATIVE))
                 .addCellWithNumber(getAttack(characterCreateRequest))
                 .addCellWithFormula(getEvasionFormula(characterCreateRequest))
                 .addCellWithNumber(characterSheetWorker.getFortunePoints(characterCreateRequest))
@@ -721,10 +665,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var attributeType = AttributeType.STR;
         var row8 = getRowBuilder()
                 .addHighlightedCellWithText("Strength (STR)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 0),
                         getSkillAttributeDataValidation(skillsList, 0))
                 .addCellWithFormula(generateTotalModifierFormula(0))
@@ -737,10 +683,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.COR;
         var row9Builder = getRowBuilder()
                 .addHighlightedCellWithText("Coordination (COR)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 1),
                         getSkillAttributeDataValidation(skillsList, 1))
                 .addCellWithFormula(generateTotalModifierFormula(1))
@@ -750,10 +698,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.STA;
         var row10Builder = getRowBuilder()
                 .addHighlightedCellWithText("Stamina (STA)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 2),
                         getSkillAttributeDataValidation(skillsList, 2))
                 .addCellWithFormula(generateTotalModifierFormula(2))
@@ -763,10 +713,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.INT;
         var row11Builder = getRowBuilder()
                 .addHighlightedCellWithText("Intellect (INT)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 3),
                         getSkillAttributeDataValidation(skillsList, 3))
                 .addCellWithFormula(generateTotalModifierFormula(3))
@@ -776,10 +728,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.PER;
         var row12Builder = getRowBuilder()
                 .addHighlightedCellWithText("Perception (PER)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 4),
                         getSkillAttributeDataValidation(skillsList, 4))
                 .addCellWithFormula(generateTotalModifierFormula(4))
@@ -789,10 +743,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.PRS;
         var row13Builder = getRowBuilder()
                 .addHighlightedCellWithText("Presence (PRS)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 5),
                         getSkillAttributeDataValidation(skillsList, 5))
                 .addCellWithFormula(generateTotalModifierFormula(5))
@@ -802,10 +758,12 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         attributeType = AttributeType.LUC;
         var row14 = getRowBuilder()
                 .addHighlightedCellWithText("Luck (LUC)",
-                        getAdvOrDadvByModifier(characterCreateRequest, attributeType.name()))
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                attributeType.name()))
                 .addCellWithAttributeValue(characterCreateRequest, attributeType)
                 .addEmptyCell()
-                .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                .addCellWithText(skillName,
+                        characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest, skillName))
                 .addCellWithText(getSkillAttributeText(skillsList, 6),
                         getSkillAttributeDataValidation(skillsList, 6))
                 .addCellWithFormula(generateTotalModifierFormula(6))
@@ -899,7 +857,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                     .addEmptyCell()
                     .addEmptyCell()
                     .addEmptyCell()
-                    .addCellWithText(skillName, getAdvOrDadvByModifier(characterCreateRequest, skillName))
+                    .addCellWithText(skillName,
+                            characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                    skillName))
                     .addCellWithText(getSkillAttributeText(skillsList, index),
                             getSkillAttributeDataValidation(skillsList, index))
                     .addCellWithFormula(generateTotalModifierFormula(index))
@@ -927,7 +887,8 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                     .addCellWithText(weaponType)
                     .addCellWithText("")
                     .addCellWithText(getWeaponDamage(characterCreateRequest, k),
-                            getAdvOrDadvByModifier(characterCreateRequest, weaponType))
+                            characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
+                                    weaponType))
                     .build();
 
             gridDataBuilder.addRow(armorWeaponRow);
