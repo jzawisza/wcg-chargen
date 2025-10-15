@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @SpringBootTest
 public class DefaultPdfCharacterCreateServiceTests {
@@ -203,6 +204,40 @@ public class DefaultPdfCharacterCreateServiceTests {
 
                 assertEquals(String.valueOf(expectedValue), actualValue);
             }
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
+    public void createCharacter_DisplaysAdvOrDadvCorrectlyForAttributes(
+            FeatureAttributeType featureAttributeType) throws Exception {
+        // arrange
+        var attributeType = AttributeType.STR;
+        // We set the attribute map to all zeroes, so this attribute string will be true
+        // for any attribute type
+        var expectedAttributeString = "0 (" + featureAttributeType.name() + ")";
+
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, 0, 0, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withAttributes(attributeMap)
+                .build();
+
+        Mockito.when(characterSheetWorker.getAdvOrDadvByModifier(any(), eq(attributeType.name())))
+                .thenReturn(featureAttributeType);
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualAttributeString = PdfUtil.getFieldValue(pdfDocument, attributeType.name());
+            assertEquals(expectedAttributeString, actualAttributeString);
         }
     }
 
