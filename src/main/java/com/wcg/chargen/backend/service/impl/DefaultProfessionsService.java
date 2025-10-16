@@ -77,13 +77,20 @@ public class DefaultProfessionsService implements ProfessionsService {
 
         if (isPalindromeNumber(professionRoll)) {
             // Return the profession rolled plus the one before and the one after
-            int professionBefore = professionRoll - 1;
-            int professionAfter = professionRoll + 1;
+            // *in the master list*, not numerically
+            // For example, if 33 was rolled, we would return Entertainer, Farmer, and Fisherman,
+            // not the professions for 32 and 34 (which are also Farmer)
 
             // Subtract 1 from numbers since array is 0-based
-            professionList.add(professionTable[professionBefore - 1]);
-            professionList.add(professionTable[professionRoll - 1]);
-            professionList.add(professionTable[professionAfter -1]);
+            var profession = professionTable[professionRoll - 1];
+
+            var professionIndex = professions.professions().indexOf(profession);
+            var professionBefore = professions.professions().get(professionIndex - 1);
+            var professionAfter = professions.professions().get(professionIndex + 1);
+
+            professionList.add(professionBefore);
+            professionList.add(profession);
+            professionList.add(professionAfter);
         }
         else {
             int reverseRoll = reverseInteger(professionRoll);

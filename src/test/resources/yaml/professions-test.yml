@@ -10,18 +10,18 @@ professions:
     rangeEnd: 39
   - name: "Test4"
     rangeStart: 40
-    rangeEnd: 75
+    rangeEnd: 71
   - name: "Test5"
-    rangeStart: 76
-    rangeEnd: 76
+    rangeStart: 72
+    rangeEnd: 74
   - name: "Test6"
-    rangeStart: 77
-    rangeEnd: 77
+    rangeStart: 75
+    rangeEnd: 79
   - name: "Test7"
-    rangeStart: 78
-    rangeEnd: 78
+    rangeStart: 80
+    rangeEnd: 81
   - name: "Test8"
-    rangeStart: 79
+    rangeStart: 82
     rangeEnd: 89
   - name: "Test9"
     rangeStart: 90
