@@ -13,4 +13,6 @@ public interface CharacterSheetWorker {
     int getEvasionBonus(CharacterCreateRequest request);
 
     FeatureAttributeType getAdvOrDadvByModifier(CharacterCreateRequest request, String modifierStr);
+
+    int getHitPoints(CharacterCreateRequest characterCreateRequest);
 }

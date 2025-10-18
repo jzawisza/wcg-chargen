@@ -4,15 +4,20 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Helper methods for creating character sheets that are used to generate both
@@ -20,10 +25,14 @@ import java.time.format.DateTimeFormatter;
  */
 @Component
 public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
+    private final Logger logger = LoggerFactory.getLogger(DefaultCharacterSheetWorker.class);
+
     @Autowired
     CharClassesService charClassesService;
     @Autowired
     CommonerService commonerService;
+    @Autowired
+    RandomNumberWorker randomNumberWorker;
 
     private static final String SHIELD = "Shield";
 
@@ -171,4 +180,67 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
 
         return featureAttributeType;
     }
+
+    public int getHitPoints(CharacterCreateRequest characterCreateRequest) {
+        var staminaScore = characterCreateRequest.getAttributeValue(AttributeType.STA);
+        if (characterCreateRequest.isCommoner()) {
+            var d4Roll = randomNumberWorker.getIntFromRange(1, 4);
+
+            return d4Roll + 1 + staminaScore;
+        }
+        else {
+            var charType = characterCreateRequest.characterClass();
+            var charClass = charClassesService.getCharClassByType(charType);
+
+            // Base hit points for level 1 character
+            var hitPoints = charClass.level1Hp() + staminaScore;
+            // Add hit points for each level above 1
+            for (int i = 1; i < characterCreateRequest.level(); i++) {
+                hitPoints += randomNumberWorker.getIntFromRange(1, charClass.maxHpAtLevelUp());
+            }
+
+            // Check for features that increase hit points
+            logger.info("Hit points before checking for BONUS_HP features: {}", hitPoints);
+
+            var tier1BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.BONUS_HP,
+                    FeatureAttributeUtil.Tier.I);
+            if (tier1BonusHpFeatureName != null) {
+                hitPoints += getHitPointsForFeature(charClass.features().tier1(), tier1BonusHpFeatureName);
+            }
+
+            var tier2BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    characterCreateRequest.features(),
+                    FeatureAttributeType.BONUS_HP,
+                    FeatureAttributeUtil.Tier.II);
+            if (tier2BonusHpFeatureName != null) {
+                hitPoints += getHitPointsForFeature(charClass.features().tier2(), tier2BonusHpFeatureName);
+            }
+
+            logger.info("Final hit points: {}", hitPoints);
+
+            return hitPoints;
+        }
+    }
+
+    private int getHitPointsForFeature(List<Feature> featureList, String featureName) {
+        var hitPoints = 0;
+        var hitPointsStr = "";
+
+        try {
+            hitPointsStr = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                    featureList, featureName, FeatureAttributeType.BONUS_HP);
+            hitPoints = Integer.parseInt(hitPointsStr);
+        }
+        catch (NumberFormatException e) {
+            logger.error("Error parsing BONUS_HP value {} for feature {}",
+                    hitPointsStr, featureName, e);
+        }
+
+        return hitPoints;
+    }
+
 }

@@ -81,6 +81,10 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.INITIATIVE,
                     initiativeStr);
 
+            var hitPointsStr = String.valueOf(characterSheetWorker.getHitPoints(request));
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.MAX_HIT_POINTS, hitPointsStr);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CURRENT_HIT_POINTS, hitPointsStr);
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());

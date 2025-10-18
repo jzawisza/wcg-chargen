@@ -7,7 +7,6 @@ import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.*;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
@@ -173,68 +172,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
 
         return (evasionBonus > 0) ? String.format("=SUM(%d,B10,%d)", evasion, evasionBonus) :
                 String.format("=SUM(%d,B10)", evasion);
-    }
-
-    private int getHitPoints(CharacterCreateRequest characterCreateRequest) {
-        var staminaScore = characterCreateRequest.getAttributeValue(AttributeType.STA);
-        if (characterCreateRequest.isCommoner()) {
-            var d4Roll = randomNumberWorker.getIntFromRange(1, 4);
-
-            return d4Roll + 1 + staminaScore;
-        }
-        else {
-            var charType = characterCreateRequest.characterClass();
-            var charClass = charClassesService.getCharClassByType(charType);
-
-            // Base hit points for level 1 character
-            var hitPoints = charClass.level1Hp() + staminaScore;
-            // Add hit points for each level above 1
-            for (int i = 1; i < characterCreateRequest.level(); i++) {
-                hitPoints += randomNumberWorker.getIntFromRange(1, charClass.maxHpAtLevelUp());
-            }
-
-            // Check for features that increase hit points
-            logger.info("Hit points before checking for BONUS_HP features: {}", hitPoints);
-
-            var tier1BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
-                    charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.BONUS_HP,
-                    FeatureAttributeUtil.Tier.I);
-            if (tier1BonusHpFeatureName != null) {
-                hitPoints += getHitPointsForFeature(charClass.features().tier1(), tier1BonusHpFeatureName);
-            }
-
-            var tier2BonusHpFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
-                    charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.BONUS_HP,
-                    FeatureAttributeUtil.Tier.II);
-            if (tier2BonusHpFeatureName != null) {
-                hitPoints += getHitPointsForFeature(charClass.features().tier2(), tier2BonusHpFeatureName);
-            }
-
-            logger.info("Final hit points: {}", hitPoints);
-
-            return hitPoints;
-        }
-    }
-
-    private int getHitPointsForFeature(List<Feature> featureList, String featureName) {
-        var hitPoints = 0;
-        var hitPointsStr = "";
-
-        try {
-            hitPointsStr = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
-                    featureList, featureName, FeatureAttributeType.BONUS_HP);
-            hitPoints = Integer.parseInt(hitPointsStr);
-        }
-        catch (NumberFormatException e) {
-            logger.error("Error parsing BONUS_HP value {} for feature {}",
-                    hitPointsStr, featureName, e);
-        }
-
-        return hitPoints;
     }
 
     private List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {
@@ -624,7 +561,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithText("")
                 .build();
 
-        var hitPoints = getHitPoints(characterCreateRequest);
+        var hitPoints = characterSheetWorker.getHitPoints(characterCreateRequest);
         var row5 = getRowBuilder()
                 .addCellWithFormula("=MAX(B10,B13)",
                         characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,

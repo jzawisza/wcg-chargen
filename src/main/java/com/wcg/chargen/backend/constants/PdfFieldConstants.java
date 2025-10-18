@@ -10,4 +10,6 @@ public class PdfFieldConstants {
     public static final String FORTUNE_POINTS = "FortunePoints";
     public static final String EVASION = "Evasion";
     public static final String INITIATIVE = "Initiative";
+    public static final String MAX_HIT_POINTS = "MaxHP";
+    public static final String CURRENT_HIT_POINTS = "CurrentHP";
 }

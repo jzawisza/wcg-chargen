@@ -466,4 +466,35 @@ public class DefaultPdfCharacterCreateServiceTests {
             assertEquals(expectedInitiativeString, actualInitiativeString);
         }
     }
+
+    @Test
+    public void createCharacter_ReturnsExpectedMaxHpAndCurrentHp() throws Exception {
+        // arrange
+        var expectedHitPoints = 10;
+
+        Mockito.when(characterSheetWorker.getHitPoints(any())).thenReturn(expectedHitPoints);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualMaxHpString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.MAX_HIT_POINTS);
+            assertEquals(Integer.toString(expectedHitPoints), actualMaxHpString);
+
+            var actualCurrentHpString = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.CURRENT_HIT_POINTS);
+            assertEquals(Integer.toString(expectedHitPoints), actualCurrentHpString);
+        }
+    }
 }

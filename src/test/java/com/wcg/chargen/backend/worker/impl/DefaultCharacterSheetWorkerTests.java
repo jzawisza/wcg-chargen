@@ -9,6 +9,8 @@ import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.testUtil.CharacterCreateRequestBuilder;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
+import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -31,9 +34,11 @@ public class DefaultCharacterSheetWorkerTests {
     @Autowired
     CharacterSheetWorker characterSheetWorker;
     @MockBean
-    private CharClassesService charClassesService;
+    CharClassesService charClassesService;
     @Autowired
     CommonerService commonerService;
+    @MockBean
+    RandomNumberWorker randomNumberWorker;
 
     private static final String TEST_MODIFIER = "Test Modifier";
 
@@ -398,5 +403,158 @@ public class DefaultCharacterSheetWorkerTests {
 
         // assert
         assertEquals(FeatureAttributeType.DADV, advOrDadv);
+    }
+
+    @ParameterizedTest
+    @MethodSource("commonerHitPointScenarios")
+    public void getHitPoints_ReturnsExpectedResultsForCommonerCharacters(int staValue,
+                                                                         int randomRoll,
+                                                                         String speciesStrength,
+                                                                         String speciesWeakness,
+                                                                         int expectedHitPoints) {
+        // arrange
+        Mockito.when(randomNumberWorker.getIntFromRange(1, 4)).thenReturn(randomRoll);
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength(speciesStrength)
+                .withSpeciesWeakness(speciesWeakness)
+                .build();
+
+        // act
+        var actualHitPoints = characterSheetWorker.getHitPoints(request);
+
+        // assert
+        assertEquals(expectedHitPoints, actualHitPoints);
+    }
+
+    static Stream<Arguments> commonerHitPointScenarios() {
+        // Commoner characters have 1d4 + 1 + STA hit points
+        return Stream.of(
+                Arguments.arguments(1, 1, "INT", "PRS", 3),
+                Arguments.arguments(1, 4, "INT", "PRS", 6),
+                Arguments.arguments(1, 1, "STA", "PRS", 4),
+                Arguments.arguments(1, 4, "STA", "PRS", 7),
+                Arguments.arguments(1, 1, "INT", "STA", 2),
+                Arguments.arguments(1, 4, "INT", "STA", 5)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("classHitPointScenarios")
+    public void getHitPoints_ReturnsExpectedResultsForClassCharacters(int level,
+                                                                      int level1Hp,
+                                                                      int staValue,
+                                                                      int randomRoll,
+                                                                      String speciesStrength,
+                                                                      String speciesWeakness,
+                                                                      int expectedHitPoints) {
+        // arrange
+        var maxHpPerLevel = 4;
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                null,
+                null,
+                level1Hp,
+                maxHpPerLevel,
+                null,
+                null,
+                null,
+                null);
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        // This is only needed for characters level 2 and up: it doesn't apply to level 1 characters
+        Mockito.when(randomNumberWorker.getIntFromRange(1, maxHpPerLevel)).thenReturn(randomRoll);
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(level)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength(speciesStrength)
+                .withSpeciesWeakness(speciesWeakness)
+                .build();
+
+        // act
+        var actualHitPoints = characterSheetWorker.getHitPoints(request);
+
+        // assert
+        assertEquals(expectedHitPoints, actualHitPoints);
+    }
+
+    static Stream<Arguments> classHitPointScenarios() {
+        // Class characters get their level 1 HP plus STA at level 1,
+        // and 1d3 or 1d4 HP per level depending on class
+        return Stream.of(
+                Arguments.arguments(1, 8, 1, 0, "INT", "PRS", 9),
+                Arguments.arguments(1, 8, 1, 0, "STA", "PRS", 10),
+                Arguments.arguments(1, 8, 1, 0, "INT", "STA", 8),
+                Arguments.arguments(7, 8, 1, 1, "INT", "PRS", 15),
+                Arguments.arguments(7, 8, 1, 4, "INT", "PRS", 33),
+                Arguments.arguments(7, 8, 1, 1, "STA", "PRS", 16),
+                Arguments.arguments(7, 8, 1, 4, "STA", "PRS", 34),
+                Arguments.arguments(7, 8, 1, 1, "INT", "STA", 14),
+                Arguments.arguments(7, 8, 1, 4, "INT", "STA", 32)
+        );
+    }
+
+    @Test
+    public void getHitPoints_ReturnsExpectedResultsIfBonusHpFeaturesAreSelected() {
+        // arrange
+        var level1Hp = 8;
+        var maxHpAtLevelUp = 4;
+        var staValue = 1;
+        var bonusTier1HitPoints = 2;
+        var bonusTier2HitPoints = 3;
+        var expectedHitPoints = level1Hp + staValue + bonusTier1HitPoints + bonusTier2HitPoints;
+
+        var bonusHpTier1FeatureName = "Tier I bonus HP test";
+        var bonusHpTier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.BONUS_HP,
+                Integer.toString(bonusTier1HitPoints));
+        var bonusHpTier1Feature = new Feature(bonusHpTier1FeatureName,
+                List.of(bonusHpTier1FeatureAttribute));
+        var bonusHpTier2FeatureName = "Tier II bonus HP test";
+        var bonusHpTier2FeatureAttribute = new FeatureAttribute(FeatureAttributeType.BONUS_HP,
+                Integer.toString(bonusTier2HitPoints));
+        var bonusHpTier2Feature = new Feature(bonusHpTier2FeatureName,
+                List.of(bonusHpTier2FeatureAttribute));
+        var features = new Features(
+                List.of(bonusHpTier1Feature),
+                List.of(bonusHpTier2Feature)
+        );
+
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                level1Hp,
+                maxHpAtLevelUp,
+                List.of(""),
+                null,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap(0, 0, staValue, 0, 0, 0, 0);
+        var featuresRequest = new FeaturesRequest(
+                List.of(bonusHpTier1FeatureName),
+                List.of(bonusHpTier2FeatureName)
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributesMap)
+                .withSpeciesStrength("STR")
+                .withSpeciesWeakness("PER")
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var actualHitPoints = characterSheetWorker.getHitPoints(request);
+
+        // assert
+        assertEquals(expectedHitPoints, actualHitPoints);
     }
 }
