@@ -872,29 +872,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(20, getNumRowsInSheet(sheet));
     }
 
-    @Test
-    public void buildStatsSheet_MysticsWithoutQuickGearHaveUnarmedWeapon() {
-        // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.MYSTIC)
-                .withLevel(1)
-                .withUseQuickGear(false)
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var weaponName = getCellValueFromSheet(sheet, 18, 4);
-        assertEquals("Fists", weaponName.getStringValue());
-        var weaponType = getCellValueFromSheet(sheet, 18, 5);
-        assertEquals("Unarmed", weaponType.getStringValue());
-        var weaponDamage = getCellValueFromSheet(sheet, 18, 7);
-        assertEquals("1d6", weaponDamage.getStringValue());
-    }
-
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void buildStatsSheet_BerzerkerCharactersHaveCorrectDaIfQuickGearIsEnabledTierIAndTierIIFeaturesToBoostDaAreTaken(
@@ -1302,60 +1279,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
         assertEquals(expectedRedColorValue, unarmedDamageCellData.getUserEnteredFormat().getBackgroundColor().getRed());
 
         assertEquals(expectedNote, unarmedDamageCellData.getNote());
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "true, true",
-            "false, true",
-            "true, false",
-            "false, false"
-    })
-    public void buildStatsSheet_UnarmedDamageIsDisplayedCorrectlyIfBoostedByFeatures(
-            boolean tier2FeatureForUnarmedDamage, boolean hasQuickGear) {
-        // arrange
-        var featureName = "Test Feature";
-        var boostedUnarmedDamage = "1d8";
-        var featureAttribute = new FeatureAttribute(FeatureAttributeType.UNARMED_BONUS, boostedUnarmedDamage);
-        var feature = new Feature(featureName, List.of(featureAttribute));
-        var regularUnarmedDamage = "1d6";
-        var unarmedWeapon = new Weapon("Fists", "Unarmed", regularUnarmedDamage);
-        var gear = new Gear(Collections.emptyList(), List.of(unarmedWeapon),0, 0, null);
-
-        var features = tier2FeatureForUnarmedDamage ?
-                new Features(Collections.emptyList(), List.of(feature)) :
-                new Features(List.of(feature), Collections.emptyList());
-        var featuresRequest = tier2FeatureForUnarmedDamage ?
-                new FeaturesRequest(Collections.emptyList(), List.of(featureName)) :
-                new FeaturesRequest(List.of(featureName), Collections.emptyList());
-
-        var charClass = new CharClass(CharType.MYSTIC.toString(),
-                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
-                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
-                TEST_LEVEL_1_HP,
-                TEST_MAX_HP_AT_LEVEL_UP,
-                Collections.emptyList(),
-                gear,
-                null,
-                features);
-
-        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
-
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.MYSTIC)
-                .withLevel(5)
-                .withFeatures(featuresRequest)
-                .withUseQuickGear(hasQuickGear)
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var unarmedDamageCellData = getCellDataFromSheet(sheet, 18, 7);
-        assertNotNull(unarmedDamageCellData.getUserEnteredValue());
-        assertEquals(boostedUnarmedDamage, unarmedDamageCellData.getUserEnteredValue().getStringValue());
     }
 
     @Test

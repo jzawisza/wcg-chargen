@@ -41,6 +41,8 @@ public class DefaultCharacterSheetWorkerTests {
     RandomNumberWorker randomNumberWorker;
 
     private static final String TEST_MODIFIER = "Test Modifier";
+    private static final int TEST_LEVEL_1_HP = 8;
+    private static final int TEST_MAX_HP_AT_LEVEL_UP = 4;
 
     @Test
     public void generateName_ReturnsExpectedNameForClassCharacters() {
@@ -501,12 +503,10 @@ public class DefaultCharacterSheetWorkerTests {
     @Test
     public void getHitPoints_ReturnsExpectedResultsIfBonusHpFeaturesAreSelected() {
         // arrange
-        var level1Hp = 8;
-        var maxHpAtLevelUp = 4;
         var staValue = 1;
         var bonusTier1HitPoints = 2;
         var bonusTier2HitPoints = 3;
-        var expectedHitPoints = level1Hp + staValue + bonusTier1HitPoints + bonusTier2HitPoints;
+        var expectedHitPoints = TEST_LEVEL_1_HP + staValue + bonusTier1HitPoints + bonusTier2HitPoints;
 
         var bonusHpTier1FeatureName = "Tier I bonus HP test";
         var bonusHpTier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.BONUS_HP,
@@ -526,8 +526,8 @@ public class DefaultCharacterSheetWorkerTests {
         var charClass = new CharClass(CharType.RANGER.toString(),
                 Arrays.asList(1, 2, 3, 4, 5, 6, 7),
                 Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
-                level1Hp,
-                maxHpAtLevelUp,
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
                 List.of(""),
                 null,
                 null,
@@ -556,5 +556,154 @@ public class DefaultCharacterSheetWorkerTests {
 
         // assert
         assertEquals(expectedHitPoints, actualHitPoints);
+    }
+
+    @Test
+    public void getWeaponMethods_ReturnEmptyStringForCommonerCharacters() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var weaponName = characterSheetWorker.getWeaponName(request, 0);
+        var weaponType = characterSheetWorker.getWeaponType(request, 0);
+        var weaponDamage = characterSheetWorker.getWeaponDamage(request, 0);
+
+        // assert
+        assertEquals("", weaponName);
+        assertEquals("", weaponType);
+        assertEquals("", weaponDamage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "BERZERKER, '', '', ''",
+            "MYSTIC, 'Fists', 'Unarmed', '1d6'"
+    })
+    public void getWeaponMethods_ReturnExpectedValueIfQuickGearIsNotSelected(CharType charType,
+                                                                             String expectedWeaponName,
+                                                                             String expectedWeaponType,
+                                                                             String expectedWeaponDamage) {
+        // arrange
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                null,
+                null,
+                new Features(Collections.emptyList(), Collections.emptyList()));
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(charType)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var actualWeaponName = characterSheetWorker.getWeaponName(request, 0);
+        var actualWeaponType = characterSheetWorker.getWeaponType(request, 0);
+        var actualWeaponDamage = characterSheetWorker.getWeaponDamage(request, 0);
+
+        // assert
+        assertEquals(expectedWeaponName, actualWeaponName);
+        assertEquals(expectedWeaponType, actualWeaponType);
+        assertEquals(expectedWeaponDamage, actualWeaponDamage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "0, 'Weapon Name', 'Weapon Type', '1d8'",
+            "1, '', '', ''"
+    })
+    public void getWeaponMethods_ReturnExpectedValuesIfQuickGearIsSelected(int index,
+                                                                           String expectedWeaponName,
+                                                                           String expectedWeaponType,
+                                                                           String expectedWeaponDamage) {
+        // arrange
+        var weapon = new Weapon(expectedWeaponName, expectedWeaponType, expectedWeaponDamage);
+        // We only have a single weapon in the list, so we expect empty values for index 1 and higher
+        var gear = new Gear(null, List.of(weapon), 0, 0, null);
+        var charClass = new CharClass(CharType.MAGE.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var actualWeaponName = characterSheetWorker.getWeaponName(request, index);
+        var actualWeaponType = characterSheetWorker.getWeaponType(request, index);
+        var actualWeaponDamage = characterSheetWorker.getWeaponDamage(request, index);
+
+        // assert
+        assertEquals(expectedWeaponName, actualWeaponName);
+        assertEquals(expectedWeaponType, actualWeaponType);
+        assertEquals(expectedWeaponDamage, actualWeaponDamage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "true, true",
+            "false, true",
+            "true, false",
+            "false, false"
+    })
+    public void getWeaponDamage_ReturnsExpectedValuesIfDamageIsBoostedByFeatures(
+            boolean tier2FeatureForUnarmedDamage, boolean hasQuickGear) {
+        // arrange
+        var featureName = "Test Feature";
+        var boostedUnarmedDamage = "1d8";
+        var featureAttribute = new FeatureAttribute(FeatureAttributeType.UNARMED_BONUS, boostedUnarmedDamage);
+        var feature = new Feature(featureName, List.of(featureAttribute));
+        var regularUnarmedDamage = "1d6";
+        var unarmedWeapon = new Weapon("Fists", "Unarmed", regularUnarmedDamage);
+        var gear = new Gear(Collections.emptyList(), List.of(unarmedWeapon),0, 0, null);
+
+        var features = tier2FeatureForUnarmedDamage ?
+                new Features(Collections.emptyList(), List.of(feature)) :
+                new Features(List.of(feature), Collections.emptyList());
+        var featuresRequest = tier2FeatureForUnarmedDamage ?
+                new FeaturesRequest(Collections.emptyList(), List.of(featureName)) :
+                new FeaturesRequest(List.of(featureName), Collections.emptyList());
+
+        var charClass = new CharClass(CharType.MYSTIC.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                Collections.emptyList(),
+                gear,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .withUseQuickGear(hasQuickGear)
+                .build();
+
+        // act
+        var actualWeaponDamage = characterSheetWorker.getWeaponDamage(request, 0);
+
+        // assert
+        assertEquals(boostedUnarmedDamage, actualWeaponDamage);
     }
 }

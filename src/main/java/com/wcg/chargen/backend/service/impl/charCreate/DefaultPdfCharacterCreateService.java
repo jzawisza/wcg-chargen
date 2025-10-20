@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 public class DefaultPdfCharacterCreateService implements PdfCharacterCreateService {
     private static final String PDF_FILE_NAME = "charSheet.pdf";
+    private static final int NUM_WEAPONS_ROWS = 3;
 
     private final Logger logger = LoggerFactory.getLogger(DefaultPdfCharacterCreateService.class);
 
@@ -80,6 +81,30 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             initiativeStr += getAdvOrDadvModifierString(request, CharacterSheetConstants.INITIATIVE);
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.INITIATIVE,
                     initiativeStr);
+
+            for (var i = 0; i < NUM_WEAPONS_ROWS; i++) {
+                // The field names in the PDF are 1-based, not 0-based
+                var weaponPdfIndex = i + 1;
+
+                var weaponName = characterSheetWorker.getWeaponName(request, i);
+                var weaponType = characterSheetWorker.getWeaponType(request, i);
+                var weaponDamage = characterSheetWorker.getWeaponDamage(request, i);
+                // This will never be null when processing actual requests, but could be
+                // null in unit test scenarios
+                if (weaponDamage != null) {
+                    weaponDamage += getAdvOrDadvModifierString(request, weaponType);
+                }
+
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.WEAPON + weaponPdfIndex,
+                        weaponName);
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.WEAPON_TYPE + weaponPdfIndex,
+                        weaponType);
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.WEAPON_DAMAGE + weaponPdfIndex,
+                        weaponDamage);
+            }
 
             var hitPointsStr = String.valueOf(characterSheetWorker.getHitPoints(request));
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.MAX_HIT_POINTS, hitPointsStr);

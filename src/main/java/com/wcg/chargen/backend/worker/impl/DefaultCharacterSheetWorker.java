@@ -1,6 +1,7 @@
 package com.wcg.chargen.backend.worker.impl;
 
 import com.wcg.chargen.backend.enums.AttributeType;
+import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
@@ -10,6 +11,7 @@ import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,8 @@ import java.util.List;
  */
 @Component
 public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
+    private static final String UNARMED_WEAPON_TYPE = "Unarmed";
+
     private final Logger logger = LoggerFactory.getLogger(DefaultCharacterSheetWorker.class);
 
     @Autowired
@@ -243,4 +247,113 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
         return hitPoints;
     }
 
+    public String getWeaponName(CharacterCreateRequest request, int index) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        if (!request.useQuickGear()) {
+            if (request.characterClass() == CharType.MYSTIC && index == 0) {
+                // Mystics always have an unarmed attack, even without quick gear
+                return "Fists";
+            }
+
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.weapons().size()) ? gear.weapons().get(index).name() : "";
+    }
+
+    public String getWeaponType(CharacterCreateRequest request, int index) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        if (!request.useQuickGear()) {
+            if (request.characterClass() == CharType.MYSTIC && index == 0) {
+                // Mystics always have an unarmed attack, even without quick gear
+                return UNARMED_WEAPON_TYPE;
+            }
+
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.weapons().size()) ? gear.weapons().get(index).type() : "";
+    }
+
+    public String getWeaponDamage(CharacterCreateRequest request, int index) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        var mysticWithoutQuickGear = false;
+        if (!request.useQuickGear()) {
+            if (request.characterClass() == CharType.MYSTIC && index == 0) {
+                // Mystics always have an unarmed attack, even without quick gear
+                mysticWithoutQuickGear = true;
+            } else {
+                return "";
+            }
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var baseDamage = "";
+        if (mysticWithoutQuickGear) {
+            baseDamage = "1d6";
+        }
+        else {
+            var gear = charClass.gear();
+
+            if (index >= gear.weapons().size()) {
+                return "";
+            }
+
+            baseDamage = gear.weapons().get(index).damage();
+        }
+
+        // Check for features that boost unarmed damage, and apply them if we're generating
+        // the damage for unarmed attacks
+        String improvedDamage = null;
+        var weaponType = getWeaponType(request, index);
+
+        if (UNARMED_WEAPON_TYPE.equals(weaponType)) {
+            var tier1UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    request.features(),
+                    FeatureAttributeType.UNARMED_BONUS,
+                    FeatureAttributeUtil.Tier.I);
+            if (tier1UnarmedBonusFeatureName != null) {
+                var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                        charClass.features().tier1(),
+                        tier1UnarmedBonusFeatureName,
+                        FeatureAttributeType.UNARMED_BONUS);
+                if (!StringUtils.isBlank(unarmedBonusModifier)) {
+                    improvedDamage = unarmedBonusModifier;
+                }
+            }
+
+            var tier2UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                    charClass.features(),
+                    request.features(),
+                    FeatureAttributeType.UNARMED_BONUS,
+                    FeatureAttributeUtil.Tier.II);
+            if (tier2UnarmedBonusFeatureName != null) {
+                var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                        charClass.features().tier2(),
+                        tier2UnarmedBonusFeatureName,
+                        FeatureAttributeType.UNARMED_BONUS);
+                if (!StringUtils.isBlank(unarmedBonusModifier)) {
+                    improvedDamage = unarmedBonusModifier;
+                }
+            }
+        }
+
+        return (improvedDamage != null) ? improvedDamage : baseDamage;
+    }
 }

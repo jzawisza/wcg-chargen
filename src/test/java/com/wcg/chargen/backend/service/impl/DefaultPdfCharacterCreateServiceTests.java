@@ -19,7 +19,6 @@ import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mockito;
@@ -29,7 +28,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -495,6 +493,112 @@ public class DefaultPdfCharacterCreateServiceTests {
             var actualCurrentHpString = PdfUtil.getFieldValue(pdfDocument,
                     PdfFieldConstants.CURRENT_HIT_POINTS);
             assertEquals(Integer.toString(expectedHitPoints), actualCurrentHpString);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedWeaponInfo() throws Exception {
+        // arrange
+        var weaponIndex = 0;
+        var expectedWeaponName = "Sword";
+        var expectedWeaponType = "Melee";
+        var expectedWeaponDamage = "1d8";
+
+        Mockito.when(characterSheetWorker.getWeaponName(any(), eq(weaponIndex)))
+                .thenReturn(expectedWeaponName);
+        Mockito.when(characterSheetWorker.getWeaponType(any(), eq(weaponIndex)))
+                .thenReturn(expectedWeaponType);
+        Mockito.when(characterSheetWorker.getWeaponDamage(any(), eq(weaponIndex)))
+                .thenReturn(expectedWeaponDamage);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.WARRIOR)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualWeaponName = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON + (weaponIndex + 1));
+            assertEquals(expectedWeaponName, actualWeaponName);
+
+            var actualWeaponType = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_TYPE + (weaponIndex + 1));
+            assertEquals(expectedWeaponType, actualWeaponType);
+
+            var actualWeaponDamage = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_DAMAGE + (weaponIndex + 1));
+            assertEquals(expectedWeaponDamage, actualWeaponDamage);
+
+            // Remaining weapons rows should be empty
+            actualWeaponName = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON + (weaponIndex + 2));
+            assertEquals("", actualWeaponName);
+
+            actualWeaponType = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_TYPE + (weaponIndex + 2));
+            assertEquals("", actualWeaponType);
+
+            actualWeaponDamage = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_DAMAGE + (weaponIndex + 2));
+            assertEquals("", actualWeaponDamage);
+
+            actualWeaponName = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON + (weaponIndex + 3));
+            assertEquals("", actualWeaponName);
+
+            actualWeaponType = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_TYPE + (weaponIndex + 3));
+            assertEquals("", actualWeaponType);
+
+            actualWeaponDamage = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_DAMAGE + (weaponIndex + 3));
+            assertEquals("", actualWeaponDamage);
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
+    public void createCharacter_DisplaysAdvOrDadvCorrectlyForWeaponDamage(
+            FeatureAttributeType featureAttributeType) throws Exception {
+        // arrange
+        var weaponIndex = 0;
+        var weaponType = "Unarmed";
+        var weaponDamage = "1d6";
+        var expectedCharSheetWeaponDamage = weaponDamage + " (" + featureAttributeType.name() + ")";
+
+        Mockito.when(characterSheetWorker.getWeaponType(any(), eq(weaponIndex)))
+                .thenReturn(weaponType);
+        Mockito.when(characterSheetWorker.getWeaponDamage(any(), eq(weaponIndex)))
+                .thenReturn(weaponDamage);
+
+        Mockito.when(characterSheetWorker.getAdvOrDadvByModifier(any(), eq(weaponType)))
+                .thenReturn(featureAttributeType);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualWeaponDamage = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_DAMAGE + (weaponIndex + 1));
+            assertEquals(expectedCharSheetWeaponDamage, actualWeaponDamage);
         }
     }
 }

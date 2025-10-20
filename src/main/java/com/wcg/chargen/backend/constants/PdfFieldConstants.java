@@ -12,4 +12,8 @@ public class PdfFieldConstants {
     public static final String INITIATIVE = "Initiative";
     public static final String MAX_HIT_POINTS = "MaxHP";
     public static final String CURRENT_HIT_POINTS = "CurrentHP";
+    public static final String WEAPON = "Weapon";
+    public static final String WEAPON_TYPE = "WeaponType";
+    public static final String WEAPON_ATTACK = "WeaponAttack";
+    public static final String WEAPON_DAMAGE = "WeaponDamage";
 }

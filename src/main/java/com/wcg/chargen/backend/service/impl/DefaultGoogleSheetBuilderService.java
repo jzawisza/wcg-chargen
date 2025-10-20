@@ -51,7 +51,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     private static final int NUM_DEFAULT_GEAR_ROWS = 10;
     private static final int NUM_EXTRA_GEAR_ROWS = 6;
     private static final int NUM_DEFAULT_SKILL_ROWS = 7;
-    private static final String UNARMED_WEAPON_TYPE = "Unarmed";
 
     private static Sheet buildSheetWithTitle(String title)
     {
@@ -391,116 +390,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         }
     }
 
-    private String getWeaponName(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner()) {
-            return "";
-        }
-
-        if (!characterCreateRequest.useQuickGear()) {
-            if (characterCreateRequest.characterClass() == CharType.MYSTIC && index == 0) {
-                // Mystics always have an unarmed attack, even without quick gear
-                return "Fists";
-            }
-
-            return "";
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var gear = charClass.gear();
-
-        return (index < gear.weapons().size()) ? gear.weapons().get(index).name() : "";
-    }
-
-    private String getWeaponType(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner()) {
-            return "";
-        }
-
-        if (!characterCreateRequest.useQuickGear()) {
-            if (characterCreateRequest.characterClass() == CharType.MYSTIC && index == 0) {
-                // Mystics always have an unarmed attack, even without quick gear
-                return UNARMED_WEAPON_TYPE;
-            }
-
-            return "";
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var gear = charClass.gear();
-
-        return (index < gear.weapons().size()) ? gear.weapons().get(index).type() : "";
-    }
-
-    private String getWeaponDamage(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner()) {
-            return "";
-        }
-
-        var mysticWithoutQuickGear = false;
-        if (!characterCreateRequest.useQuickGear()) {
-            if (characterCreateRequest.characterClass() == CharType.MYSTIC && index == 0) {
-                // Mystics always have an unarmed attack, even without quick gear
-                mysticWithoutQuickGear = true;
-            } else {
-                return "";
-            }
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var baseDamage = "";
-        if (mysticWithoutQuickGear) {
-            baseDamage = "1d6";
-        }
-        else {
-            var gear = charClass.gear();
-
-            if (index >= gear.weapons().size()) {
-                return "";
-            }
-
-            baseDamage = gear.weapons().get(index).damage();
-        }
-
-        // Check for features that boost unarmed damage, and apply them if we're generating
-        // the damage for unarmed attacks
-        String improvedDamage = null;
-        var weaponType = getWeaponType(characterCreateRequest, index);
-
-        if (UNARMED_WEAPON_TYPE.equals(weaponType)) {
-            var tier1UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
-                    charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.UNARMED_BONUS,
-                    FeatureAttributeUtil.Tier.I);
-            if (tier1UnarmedBonusFeatureName != null) {
-                var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
-                        charClass.features().tier1(),
-                        tier1UnarmedBonusFeatureName,
-                        FeatureAttributeType.UNARMED_BONUS);
-                if (!StringUtils.isBlank(unarmedBonusModifier)) {
-                    improvedDamage = unarmedBonusModifier;
-                }
-            }
-
-            var tier2UnarmedBonusFeatureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
-                    charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.UNARMED_BONUS,
-                    FeatureAttributeUtil.Tier.II);
-            if (tier2UnarmedBonusFeatureName != null) {
-                var unarmedBonusModifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
-                        charClass.features().tier2(),
-                        tier2UnarmedBonusFeatureName,
-                        FeatureAttributeType.UNARMED_BONUS);
-                if (!StringUtils.isBlank(unarmedBonusModifier)) {
-                    improvedDamage = unarmedBonusModifier;
-                }
-            }
-        }
-
-        return (improvedDamage != null) ? improvedDamage : baseDamage;
-    }
-
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -813,17 +702,17 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         // Add rows for armor and weapons
         var numArmorAndWeaponsRows = getNumArmorAndWeaponsRows(characterCreateRequest);
         for (var k = 0; k < numArmorAndWeaponsRows; k++) {
-            var weaponType = getWeaponType(characterCreateRequest, k);
+            var weaponType = characterSheetWorker.getWeaponType(characterCreateRequest, k);
 
             var armorWeaponRow = getRowBuilder()
                     .addCellWithText(getArmorName(characterCreateRequest, k))
                     .addCellWithText(getArmorType(characterCreateRequest, k))
                     .addCellWithText(getArmorDa(characterCreateRequest, k))
                     .addEmptyCell()
-                    .addCellWithText(getWeaponName(characterCreateRequest, k))
+                    .addCellWithText(characterSheetWorker.getWeaponName(characterCreateRequest, k))
                     .addCellWithText(weaponType)
                     .addCellWithText("")
-                    .addCellWithText(getWeaponDamage(characterCreateRequest, k),
+                    .addCellWithText(characterSheetWorker.getWeaponDamage(characterCreateRequest, k),
                             characterSheetWorker.getAdvOrDadvByModifier(characterCreateRequest,
                                     weaponType))
                     .build();

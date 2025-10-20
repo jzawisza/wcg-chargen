@@ -14,5 +14,11 @@ public interface CharacterSheetWorker {
 
     FeatureAttributeType getAdvOrDadvByModifier(CharacterCreateRequest request, String modifierStr);
 
-    int getHitPoints(CharacterCreateRequest characterCreateRequest);
+    int getHitPoints(CharacterCreateRequest request);
+
+    String getWeaponName(CharacterCreateRequest request, int index);
+
+    String getWeaponType(CharacterCreateRequest request, int index);
+
+    String getWeaponDamage(CharacterCreateRequest request, int index);
 }
