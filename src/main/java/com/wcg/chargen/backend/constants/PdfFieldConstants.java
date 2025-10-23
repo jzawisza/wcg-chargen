@@ -16,4 +16,8 @@ public class PdfFieldConstants {
     public static final String WEAPON_TYPE = "WeaponType";
     public static final String WEAPON_ATTACK = "WeaponAttack";
     public static final String WEAPON_DAMAGE = "WeaponDamage";
+    public static final String ARMOR_TYPE = "ArmorType";
+    public static final String ARMOR_STYLE = "ArmorStyle";
+    public static final String DAMAGE_ABSORPTION = "DA";
+    public static final String OFF_HAND_ITEM = "OffHandItem";
 }

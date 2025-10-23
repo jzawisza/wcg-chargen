@@ -38,7 +38,7 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
     @Autowired
     RandomNumberWorker randomNumberWorker;
 
-    private static final String SHIELD = "Shield";
+    public static final String SHIELD = "Shield";
 
     /**
      * Generate a name for the character sheet, i.e. the Google Sheets title or PDF file name.
@@ -355,5 +355,83 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
         }
 
         return (improvedDamage != null) ? improvedDamage : baseDamage;
+    }
+
+    public String getArmorName(CharacterCreateRequest request, int index) {
+        if (request.isCommoner() || !request.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.armor().size()) ? gear.armor().get(index).name() : "";
+    }
+
+    public String getArmorType(CharacterCreateRequest request, int index) {
+        if (request.isCommoner() || !request.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var gear = charClass.gear();
+
+        return (index < gear.armor().size()) ? gear.armor().get(index).type() : "";
+    }
+
+    public String getArmorDa(CharacterCreateRequest request, int index) {
+        // If mystics take the feature that gives them DA_PLUS_1, it applies regardless of whether
+        // they have armor, so it'll apply even if they don't use quick gear
+        if (request.isCommoner() ||
+                (request.characterClass() != CharType.MYSTIC && !request.useQuickGear())) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var gear = charClass.gear();
+
+        if (index >= gear.armor().size()) {
+            return "";
+        }
+
+        var isMysticWithoutQuickGear = request.characterClass() == CharType.MYSTIC &&
+                !request.useQuickGear();
+        if (isMysticWithoutQuickGear) {
+            logger.info("Getting armor DA for mystic without quick gear; feature for DA boost will be searched for");
+        }
+
+        var baseDaStr = isMysticWithoutQuickGear ? "0" : gear.armor().get(index).da();
+        logger.info("Base DA before checking for DA_PLUS_1 features: {}", baseDaStr);
+
+        try {
+            var totalDa = Integer.parseInt(baseDaStr);
+
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    request.features(),
+                    FeatureAttributeType.DA_PLUS_1,
+                    FeatureAttributeUtil.Tier.I) != null) {
+                totalDa++;
+            }
+
+            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                    request.features(),
+                    FeatureAttributeType.DA_PLUS_1,
+                    FeatureAttributeUtil.Tier.II) != null) {
+                totalDa++;
+            }
+
+            if (isMysticWithoutQuickGear && totalDa == 0) {
+                // If the mystic has no quick gear and didn't take the DA_PLUS_1 feature,
+                // leave the DA as the empty string
+                return "";
+            }
+
+            return String.valueOf(totalDa);
+        }
+        catch (Exception e) {
+            logger.warn("Error searching for DA_PLUS_1 features: returning unmodified base DA", e);
+
+            return baseDaStr;
+        }
     }
 }

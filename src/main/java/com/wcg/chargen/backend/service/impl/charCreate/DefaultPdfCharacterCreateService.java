@@ -5,11 +5,13 @@ import com.wcg.chargen.backend.constants.PdfFieldConstants;
 import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.PdfCharacterCreateStatus;
+import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
 import com.wcg.chargen.backend.service.SpeciesService;
 import com.wcg.chargen.backend.util.PdfUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
+import com.wcg.chargen.backend.worker.impl.DefaultCharacterSheetWorker;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.slf4j.Logger;
@@ -37,6 +39,8 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
     SpeciesService speciesService;
     @Autowired
     CharacterSheetWorker characterSheetWorker;
+    @Autowired
+    CharClassesService charClassesService;
 
     @Override
     public PdfCharacterCreateStatus createCharacter(CharacterCreateRequest request) {
@@ -105,6 +109,15 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
                         PdfFieldConstants.WEAPON_DAMAGE + weaponPdfIndex,
                         weaponDamage);
             }
+
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.ARMOR_TYPE,
+                    characterSheetWorker.getArmorType(request, 0));
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.ARMOR_STYLE,
+                    characterSheetWorker.getArmorName(request, 0));
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.DAMAGE_ABSORPTION,
+                    characterSheetWorker.getArmorDa(request, 0));
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.OFF_HAND_ITEM,
+                    getOffHandItem(request));
 
             var hitPointsStr = String.valueOf(characterSheetWorker.getHitPoints(request));
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.MAX_HIT_POINTS, hitPointsStr);
@@ -178,5 +191,25 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             case DADV -> " (DADV)";
             default -> "";
         };
+    }
+
+    private String getOffHandItem(CharacterCreateRequest request) {
+        if (request.isCommoner() || !request.useQuickGear()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var armorList = charClass.gear().armor();
+        // We won't have an off-hand item unless there are at least two pieces of armor
+        if (armorList.size() < 2) {
+            return "";
+        }
+
+        var armorType = armorList.get(1).type();
+        if (DefaultCharacterSheetWorker.SHIELD.equals(armorType)) {
+            return armorList.get(1).name();
+        }
+
+        return "";
     }
 }

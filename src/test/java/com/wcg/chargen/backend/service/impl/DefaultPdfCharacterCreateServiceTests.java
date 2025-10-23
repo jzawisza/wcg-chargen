@@ -5,9 +5,8 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
-import com.wcg.chargen.backend.model.CharacterCreateRequest;
-import com.wcg.chargen.backend.model.CharacterCreateStatus;
-import com.wcg.chargen.backend.model.Species;
+import com.wcg.chargen.backend.model.*;
+import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CharacterCreateRequestValidatorService;
 import com.wcg.chargen.backend.service.PdfCharacterCreateService;
 import com.wcg.chargen.backend.service.SpeciesService;
@@ -43,6 +42,8 @@ public class DefaultPdfCharacterCreateServiceTests {
     private SpeciesService speciesService;
     @MockBean
     CharacterSheetWorker characterSheetWorker;
+    @MockBean
+    CharClassesService charClassesService;
 
     private static final String CHARACTER_NAME = "SomeName";
     private static final int CHARACTER_LEVEL = 1;
@@ -599,6 +600,172 @@ public class DefaultPdfCharacterCreateServiceTests {
             var actualWeaponDamage = PdfUtil.getFieldValue(pdfDocument,
                     PdfFieldConstants.WEAPON_DAMAGE + (weaponIndex + 1));
             assertEquals(expectedCharSheetWeaponDamage, actualWeaponDamage);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedArmorInfo() throws Exception {
+        // arrange
+        var expectedArmorName = "Leather";
+        var expectedArmorType = "Light";
+        var expectedArmorDa = "3";
+
+        Mockito.when(characterSheetWorker.getArmorName(any(), eq(0))).thenReturn(expectedArmorName);
+        Mockito.when(characterSheetWorker.getArmorType(any(), eq(0))).thenReturn(expectedArmorType);
+        Mockito.when(characterSheetWorker.getArmorDa(any(), eq(0))).thenReturn(expectedArmorDa);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.MYSTIC)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualArmorName = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.ARMOR_STYLE);
+            assertEquals(expectedArmorName, actualArmorName);
+
+            var actualArmorType = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.ARMOR_TYPE);
+            assertEquals(expectedArmorType, actualArmorType);
+
+            var actualArmorDa = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.DAMAGE_ABSORPTION);
+            assertEquals(expectedArmorDa, actualArmorDa);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForOffHandItemForCommonerCharacters() throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(0)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualOffHandItem = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.OFF_HAND_ITEM);
+            assertEquals("", actualOffHandItem);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForOffHandItemForCharactersWithoutQuickGear()
+            throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualOffHandItem = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.OFF_HAND_ITEM);
+            assertEquals("", actualOffHandItem);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForOffHandItemForCharactersWithOnePieceOfAmor()
+            throws Exception {
+        // arrange
+        var armor = new Armor("Leather", "Light", "3");
+        var gear = new Gear(List.of(armor), null, 0, 0, null);
+        var charClass = new CharClass(CharType.SKALD.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualOffHandItem = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.OFF_HAND_ITEM);
+            assertEquals("", actualOffHandItem);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedOffHandItemForCharactersWithShieldAsSecondPieceOfArmor()
+            throws Exception {
+        // arrange
+        var expectedOffHandItem = "Hoplite Shield";
+        var armor = new Armor("Leather", "Light", "3");
+        var shield = new Armor(expectedOffHandItem, "Shield", "All from one hit");
+        var gear = new Gear(List.of(armor, shield), null, 0, 0, null);
+        var charClass = new CharClass(CharType.SKALD.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualOffHandItem = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.OFF_HAND_ITEM);
+            assertEquals(expectedOffHandItem, actualOffHandItem);
         }
     }
 }

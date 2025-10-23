@@ -312,84 +312,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return Math.max(gear.armor().size(), gear.weapons().size());
     }
 
-    private String getArmorName(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
-            return "";
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var gear = charClass.gear();
-
-        return (index < gear.armor().size()) ? gear.armor().get(index).name() : "";
-    }
-
-    private String getArmorType(CharacterCreateRequest characterCreateRequest, int index) {
-        if (characterCreateRequest.isCommoner() || !characterCreateRequest.useQuickGear()) {
-            return "";
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var gear = charClass.gear();
-
-        return (index < gear.armor().size()) ? gear.armor().get(index).type() : "";
-    }
-
-    private String getArmorDa(CharacterCreateRequest characterCreateRequest, int index) {
-        // If mystics take the feature that gives them DA_PLUS_1, it applies regardless of whether
-        // they have armor, so it'll apply even if they don't use quick gear
-        if (characterCreateRequest.isCommoner() ||
-                (characterCreateRequest.characterClass() != CharType.MYSTIC && !characterCreateRequest.useQuickGear())) {
-            return "";
-        }
-
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        var gear = charClass.gear();
-
-        if (index >= gear.armor().size()) {
-            return "";
-        }
-
-        var isMysticWithoutQuickGear = characterCreateRequest.characterClass() == CharType.MYSTIC &&
-                !characterCreateRequest.useQuickGear();
-        if (isMysticWithoutQuickGear) {
-            logger.info("Getting armor DA for mystic without quick gear; feature for DA boost will be searched for");
-        }
-
-        var baseDaStr = isMysticWithoutQuickGear ? "0" : gear.armor().get(index).da();
-        logger.info("Base DA before checking for DA_PLUS_1 features: {}", baseDaStr);
-
-        try {
-            var totalDa = Integer.parseInt(baseDaStr);
-
-            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.DA_PLUS_1,
-                    FeatureAttributeUtil.Tier.I) != null) {
-                totalDa++;
-            }
-
-            if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                    characterCreateRequest.features(),
-                    FeatureAttributeType.DA_PLUS_1,
-                    FeatureAttributeUtil.Tier.II) != null) {
-                totalDa++;
-            }
-
-            if (isMysticWithoutQuickGear && totalDa == 0) {
-                // If the mystic has no quick gear and didn't take the DA_PLUS_1 feature,
-                // leave the DA as the empty string
-                return "";
-            }
-
-            return String.valueOf(totalDa);
-        }
-        catch (Exception e) {
-            logger.warn("Error searching for DA_PLUS_1 features: returning unmodified base DA", e);
-
-            return baseDaStr;
-        }
-    }
-
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
@@ -705,9 +627,9 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
             var weaponType = characterSheetWorker.getWeaponType(characterCreateRequest, k);
 
             var armorWeaponRow = getRowBuilder()
-                    .addCellWithText(getArmorName(characterCreateRequest, k))
-                    .addCellWithText(getArmorType(characterCreateRequest, k))
-                    .addCellWithText(getArmorDa(characterCreateRequest, k))
+                    .addCellWithText(characterSheetWorker.getArmorName(characterCreateRequest, k))
+                    .addCellWithText(characterSheetWorker.getArmorType(characterCreateRequest, k))
+                    .addCellWithText(characterSheetWorker.getArmorDa(characterCreateRequest, k))
                     .addEmptyCell()
                     .addCellWithText(characterSheetWorker.getWeaponName(characterCreateRequest, k))
                     .addCellWithText(weaponType)

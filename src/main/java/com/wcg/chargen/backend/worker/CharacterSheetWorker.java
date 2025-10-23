@@ -21,4 +21,10 @@ public interface CharacterSheetWorker {
     String getWeaponType(CharacterCreateRequest request, int index);
 
     String getWeaponDamage(CharacterCreateRequest request, int index);
+
+    String getArmorName(CharacterCreateRequest request, int index);
+
+    String getArmorType(CharacterCreateRequest request, int index);
+
+    String getArmorDa(CharacterCreateRequest request, int index);
 }

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -705,5 +706,171 @@ public class DefaultCharacterSheetWorkerTests {
 
         // assert
         assertEquals(boostedUnarmedDamage, actualWeaponDamage);
+    }
+
+    @Test
+    public void getArmorMethods_ReturnEmptyStringForCommonerCharacters() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var armorName = characterSheetWorker.getArmorName(request, 0);
+        var armorType = characterSheetWorker.getArmorType(request, 0);
+        var armorDa = characterSheetWorker.getArmorDa(request, 0);
+
+        // assert
+        assertEquals("", armorName);
+        assertEquals("", armorType);
+        assertEquals("", armorDa);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CharType.class, names = {"BERZERKER", "MYSTIC"})
+    public void getArmorMethods_ReturnEmptyStringIfQuickGearIsNotSelected(CharType charType) {
+        // arrange
+        var gear = new Gear(Collections.emptyList(), null, 0, 0, null);
+        var charClass = new CharClass(charType.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                new Features(Collections.emptyList(), Collections.emptyList()));
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(charType)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var actualArmorName = characterSheetWorker.getArmorName(request, 0);
+        var actualArmorType = characterSheetWorker.getArmorType(request, 0);
+        var actualArmorDa = characterSheetWorker.getArmorDa(request, 0);
+
+        // assert
+        assertEquals("", actualArmorName);
+        assertEquals("", actualArmorType);
+        assertEquals("", actualArmorDa);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "0, 'Leather Armor', 'Light', '3'",
+            "1, '', '', ''"
+    })
+    public void getArmorMethods_ReturnExpectedValuesIfQuickGearIsSelected(int index,
+                                                                          String expectedArmorName,
+                                                                          String expectedArmorType,
+                                                                          String expectedArmorDa) {
+        // arrange
+        var armor = new Armor(expectedArmorName, expectedArmorType, expectedArmorDa);
+        var gear = new Gear(List.of(armor), null, 0, 0, null);
+        var charClass = new CharClass(CharType.MAGE.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                new Features(Collections.emptyList(), Collections.emptyList()));
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.MAGE)
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var actualArmorName = characterSheetWorker.getArmorName(request, index);
+        var actualArmorType = characterSheetWorker.getArmorType(request, index);
+        var actualArmorDa = characterSheetWorker.getArmorDa(request, index);
+
+        // assert
+        assertEquals(expectedArmorName, actualArmorName);
+        assertEquals(expectedArmorType, actualArmorType);
+        assertEquals(expectedArmorDa, actualArmorDa);
+    }
+
+    @ParameterizedTest
+    @MethodSource("armorDaBoostScenarios")
+    public void getArmorDa_ReturnsExpectedValueIfDaIsBoostedByFeatures(CharType charType,
+                                                                       boolean useQuickGear,
+                                                                       int baseDa,
+                                                                       boolean useTier1Feature,
+                                                                       boolean useTier2Feature,
+                                                                       String expectedArmorDa) {
+        // arrange
+        var baseDaStr = Integer.toString(baseDa);
+
+        var tier1FeatureName = "Tier I DA_PLUS_1";
+        var tier1FeatureAttribute = new FeatureAttribute(FeatureAttributeType.DA_PLUS_1, "NO_HEAVY_ARMOR");
+        var tier2FeatureName = "Tier II DA_PLUS_1";
+        var tier2FeatureAttribute = new FeatureAttribute(FeatureAttributeType.DA_PLUS_1, "ANY");
+        var tier1Feature = new Feature(tier1FeatureName, List.of(tier1FeatureAttribute));
+        var tier2Feature = new Feature(tier2FeatureName, List.of(tier2FeatureAttribute));
+        var features = new Features(
+                List.of(tier1Feature),
+                List.of(tier2Feature));
+
+        var armor = new Armor("Leather Armor", "Light", baseDaStr);
+        var gear = new Gear(List.of(armor),
+                Collections.emptyList(),
+                0,
+                0,
+                Collections.emptyList());
+
+        var charClass = new CharClass(charType.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                useTier1Feature ? List.of(tier1FeatureName) : Collections.emptyList(),
+                useTier2Feature ? List.of(tier2FeatureName) : Collections.emptyList()
+        );
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(charType)
+                .withLevel(5)
+                .withFeatures(featuresRequest)
+                .withUseQuickGear(useQuickGear)
+                .build();
+
+        // act
+        var actualArmorDa = characterSheetWorker.getArmorDa(request, 0);
+
+        // assert
+        assertEquals(expectedArmorDa, actualArmorDa);
+    }
+
+    static Stream<Arguments> armorDaBoostScenarios() {
+        return Stream.of(
+                Arguments.arguments(CharType.BERZERKER, true, 3, false, false, "3"),
+                Arguments.arguments(CharType.BERZERKER, true, 3, true, false, "4"),
+                Arguments.arguments(CharType.BERZERKER, true, 3, false, true, "4"),
+                Arguments.arguments(CharType.BERZERKER, true, 3, true, true, "5"),
+                Arguments.arguments(CharType.MYSTIC, true, 3, false, false, "3"),
+                Arguments.arguments(CharType.MYSTIC, true, 3, true, false, "4"),
+                Arguments.arguments(CharType.MYSTIC, true, 3, false, true, "4"),
+                Arguments.arguments(CharType.MYSTIC, true, 3, true, true, "5"),
+                Arguments.arguments(CharType.MYSTIC, false, 3, false, false, ""),
+                Arguments.arguments(CharType.MYSTIC, false, 3, true, false, "1"),
+                Arguments.arguments(CharType.MYSTIC, false, 3, false, true, "1"),
+                Arguments.arguments(CharType.MYSTIC, false, 3, true, true, "2")
+        );
     }
 }
