@@ -628,36 +628,7 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @Test
-    public void buildStatsSheet_CommonerCharactersHaveExpectedMoney() {
-        // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withProfession("Test")
-                .withLevel(0)
-                .withSpeciesStrength("INT")
-                .withSpeciesWeakness("PRS")
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var copperValue = getCellValueFromSheet(sheet, 1, 8);
-        var silverValue = getCellValueFromSheet(sheet, 2, 8);
-        var copper = copperValue.getNumberValue();
-        var silver = silverValue.getNumberValue();
-
-        assertNotNull(copper);
-        assertNotNull(silver);
-        assertTrue(copper >= 1);
-        assertTrue(silver >= 1);
-        assertTrue(copper <= MAX_COMMONER_COPPER);
-        assertTrue(silver <= MAX_COMMONER_SILVER);
-    }
-
-    @Test
-    public void buildStatsSheet_ClassCharactersHaveNoMoneyIfUseQuickGearIsFalse() {
+    public void buildStatsSheet_CpAndSpFieldsArePopulated() {
         // arrange
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName(RandomStringUtils.randomAlphabetic(10))
@@ -678,98 +649,6 @@ public class DefaultGoogleSheetBuilderServiceTests {
 
         assertEquals(0.0, copper);
         assertEquals(0.0, silver);
-    }
-
-    @Test
-    public void buildStatsSheet_ClassCharactersHaveExpectedMoneyIfUseQuickGearIsTrue() {
-        // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.MAGE)
-                .withLevel(1)
-                .withUseQuickGear(true)
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var copperValue = getCellValueFromSheet(sheet, 1, 8);
-        var silverValue = getCellValueFromSheet(sheet, 2, 8);
-        var copper = copperValue.getNumberValue();
-        var silver = silverValue.getNumberValue();
-
-        assertNotNull(copper);
-        assertNotNull(silver);
-        assertTrue(copper >= 1);
-        assertTrue(silver >= 1);
-        assertTrue(copper <= MAX_CLASS_COPPER);
-        assertTrue(silver <= MAX_CLASS_SILVER);
-    }
-
-    @Test
-    public void buildStatsSheet_SpecialCaseForShamanClassCharacterCopperWorksAsExpected() {
-        // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.SHAMAN)
-                .withLevel(1)
-                .withUseQuickGear(true)
-                .build();
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var copperValue = getCellValueFromSheet(sheet, 1, 8);
-        var copper = copperValue.getNumberValue();
-
-        assertNotNull(copper);
-        // Shamans get 2d12 copper, so we expect a range of 2 to 24
-        assertTrue(copper >= 2);
-        assertTrue(copper <= 24);
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {0, 1})
-    public void buildStatsSheet_ClassCharactersThatGet0Or1CopperOrSilverGetExpectedMoney(int expectedMoney) {
-        // arrange
-        var request = CharacterCreateRequestBuilder.getBuilder()
-                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
-                .withSpeciesType(SpeciesType.HUMAN)
-                .withCharacterType(CharType.MAGE)
-                .withLevel(1)
-                .withUseQuickGear(true)
-                .build();
-
-        var gear = new Gear(Collections.emptyList(), Collections.emptyList(),
-                expectedMoney, expectedMoney, null);
-        var charClass = new CharClass(CharType.WARRIOR.toString(),
-                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
-                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
-                TEST_LEVEL_1_HP,
-                TEST_MAX_HP_AT_LEVEL_UP,
-                Collections.emptyList(),
-                gear,
-                null,
-                null);
-        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
-
-        // act
-        var sheet = googleSheetBuilderService.buildStatsSheet(request);
-
-        // assert
-        var copperValue = getCellValueFromSheet(sheet, 1, 8);
-        var silverValue = getCellValueFromSheet(sheet, 2, 8);
-        var copper = copperValue.getNumberValue();
-        var silver = silverValue.getNumberValue();
-
-        assertNotNull(copper);
-        assertNotNull(silver);
-        assertEquals(expectedMoney, copper);
-        assertEquals(expectedMoney, silver);
     }
 
     @Test

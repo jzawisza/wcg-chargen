@@ -246,55 +246,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return dataValidationRule;
     }
 
-    private int getCopper(CharacterCreateRequest characterCreateRequest) {
-        int maxCopper;
-
-        if (characterCreateRequest.isCommoner()) {
-            maxCopper = commonerService.getInfo().maxCopper();
-        }
-        else {
-            if (characterCreateRequest.useQuickGear()) {
-                maxCopper = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
-                        .gear().maxCopper();
-            }
-            else {
-                // If quick gear is not used, characters start with no money
-                return 0;
-            }
-        }
-
-        if (characterCreateRequest.characterClass() == CharType.SHAMAN) {
-            // Shamans are a special case where we roll 2d12 for copper instead of a single die
-            var firstDie = randomNumberWorker.getIntFromRange(1, 12);
-            var secondDie = randomNumberWorker.getIntFromRange(1, 12);
-
-            return firstDie + secondDie;
-        }
-        else {
-            return maxCopper > 1 ? randomNumberWorker.getIntFromRange(1, maxCopper) : maxCopper;
-        }
-    }
-
-    private int getSilver(CharacterCreateRequest characterCreateRequest) {
-        int maxSilver;
-
-        if (characterCreateRequest.isCommoner()) {
-            maxSilver = commonerService.getInfo().maxSilver();
-        }
-        else {
-            if (characterCreateRequest.useQuickGear()) {
-                maxSilver = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
-                        .gear().maxSilver();
-            }
-            else {
-                // If quick gear is not used, characters start with no money
-                return 0;
-            }
-        }
-
-        return maxSilver > 1 ? randomNumberWorker.getIntFromRange(1, maxSilver) : maxSilver;
-    }
-
     private int getNumArmorAndWeaponsRows(CharacterCreateRequest characterCreateRequest) {
         if (characterCreateRequest.isCommoner()) {
             // Commoner characters won't have armor, but they may have an improvised weapon
@@ -339,7 +290,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addSecondaryHeaderCell("XP")
                 .addEmptyCell()
                 .addHighlightedCellWithText("CP")
-                .addCellWithNumber(getCopper(characterCreateRequest))
+                .addCellWithNumber(characterSheetWorker.getCopper(characterCreateRequest))
                 .build();
 
         var profession = isClassCharacter ? "" : characterCreateRequest.profession();
@@ -357,7 +308,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
                 .addCellWithText("")
                 .addEmptyCell()
                 .addHighlightedCellWithText("SP")
-                .addCellWithNumber(getSilver(characterCreateRequest))
+                .addCellWithNumber(characterSheetWorker.getSilver(characterCreateRequest))
                 .build();
 
         var row4 = getRowBuilder()
@@ -787,15 +738,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var gridDataBuilder = getGridBuilder()
                 .addRow(headerRow);
 
-        List<String> itemList = null;
-        if (characterCreateRequest.isCommoner()) {
-            itemList = commonerService.getInfo().items();
-        }
-        else if (characterCreateRequest.useQuickGear()) {
-            var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-            itemList = charClass.gear().items();
-        }
-
+        var itemList = characterSheetWorker.getEquipmentList(characterCreateRequest);
         if (itemList != null) {
             for (var item : itemList) {
                 var itemRow = getRowBuilder()

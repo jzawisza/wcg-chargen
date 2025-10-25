@@ -434,4 +434,65 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
             return baseDaStr;
         }
     }
+
+    public List<String> getEquipmentList(CharacterCreateRequest request) {
+        if (request.isCommoner()) {
+            return commonerService.getInfo().items();
+        }
+        else if (request.useQuickGear()) {
+            var charClass = charClassesService.getCharClassByType(request.characterClass());
+            return charClass.gear().items();
+        }
+
+        return null;
+    }
+
+    public int getCopper(CharacterCreateRequest characterCreateRequest) {
+        int maxCopper;
+
+        if (characterCreateRequest.isCommoner()) {
+            maxCopper = commonerService.getInfo().maxCopper();
+        }
+        else {
+            if (characterCreateRequest.useQuickGear()) {
+                maxCopper = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
+                        .gear().maxCopper();
+            }
+            else {
+                // If quick gear is not used, characters start with no money
+                return 0;
+            }
+        }
+
+        if (characterCreateRequest.characterClass() == CharType.SHAMAN) {
+            // Shamans are a special case where we roll 2d12 for copper instead of a single die
+            var firstDie = randomNumberWorker.getIntFromRange(1, 12);
+            var secondDie = randomNumberWorker.getIntFromRange(1, 12);
+
+            return firstDie + secondDie;
+        }
+        else {
+            return maxCopper > 1 ? randomNumberWorker.getIntFromRange(1, maxCopper) : maxCopper;
+        }
+    }
+
+    public int getSilver(CharacterCreateRequest characterCreateRequest) {
+        int maxSilver;
+
+        if (characterCreateRequest.isCommoner()) {
+            maxSilver = commonerService.getInfo().maxSilver();
+        }
+        else {
+            if (characterCreateRequest.useQuickGear()) {
+                maxSilver = charClassesService.getCharClassByType(characterCreateRequest.characterClass())
+                        .gear().maxSilver();
+            }
+            else {
+                // If quick gear is not used, characters start with no money
+                return 0;
+            }
+        }
+
+        return maxSilver > 1 ? randomNumberWorker.getIntFromRange(1, maxSilver) : maxSilver;
+    }
 }

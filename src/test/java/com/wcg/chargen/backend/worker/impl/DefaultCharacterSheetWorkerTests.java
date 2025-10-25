@@ -13,10 +13,7 @@ import com.wcg.chargen.backend.worker.RandomNumberWorker;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +33,7 @@ public class DefaultCharacterSheetWorkerTests {
     CharacterSheetWorker characterSheetWorker;
     @MockBean
     CharClassesService charClassesService;
-    @Autowired
+    @MockBean
     CommonerService commonerService;
     @MockBean
     RandomNumberWorker randomNumberWorker;
@@ -178,7 +175,11 @@ public class DefaultCharacterSheetWorkerTests {
     @Test
     public void getBaseEvasion_ReturnsExpectedEvasionForCommonerCharacters() {
         // arrange
-        var expectedEvasion = commonerService.getInfo().evasion();
+        var expectedEvasion = 2;
+        var commoner = new Commoner(0, 2, 0, 0, null);
+
+        Mockito.when(commonerService.getInfo()).thenReturn(commoner);
+
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withLevel(0)
                 .build();
@@ -872,5 +873,199 @@ public class DefaultCharacterSheetWorkerTests {
                 Arguments.arguments(CharType.MYSTIC, false, 3, false, true, "1"),
                 Arguments.arguments(CharType.MYSTIC, false, 3, true, true, "2")
         );
+    }
+
+    @Test
+    public void getEquipmentList_ReturnsExpectedInformationForCommonerCharacters() {
+        // arrange
+        var item1 = "Item 1";
+        var item2 = "Item 2";
+        var itemList = List.of(item1, item2);
+        var commoner = new Commoner(0, 0, 0, 0, itemList);
+
+        Mockito.when(commonerService.getInfo()).thenReturn(commoner);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var equipmentList = characterSheetWorker.getEquipmentList(request);
+
+        // assert
+        assertNotNull(equipmentList);
+        assertEquals(2, equipmentList.size());
+        assertEquals(item1, equipmentList.get(0));
+        assertEquals(item2, equipmentList.get(1));
+    }
+
+    @Test
+    public void getEquipmentList_ReturnsExpectedInformationForClassCharactersWithQuickGear() {
+        // arrange
+        var item1 = "Item A";
+        var item2 = "Item B";
+        var item3 = "Item C";
+        var itemList = List.of(item1, item2, item3);
+        var gear = new Gear(null, null, 0, 0, itemList);
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var equipmentList = characterSheetWorker.getEquipmentList(request);
+
+        // assert
+        assertNotNull(equipmentList);
+        assertEquals(3, equipmentList.size());
+        assertEquals(item1, equipmentList.get(0));
+        assertEquals(item2, equipmentList.get(1));
+        assertEquals(item3, equipmentList.get(2));
+    }
+
+    @Test
+    public void getEquipmentList_ReturnsNullForClassCharactersWithoutQuickGear() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var equipmentList = characterSheetWorker.getEquipmentList(request);
+
+        // assert
+        assertNull(equipmentList);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1, 1, 1, 1",
+            "5, 3, 3, 2"
+    })
+    public void getMoneyMethods_ReturnExpectedValuesForCommonerCharacters(int maxCopper,
+                                                                          int maxSilver,
+                                                                          int expectedCopper,
+                                                                          int expectedSilver) {
+        // arrange
+        var commonerInfo = new Commoner(0, 0, maxCopper, maxSilver, null);
+
+        Mockito.when(commonerService.getInfo()).thenReturn(commonerInfo);
+        Mockito.when(randomNumberWorker.getIntFromRange(1, maxCopper)).thenReturn(expectedCopper);
+        Mockito.when(randomNumberWorker.getIntFromRange(1, maxSilver)).thenReturn(expectedSilver);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var actualCopper = characterSheetWorker.getCopper(request);
+        var actualSilver = characterSheetWorker.getSilver(request);
+
+        // assert
+        assertEquals(expectedCopper, actualCopper);
+        assertEquals(expectedSilver, actualSilver);
+    }
+
+    @Test
+    public void getMoneyMethods_ReturnZeroForClassCharactersWithoutQuickGear() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var actualCopper = characterSheetWorker.getCopper(request);
+        var actualSilver = characterSheetWorker.getSilver(request);
+
+        // assert
+        assertEquals(0, actualCopper);
+        assertEquals(0, actualSilver);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1, 1, 1, 1",
+            "5, 3, 3, 2"
+    })
+    public void getMoneyMethods_ReturnExpectedValuesForClassCharactersWithQuickGear(int maxCopper,
+                                                                                    int maxSilver,
+                                                                                    int expectedCopper,
+                                                                                     int expectedSilver) {
+        // arrange
+        var gear = new Gear(null, null, maxCopper, maxSilver, null);
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        Mockito.when(randomNumberWorker.getIntFromRange(1, maxCopper)).thenReturn(expectedCopper);
+        Mockito.when(randomNumberWorker.getIntFromRange(1, maxSilver)).thenReturn(expectedSilver);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var actualCopper = characterSheetWorker.getCopper(request);
+        var actualSilver = characterSheetWorker.getSilver(request);
+
+        // assert
+        assertEquals(expectedCopper, actualCopper);
+        assertEquals(expectedSilver, actualSilver);
+    }
+
+    public void getCopper_ReturnsExpectedValueForShamansWithQuickGear() {
+        // arrange
+        // For shamans, we roll 2d12 for copper, so the expected copper is double the random roll
+        var randomRoll = 7;
+        var expectedCopper = randomRoll * 2;
+
+        // maxCopper and maxSilver values aren't actually used for shamans
+        var gear = new Gear(null, null, 0, 0, null);
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        Mockito.when(randomNumberWorker.getIntFromRange(1, 12)).thenReturn(expectedCopper);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withCharacterType(CharType.SHAMAN)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var actualCopper = characterSheetWorker.getCopper(request);
+
+        // assert
+        assertEquals(expectedCopper, actualCopper);
     }
 }

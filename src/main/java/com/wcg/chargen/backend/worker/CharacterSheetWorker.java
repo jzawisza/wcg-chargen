@@ -3,6 +3,8 @@ package com.wcg.chargen.backend.worker;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 
+import java.util.List;
+
 public interface CharacterSheetWorker {
     String generateName(CharacterCreateRequest request);
 
@@ -27,4 +29,10 @@ public interface CharacterSheetWorker {
     String getArmorType(CharacterCreateRequest request, int index);
 
     String getArmorDa(CharacterCreateRequest request, int index);
+
+    List<String> getEquipmentList(CharacterCreateRequest request);
+
+    int getCopper(CharacterCreateRequest request);
+
+    int getSilver(CharacterCreateRequest request);
 }

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -766,6 +767,90 @@ public class DefaultPdfCharacterCreateServiceTests {
             var actualOffHandItem = PdfUtil.getFieldValue(pdfDocument,
                     PdfFieldConstants.OFF_HAND_ITEM);
             assertEquals(expectedOffHandItem, actualOffHandItem);
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void createCharacter_ReturnsEmptyStringForEquipmentListIfListIsNullOrEmpty(
+            List<String> equipmentList) throws Exception {
+        // arrange
+        Mockito.when(characterSheetWorker.getEquipmentList(any())).thenReturn(equipmentList);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualEquipmentStr = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.EQUIPMENT);
+            assertEquals("", actualEquipmentStr);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedEquipmentListStringIfListHasItems() throws Exception {
+        // arrange
+        var equipmentList = List.of("Rope", "Torch", "Backpack");
+        var expectedEquipmentStr = String.join("\n", equipmentList);
+        Mockito.when(characterSheetWorker.getEquipmentList(any())).thenReturn(equipmentList);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualEquipmentStr = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.EQUIPMENT);
+            assertEquals(expectedEquipmentStr, actualEquipmentStr);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedCopperAndSilver() throws Exception {
+        // arrange
+        var expectedCopper = 10;
+        var expectedSilver = 2;
+        Mockito.when(characterSheetWorker.getCopper(any())).thenReturn(expectedCopper);
+        Mockito.when(characterSheetWorker.getSilver(any())).thenReturn(expectedSilver);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SKALD)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualCopperStr = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.CP);
+            var actualSilverStr = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.SP);
+            
+            assertEquals(String.valueOf(expectedCopper), actualCopperStr);
+            assertEquals(String.valueOf(expectedSilver), actualSilverStr);
         }
     }
 }

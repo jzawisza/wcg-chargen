@@ -123,6 +123,13 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.MAX_HIT_POINTS, hitPointsStr);
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CURRENT_HIT_POINTS, hitPointsStr);
 
+            var equipmentStr = getEquipmentString(request);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.EQUIPMENT, equipmentStr);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CP,
+                    String.valueOf(characterSheetWorker.getCopper(request)));
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SP,
+                    String.valueOf(characterSheetWorker.getSilver(request)));
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -211,5 +218,15 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         }
 
         return "";
+    }
+
+    private String getEquipmentString(CharacterCreateRequest request) {
+        var equipmentList = characterSheetWorker.getEquipmentList(request);
+
+        if (equipmentList == null || equipmentList.isEmpty()) {
+            return "";
+        }
+
+        return String.join("\n", equipmentList);
     }
 }

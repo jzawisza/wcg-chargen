@@ -20,4 +20,7 @@ public class PdfFieldConstants {
     public static final String ARMOR_STYLE = "ArmorStyle";
     public static final String DAMAGE_ABSORPTION = "DA";
     public static final String OFF_HAND_ITEM = "OffHandItem";
+    public static final String EQUIPMENT = "Equipment";
+    public static final String CP = "CP";
+    public static final String SP = "SP";
 }
