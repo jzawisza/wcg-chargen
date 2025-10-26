@@ -32,7 +32,7 @@ gear:
     - Rations (3)
     - Waterskin
 abilities:
-  - "May cast spells of character level or less. GM assigns spells."
+  - "May cast spells of character level or less. Cast cantrips at Advantage. GM assigns spells."
   - "Aura Sense: See most magical auras at Close range. Arcana roll for more detail."
   - "Can read and use magic spell scrolls."
 features:

@@ -1068,4 +1068,84 @@ public class DefaultCharacterSheetWorkerTests {
         // assert
         assertEquals(expectedCopper, actualCopper);
     }
+
+    @Test
+    public void hasMagic_ReturnsFalseForCommonerCharacters() {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(0)
+                .build();
+
+        // act
+        var hasMagic = characterSheetWorker.hasMagic(request);
+
+        // assert
+        assertFalse(hasMagic);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CharType.class, names = {"MAGE", "SHAMAN"})
+    public void hasMagic_ReturnsTrueForMagicUsers(CharType charType) {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withLevel(1)
+                .withCharacterType(charType)
+                .build();
+
+        // act
+        var hasMagic = characterSheetWorker.hasMagic(request);
+
+        // assert
+        assertTrue(hasMagic);
+    }
+
+    @ParameterizedTest
+    @MethodSource("skaldFeaturesAndExpectedHasMagic")
+    public void hasMagic_ReturnsTrueForSkaldsWithFeaturesThatAllowMagic(
+            boolean hasMagicTier1Feature, boolean hasMagicTier2Feature, boolean expectedHasMagic) {
+        // arrange
+        var magicTier1FeatureName = "Magic Feature Tier I";
+        var magicTier2FeatureName = "Magic Feature Tier II";
+        var magicFeatureAttribute = new FeatureAttribute(FeatureAttributeType.MAGIC, "");
+        var magicTier1Feature = new Feature(magicTier1FeatureName, List.of(magicFeatureAttribute));
+        var magicTier2Feature = new Feature(magicTier2FeatureName, List.of(magicFeatureAttribute));
+        var features = new Features(List.of(magicTier1Feature), List.of(magicTier2Feature));
+
+        var charClass = new CharClass(CharType.SKALD.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                null,
+                null,
+                features);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var featuresRequest = new FeaturesRequest(
+                hasMagicTier1Feature ? List.of(magicTier1FeatureName) : Collections.emptyList(),
+                hasMagicTier2Feature ? List.of(magicTier2FeatureName) : Collections.emptyList()
+        );
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterType(CharType.SKALD)
+                .withLevel(4)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var actualHasMagic = characterSheetWorker.hasMagic(request);
+
+        // assert
+        assertEquals(expectedHasMagic, actualHasMagic);
+    }
+
+    static Stream<Arguments> skaldFeaturesAndExpectedHasMagic() {
+        return Stream.of(
+                Arguments.arguments(true, true, true),
+                Arguments.arguments(true, false, true),
+                Arguments.arguments(false, true, true),
+                Arguments.arguments(false, false, false));
+    }
 }

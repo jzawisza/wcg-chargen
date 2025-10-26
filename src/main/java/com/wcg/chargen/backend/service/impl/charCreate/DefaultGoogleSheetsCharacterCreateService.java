@@ -1,12 +1,10 @@
 package com.wcg.chargen.backend.service.impl.charCreate;
 
 import com.google.api.services.sheets.v4.model.*;
-import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.CharacterCreateStatus;
 
 import com.wcg.chargen.backend.service.*;
-import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +75,7 @@ public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCh
         var statsSheet = googleSheetBuilderService.buildStatsSheet(characterCreateRequest);
         sheetList.add(statsSheet);
 
-        if(shouldAddSpellsSheet(characterCreateRequest)) {
+        if(characterSheetWorker.hasMagic(characterCreateRequest)) {
             var spellsSheet = googleSheetBuilderService.buildSpellsSheet(characterCreateRequest);
             sheetList.add(spellsSheet);
         }
@@ -89,34 +87,5 @@ public class DefaultGoogleSheetsCharacterCreateService implements GoogleSheetsCh
         sheetList.add(gearSheet);
 
         return sheetList;
-    }
-
-    private boolean shouldAddSpellsSheet(CharacterCreateRequest characterCreateRequest) {
-        if(characterCreateRequest.characterClass() == null) {
-            return false;
-        }
-
-        if (characterCreateRequest.characterClass().isMagicUser()) {
-            return true;
-        }
-
-        // Check if a feature has been selected that allows a character not otherwise
-        // considered a magic user to cast spells
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                characterCreateRequest.features(),
-                FeatureAttributeType.MAGIC,
-                FeatureAttributeUtil.Tier.I) != null) {
-            return true;
-        }
-
-        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                characterCreateRequest.features(),
-                FeatureAttributeType.MAGIC,
-                FeatureAttributeUtil.Tier.II) != null) {
-            return true;
-        }
-
-        return false;
     }
 }

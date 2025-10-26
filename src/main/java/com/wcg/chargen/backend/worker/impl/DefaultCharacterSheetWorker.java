@@ -495,4 +495,33 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
 
         return maxSilver > 1 ? randomNumberWorker.getIntFromRange(1, maxSilver) : maxSilver;
     }
+
+    public boolean hasMagic(CharacterCreateRequest request) {
+        if (request.isCommoner()) {
+            return false;
+        }
+
+        if (request.characterClass().isMagicUser()) {
+            return true;
+        }
+
+        // Check if a feature has been selected that allows a character not otherwise
+        // considered a magic user to cast spells
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                request.features(),
+                FeatureAttributeType.MAGIC,
+                FeatureAttributeUtil.Tier.I) != null) {
+            return true;
+        }
+
+        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+                request.features(),
+                FeatureAttributeType.MAGIC,
+                FeatureAttributeUtil.Tier.II) != null) {
+            return true;
+        }
+
+        return false;
+    }
 }

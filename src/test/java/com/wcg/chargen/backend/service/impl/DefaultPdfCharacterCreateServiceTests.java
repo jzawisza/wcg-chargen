@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -848,9 +849,85 @@ public class DefaultPdfCharacterCreateServiceTests {
         try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
             var actualCopperStr = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.CP);
             var actualSilverStr = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.SP);
-            
+
             assertEquals(String.valueOf(expectedCopper), actualCopperStr);
             assertEquals(String.valueOf(expectedSilver), actualSilverStr);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForSpellModForNonMagicUsingCharacters()
+        throws Exception {
+        // arrange
+        Mockito.when(characterSheetWorker.hasMagic(any())).thenReturn(false);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.WARRIOR)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualSpellMod = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.SPELL_MOD);
+            assertEquals("", actualSpellMod);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "MAGE, '+2'",
+            "SHAMAN, '-1'",
+            "SKALD, '+2 (Mage), -1 (Shaman)'"
+    })
+    public void createCharacter_ReturnsExpectedSpellModForMagicUsingCharacters(CharType charType,
+                                                                               String expectedSpellMod)
+        throws Exception {
+        // arrange
+        var intModifier = 1;
+        var prsModifier = -2;
+        var attackModifier = 1;
+
+        var charClass = new CharClass(charType.toString(),
+                List.of(0, attackModifier, 0, 0, 0, 0, 0),
+                null,
+                0,
+                0,
+                null,
+                null,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        Mockito.when(characterSheetWorker.hasMagic(any())).thenReturn(true);
+
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, 0, 0, 0, intModifier, prsModifier, 0);
+        // Level must be 2 to match the charClass attack modifier list, which has zeroes
+        // for every element except the second one
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(charType)
+                .withAttributes(attributeMap)
+                .withLevel(2)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualSpellMod = PdfUtil.getFieldValue(pdfDocument, PdfFieldConstants.SPELL_MOD);
+            assertEquals(expectedSpellMod, actualSpellMod);
         }
     }
 }

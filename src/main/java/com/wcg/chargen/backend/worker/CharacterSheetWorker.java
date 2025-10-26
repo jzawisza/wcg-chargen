@@ -35,4 +35,6 @@ public interface CharacterSheetWorker {
     int getCopper(CharacterCreateRequest request);
 
     int getSilver(CharacterCreateRequest request);
+
+    boolean hasMagic(CharacterCreateRequest request);
 }

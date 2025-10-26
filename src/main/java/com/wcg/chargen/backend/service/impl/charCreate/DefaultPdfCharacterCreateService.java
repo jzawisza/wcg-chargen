@@ -130,6 +130,9 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SP,
                     String.valueOf(characterSheetWorker.getSilver(request)));
 
+            var spellMod = getSpellMod(request, attributeScores);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SPELL_MOD, spellMod);
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -228,5 +231,54 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         }
 
         return String.join("\n", equipmentList);
+    }
+
+    private String getSpellMod(CharacterCreateRequest request,
+                               Map<AttributeType, Integer> attributeScores) {
+        if (!characterSheetWorker.hasMagic(request)) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var level = request.level();
+        var attackMod = charClass.attackModifiers().get(level - 1);
+
+        switch (request.characterClass()) {
+            case MAGE -> {
+                var intMod = attributeScores.get(AttributeType.INT);
+                var spellMod = attackMod + intMod;
+
+                return getModifierRepresentation(spellMod);
+            }
+            case SHAMAN -> {
+                var prsMod = attributeScores.get(AttributeType.PRS);
+                var spellMod = attackMod + prsMod;
+
+                return getModifierRepresentation(spellMod);
+            }
+            case SKALD -> {
+                var intMod = attributeScores.get(AttributeType.INT);
+                var prsMod = attributeScores.get(AttributeType.PRS);
+                var mageSpellMod = attackMod + intMod;
+                var shamanSpellMod = attackMod + prsMod;
+
+                var mageSpellModStr = getModifierRepresentation(mageSpellMod);
+                var shamanSpellModStr = getModifierRepresentation(shamanSpellMod);
+
+                return mageSpellModStr + " (Mage), " + shamanSpellModStr + " (Shaman)";
+            }
+            default -> {
+                return "";
+            }
+        }
+    }
+
+    private String getModifierRepresentation(int modifier) {
+        if (modifier > 0) {
+            return "+" + modifier;
+        }
+        else {
+            return String.valueOf(modifier);
+        }
     }
 }
