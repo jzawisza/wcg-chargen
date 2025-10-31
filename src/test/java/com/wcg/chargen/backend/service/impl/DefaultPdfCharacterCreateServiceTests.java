@@ -930,4 +930,149 @@ public class DefaultPdfCharacterCreateServiceTests {
             assertEquals(expectedSpellMod, actualSpellMod);
         }
     }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForClassFeaturesForCommonerCharacters()
+        throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(0)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualClassFeatures = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.CLASS_FEATURES);
+            assertEquals("", actualClassFeatures);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedClassFeaturesForClassCharacters()
+        throws Exception {
+        // arrange
+        var abilitiesList = List.of("Test Feature 1", "Test Feature 2", "Test Feature 3");
+        var expectedClassFeatures = String.join("\n", abilitiesList);
+
+        var charClass = new CharClass(CharType.BERZERKER.toString(),
+                null,
+                null,
+                0,
+                0,
+                null,
+                null,
+                abilitiesList,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.BERZERKER)
+                .withLevel(1)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualClassFeatures = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.CLASS_FEATURES);
+            assertEquals(expectedClassFeatures, actualClassFeatures);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForAdvancedFeaturesIfRequestHasNullFeatures()
+            throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(1)
+                .withFeatures(null)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var advancedFeatures = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.TIER_I_II_FEATURES);
+            assertEquals("", advancedFeatures);
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void createCharacter_ReturnsEmptyStringForAdvancedFeaturesIfRequestHasNullOrEmptyTierIAndTierIIFeatures(
+            List<String> features) throws Exception {
+        // arrange
+        var featuresRequest = new FeaturesRequest(features, features);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(1)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var advancedFeatures = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.TIER_I_II_FEATURES);
+            assertEquals("", advancedFeatures);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedAdvancedFeaturesStringForTierIAndTierIIFeatures()
+            throws Exception {
+        // arrange
+        var expectedAdvancedFeatures = "Tier I Features:\n- Tier 1 Feature A\n- Tier 1 Feature B\n" +
+                "Tier II Features:\n- Tier 2 Feature C\n- Tier 2 Feature D\n";
+        var tier1FeatureList = List.of("Tier 1 Feature A", "Tier 1 Feature B");
+        var tier2FeatureList = List.of("Tier 2 Feature C", "Tier 2 Feature D");
+        var featuresRequest = new FeaturesRequest(tier1FeatureList, tier2FeatureList);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.SHAMAN)
+                .withLevel(4)
+                .withFeatures(featuresRequest)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualAdvancedFeatures = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.TIER_I_II_FEATURES);
+            assertEquals(expectedAdvancedFeatures, actualAdvancedFeatures);
+        }
+    }
+
 }

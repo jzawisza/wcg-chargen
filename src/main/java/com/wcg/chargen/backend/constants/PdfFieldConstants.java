@@ -24,4 +24,6 @@ public class PdfFieldConstants {
     public static final String CP = "CP";
     public static final String SP = "SP";
     public static final String SPELL_MOD = "SpellMod";
+    public static final String CLASS_FEATURES = "ClassFeatures";
+    public static final String TIER_I_II_FEATURES = "AdvancedFeatures";
 }

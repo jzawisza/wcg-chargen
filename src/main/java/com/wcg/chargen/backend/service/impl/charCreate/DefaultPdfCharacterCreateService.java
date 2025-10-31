@@ -133,6 +133,12 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             var spellMod = getSpellMod(request, attributeScores);
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.SPELL_MOD, spellMod);
 
+            var classFeatures = getClassFeatures(request);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.CLASS_FEATURES, classFeatures);
+
+            var advancedFeatures = getAdvancedFeatures(request);
+            PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.TIER_I_II_FEATURES, advancedFeatures);
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -280,5 +286,50 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         else {
             return String.valueOf(modifier);
         }
+    }
+
+    private String getClassFeatures(CharacterCreateRequest request) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+
+        // This check is mainly here so the unit tests pass:
+        // real requests will always have abilities for non-commoner classes
+        if (charClass == null ||
+                charClass.abilities() == null ||
+                charClass.abilities().isEmpty()) {
+            return "";
+        }
+
+        return String.join(("\n"), charClass.abilities());
+    }
+
+    private String getAdvancedFeatures(CharacterCreateRequest request) {
+        if (request.features() == null) {
+            return "";
+        }
+
+        var sb = new StringBuilder();
+
+        var tier1Features = request.features().tier1();
+
+        if (!(tier1Features == null || tier1Features.isEmpty())) {
+            sb.append("Tier I Features:\n");
+            for (var feature : request.features().tier1()) {
+                sb.append("- ").append(feature).append("\n");
+            }
+        }
+
+        var tier2Features = request.features().tier2();
+        if (!(tier2Features == null || tier2Features.isEmpty())) {
+            sb.append("Tier II Features:\n");
+            for (var feature : request.features().tier2()) {
+                sb.append("- ").append(feature).append("\n");
+            }
+        }
+
+        return sb.toString();
     }
 }
