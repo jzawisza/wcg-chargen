@@ -169,8 +169,11 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         var evasion = characterSheetWorker.getBaseEvasion(characterCreateRequest);
         var evasionBonus = characterSheetWorker.getEvasionBonus(characterCreateRequest);
 
-        return (evasionBonus > 0) ? String.format("=SUM(%d,B10,%d)", evasion, evasionBonus) :
+        var evasionFormula = (evasionBonus > 0) ? String.format("=SUM(%d,B10,%d)", evasion, evasionBonus) :
                 String.format("=SUM(%d,B10)", evasion);
+        logger.info("Evasion formula: {}", evasionFormula);
+
+        return evasionFormula;
     }
 
     private List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {

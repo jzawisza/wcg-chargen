@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.wcg.chargen.backend.worker.impl.DefaultCharacterSheetWorker.SHIELD;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -229,20 +230,28 @@ public class DefaultCharacterSheetWorkerTests {
     @ParameterizedTest
     @MethodSource("conditionsForEvasionBonus")
     public void getEvasionBonus_ReturnsExpectedBonusForClassCharactersBasedOnQuickGearAndFeatures(
-            boolean useQuickGear, boolean hasTier1EvasionFeature, boolean hasTier2EvasionFeature,
-            int expectedEvasionBonus) {
+            boolean useQuickGear, boolean hasShield, boolean hasTier1EvasionFeature,
+            String tier1EvasionFeatureModifier, boolean hasTier2EvasionFeature,
+            String tier2EvasionFeatureModifier, int expectedEvasionBonus) {
         // arrange
-        var armor = new Armor("Hoplite Shield", "Shield", "+1 Evasion");
+        var armorType = hasShield ? SHIELD : "Not A Shield";
+        var armor = new Armor("Test Armor", armorType, "Test DA");
         var gear = new Gear(List.of(armor), Collections.emptyList(), 0, 0, Collections.emptyList());
 
-        var evasionFeatureName = "Evasion test";
-        var evasionFeatureAttribute = new FeatureAttribute(FeatureAttributeType.EV_PLUS_1, "");
-        var evasionFeature = new Feature(evasionFeatureName, List.of(evasionFeatureAttribute));
-        var evasionFeatureList = List.of(evasionFeature);
+        // Create list of Tier I and II features based on values passed in to method
+        var tier1FeatureName = "Tier I Feature";
+        var tier1FeatureAttribute = new FeatureAttribute(
+                FeatureAttributeType.EV_PLUS_1, tier1EvasionFeatureModifier);
+        var tier1Feature = new Feature(tier1FeatureName, List.of(tier1FeatureAttribute));
+
+        var tier2FeatureName = "Tier II Feature";
+        var tier2FeatureAttribute = new FeatureAttribute(
+                FeatureAttributeType.EV_PLUS_1, tier2EvasionFeatureModifier);
+        var tier2Feature = new Feature(tier2FeatureName, List.of(tier2FeatureAttribute));
+
         var features = new Features(
-                hasTier1EvasionFeature ? evasionFeatureList : Collections.emptyList(),
-                hasTier2EvasionFeature ? evasionFeatureList : Collections.emptyList()
-        );
+                hasTier1EvasionFeature ? List.of(tier1Feature) : Collections.emptyList(),
+                hasTier2EvasionFeature ? List.of(tier2Feature) : Collections.emptyList());
 
         var charClass = new CharClass(CharType.RANGER.toString(),
                 Collections.emptyList(),
@@ -257,9 +266,8 @@ public class DefaultCharacterSheetWorkerTests {
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
 
         var featuresRequest = new FeaturesRequest(
-                hasTier1EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList(),
-                hasTier2EvasionFeature ? List.of(evasionFeatureName) : Collections.emptyList()
-        );
+                hasTier1EvasionFeature ? List.of(tier1FeatureName) : Collections.emptyList(),
+                hasTier2EvasionFeature ? List.of(tier2FeatureName) : Collections.emptyList());
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withSpeciesType(SpeciesType.HUMAN)
                 .withCharacterType(CharType.RANGER)
@@ -275,16 +283,31 @@ public class DefaultCharacterSheetWorkerTests {
         assertEquals(expectedEvasionBonus, actualEvasionBonus);
     }
 
+    /**
+     * Different conditions for calculating evasion bonuses. Variables represented are:
+     * - Whether quick gear is being used
+     * - Whether the quick gear includes a shield
+     * - Whether a Tier I feature that affects evasion exists
+     * - Modifier for the Tier I feature if it exists
+     * - Whether a Tier II feature that affects evasion exists
+     * - Modifier for the Tier II feature if it exists
+     * - Expected evasion bonus
+     */
     static Stream<Arguments> conditionsForEvasionBonus() {
         return Stream.of(
-                Arguments.arguments(false, false, false, 0),
-                Arguments.arguments(true, false, false, 1),
-                Arguments.arguments(false, true, false, 1),
-                Arguments.arguments(false, false, true, 1),
-                Arguments.arguments(true, true, false, 2),
-                Arguments.arguments(true, false, true, 2),
-                Arguments.arguments(false, true, true, 2),
-                Arguments.arguments(true, true, true, 3)
+                Arguments.arguments(false, false, false, null, false, null, 0),
+                Arguments.arguments(true, false, false, null, false, null, 0),
+                Arguments.arguments(true, true, false, null, false, null, 1),
+                Arguments.arguments(true, true, true, "", false, null, 2),
+                Arguments.arguments(true, true, true, SHIELD, false, null, 2),
+                Arguments.arguments(true, false, true, SHIELD, false, null, 0),
+                Arguments.arguments(true, true, false, null, true, "", 2),
+                Arguments.arguments(true, true, false, null, true, SHIELD, 2),
+                Arguments.arguments(true, false, false, null, true, SHIELD, 0),
+                Arguments.arguments(true, false, true, "", true, "", 2),
+                Arguments.arguments(true, true, true, "", true, "", 3),
+                Arguments.arguments(true, true, true, SHIELD, true, SHIELD, 3),
+                Arguments.arguments(true, false, true, SHIELD, true, SHIELD, 0)
         );
     }
 

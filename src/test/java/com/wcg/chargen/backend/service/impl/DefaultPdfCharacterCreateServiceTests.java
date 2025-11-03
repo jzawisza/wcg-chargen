@@ -362,13 +362,16 @@ public class DefaultPdfCharacterCreateServiceTests {
         // arrange
         Mockito.when(characterSheetWorker.getBaseEvasion(any())).thenReturn(10);
         Mockito.when(characterSheetWorker.getEvasionBonus(any())).thenReturn(2);
-        var expectedEvasionString = "12"; // 10 base + 2 bonus
+        var expectedEvasionString = "13"; // 10 base + 1 COR (below) + 2 bonus
 
         // act
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, 1, 0, 0, 0, 0, 0);
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withSpeciesType(SpeciesType.HUMAN)
                 .withCharacterType(CharType.MAGE)
                 .withLevel(2)
+                .withAttributes(attributeMap)
                 .build();
 
         // act

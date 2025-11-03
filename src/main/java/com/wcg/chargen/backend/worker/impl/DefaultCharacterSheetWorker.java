@@ -4,6 +4,7 @@ import com.wcg.chargen.backend.enums.AttributeType;
 import com.wcg.chargen.backend.enums.CharType;
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.enums.SpeciesType;
+import com.wcg.chargen.backend.model.CharClass;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Feature;
 import com.wcg.chargen.backend.service.CharClassesService;
@@ -84,13 +85,21 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
     }
 
     public int getBaseEvasion(CharacterCreateRequest request) {
+        var baseEvasion = 0;
         if (request.isCommoner()) {
-            return commonerService.getInfo().evasion();
+            baseEvasion = commonerService.getInfo().evasion();
+            logger.info("Base evasion for commoner characters = {}", baseEvasion);
         }
         else {
             var charClass = charClassesService.getCharClassByType(request.characterClass());
-            return charClass.evasionModifiers().get(request.level() - 1);
+            baseEvasion = charClass.evasionModifiers().get(request.level() - 1);
+            logger.info("Base evasion for Level {} {} = {}",
+                    request.level(),
+                    request.characterClass(),
+                    baseEvasion);
         }
+
+        return baseEvasion;
     }
 
     public int getEvasionBonus(CharacterCreateRequest request) {
@@ -103,26 +112,62 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
         var charClass = charClassesService.getCharClassByType(request.characterClass());
 
         // If a character has a shield, they get a +1 bonus to evasion
-        if(request.useQuickGear() &&
+        var hasShield = false;
+        if (request.useQuickGear() &&
                 charClass.gear().armor().stream()
                         .anyMatch(a -> a.type().equals(SHIELD))) {
-            bonusEvasion += 1;
+            logger.info("Character has shield, +1 bonus to evasion granted");
+            bonusEvasion++;
+            hasShield = true;
         }
 
         // If a character has a feature that gives them a bonus to evasion,
         // take that into account
-        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
-                request.features(),
-                FeatureAttributeType.EV_PLUS_1,
-                FeatureAttributeUtil.Tier.I) != null) {
-            bonusEvasion += 1;
+        bonusEvasion += getEvasionBonusFromFeatures(request, charClass,
+                FeatureAttributeUtil.Tier.I, hasShield);
+        bonusEvasion += getEvasionBonusFromFeatures(request, charClass,
+                FeatureAttributeUtil.Tier.II, hasShield);
+
+        logger.info("Total evasion bonus = {}", bonusEvasion);
+
+        return bonusEvasion;
+    }
+
+    private int getEvasionBonusFromFeatures(CharacterCreateRequest request, CharClass charClass,
+                                            FeatureAttributeUtil.Tier tier, boolean hasShield) {
+        var bonusEvasion = 0;
+        if (charClass.features() == null) {
+            return 0;
         }
 
-        if (FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(charClass.features(),
+        var featureName = FeatureAttributeUtil.getFeatureNameFromRequestWithAttributeType(
+                charClass.features(),
                 request.features(),
                 FeatureAttributeType.EV_PLUS_1,
-                FeatureAttributeUtil.Tier.II) != null) {
-            bonusEvasion += 1;
+                tier);
+        if (featureName != null) {
+            // Check the modifier to see if this feature applies only if the character has a shield
+            var featureList = (tier == FeatureAttributeUtil.Tier.I) ?
+                    charClass.features().tier1() : charClass.features().tier2();
+            var modifier = FeatureAttributeUtil.getAttributeModifierForFeatureAndAttributeType(
+                    featureList, featureName, FeatureAttributeType.EV_PLUS_1);
+
+            if (SHIELD.equals(modifier)) {
+                if (hasShield) {
+                    logger.info("Tier {} feature \"{}\" grants an additional +1 evasion bonus because the character has a shield",
+                            tier.name(), featureName);
+                    bonusEvasion++;
+                }
+                else {
+                    logger.info("Character has no shield, so feature \"{}\" does not grant any evasion bonus",
+                            featureName);
+                }
+            }
+            else {
+                logger.info("Tier {} feature \"{}\" grants an additional +1 evasion bonus",
+                        tier.name(), featureName);
+                bonusEvasion++;
+            }
         }
 
         return bonusEvasion;

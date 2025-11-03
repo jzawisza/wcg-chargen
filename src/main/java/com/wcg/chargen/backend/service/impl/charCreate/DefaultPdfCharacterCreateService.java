@@ -182,9 +182,13 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
     private String getEvasion(CharacterCreateRequest request) {
         var baseEvasion = characterSheetWorker.getBaseEvasion(request);
+        var corScore = request.getAttributeValue(AttributeType.COR);
         var evasionBonus = characterSheetWorker.getEvasionBonus(request);
 
-        return String.valueOf(baseEvasion + evasionBonus);
+        logger.info("Base evasion = {}, COR score = {}, evasion bonus (excluding COR): {}",
+                baseEvasion, corScore, evasionBonus);
+
+        return String.valueOf(baseEvasion + corScore + evasionBonus);
     }
 
     private String getInitiative(CharacterCreateRequest request) {

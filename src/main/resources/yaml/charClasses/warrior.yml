@@ -55,7 +55,7 @@ features:
     - description: "+1 to one attribute which is not the character’s highest"
       attributes: [ { type: 'ATTR_PLUS_1', modifier: 'NOT_HIGHEST' } ]
     - description: "Shield Mastery: +1 to Evasion when using shield, +1 to damage on shield bash attack strike"
-      attributes: [ ]
+      attributes: [ { type: 'EV_PLUS_1', modifier: 'Shield' } ]
   tier2:
     - description: "Damage dice rolled at advantage for any specialized weapons (see Tier I)"
       attributes: [ ]

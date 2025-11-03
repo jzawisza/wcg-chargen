@@ -330,12 +330,9 @@ public class DefaultGoogleSheetBuilderServiceTests {
     }
 
     @Test
-    public void buildStatsSheet_AttackAndEvasionArePopulatedCorrectly() {
+    public void buildStatsSheet_AttackIsPopulatedCorrectlyForClassCharacters() {
         // arrange
         var expectedAttack = 3;
-        var expectedEvasion = 12;
-        var expectedEvasionFormula = String.format("=SUM(%d,B10)", expectedEvasion);
-
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withCharacterName(RandomStringUtils.randomAlphabetic(10))
                 .withSpeciesType(SpeciesType.DWARF)
@@ -349,7 +346,93 @@ public class DefaultGoogleSheetBuilderServiceTests {
         // assert
         var attackValue = getCellValueFromSheet(sheet, 4, 1);
         assertEquals((double)expectedAttack, attackValue.getNumberValue());
+    }
 
+    @Test
+    public void buildStatsSheet_AttackIsPopulatedCorrectlyForCommonerCharacters() {
+        // arrange
+        var expectedAttack = 0;
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.DWARF)
+                .withLevel(0)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var attackValue = getCellValueFromSheet(sheet, 4, 1);
+        assertEquals((double)expectedAttack, attackValue.getNumberValue());
+    }
+
+    @Test
+    public void buildStatsSheet_EvasionIsPopulatedCorrectlyIfNoEvasionBonus() {
+        // arrange
+        var expectedBaseEvasion = 12; // see beforeTest method for evasion values
+        var expectedEvasionFormula = "=SUM(" + expectedBaseEvasion + ",B10)";
+
+        // Verify that COR scores aren't included in base evasion calculation,
+        // since the generated formula will incorporate them
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap
+                (0, 1, 0, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.WARRIOR)
+                .withLevel(3)
+                .withAttributes(attributesMap)
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
+        var evasionValue = getCellValueFromSheet(sheet, 4, 2);
+        assertEquals(expectedEvasionFormula, evasionValue.getFormulaValue());
+    }
+
+    @Test
+    public void buildStatsSheet_EvasionIsPopulatedCorrectlyIfEvasionBonusIsIncluded() {
+        // arrange
+        var expectedBaseEvasion = 12;
+        var expectedEvasionFormula = "=SUM(" + expectedBaseEvasion + ",B10,1)";
+
+        // Shields grant a +1 evasion bonus
+        var armor = new Armor("Test Shield", "Shield", "Test");
+        var gear = new Gear(List.of(armor),
+                Collections.emptyList(),
+                MAX_CLASS_COPPER,
+                MAX_CLASS_SILVER,
+                Collections.emptyList());
+        var charClass = new CharClass(CharType.WARRIOR.toString(),
+                Arrays.asList(1, 2, 3, 4, 5, 6, 7),
+                Arrays.asList(10, 11, 12, 13, 14, 15 ,16),
+                TEST_LEVEL_1_HP,
+                TEST_MAX_HP_AT_LEVEL_UP,
+                Collections.emptyList(),
+                gear,
+                Collections.emptyList(),
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+
+        // Verify that COR scores aren't included in base evasion calculation,
+        // since the generated formula will incorporate them
+        var attributesMap = CharacterCreateRequestBuilder.getAttributesMap
+                (0, 2, 0, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withCharacterName(RandomStringUtils.randomAlphabetic(10))
+                .withSpeciesType(SpeciesType.DWARF)
+                .withCharacterType(CharType.WARRIOR)
+                .withLevel(3)
+                .withAttributes(attributesMap)
+                .withUseQuickGear(true) // need quick gear to get shield equipped
+                .build();
+
+        // act
+        var sheet = googleSheetBuilderService.buildStatsSheet(request);
+
+        // assert
         var evasionValue = getCellValueFromSheet(sheet, 4, 2);
         assertEquals(expectedEvasionFormula, evasionValue.getFormulaValue());
     }
