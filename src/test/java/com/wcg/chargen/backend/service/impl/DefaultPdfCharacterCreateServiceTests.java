@@ -201,9 +201,11 @@ public class DefaultPdfCharacterCreateServiceTests {
                 else if (attributeName.equals(speciesWeakness)) {
                     expectedValue -= 1;
                 }
+                var expectedValueStr = (expectedValue > 0) ?
+                        "+" + expectedValue : String.valueOf(expectedValue);
                 var actualValue = PdfUtil.getFieldValue(pdfDocument, attributeName);
 
-                assertEquals(String.valueOf(expectedValue), actualValue);
+                assertEquals(expectedValueStr, actualValue);
             }
         }
     }

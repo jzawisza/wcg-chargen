@@ -70,7 +70,7 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
             var attributeScores = calculateAttributeScores(request);
             for (var attributeType : AttributeType.values()) {
-                var attributeValue = String.valueOf(attributeScores.get(attributeType));
+                var attributeValue = getModifierRepresentation(attributeScores.get(attributeType));
                 attributeValue += getAdvOrDadvModifierString(request, attributeType.name());
                 PdfUtil.setFieldValue(pdfDocument, attributeType.name(), attributeValue);
             }
