@@ -174,32 +174,6 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
         return evasionFormula;
     }
 
-    private List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {
-        // Commoner characters don't have skills
-        if (characterCreateRequest.level() == 0) {
-            return Collections.emptyList();
-        }
-
-        // First, get all the class skills
-        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
-        // Wrap with ArrayList so we can mutate the list to add species and bonus skills
-        var skillsList = new ArrayList<>(charClass.skills().stream()
-                .map(x -> skillsProvider.getByName(x))
-                .toList());
-
-        // Then add the species skill (if applicable) and bonus skills
-        if (!StringUtils.isEmpty(characterCreateRequest.speciesSkill())) {
-            skillsList.add(skillsProvider.getByName(characterCreateRequest.speciesSkill()));
-        }
-        for (var bonusSkill : characterCreateRequest.bonusSkills()) {
-            skillsList.add(skillsProvider.getByName(bonusSkill));
-        }
-
-        return skillsList.stream()
-                .sorted((Comparator.comparing(Skill::name)))
-                .toList();
-    }
-
     private Skill getSkillFromList(List<Skill> skillsList, int index) {
         // If we've gone through the entire list of skills, don't return anything
         return (skillsList.size() > index) ? skillsList.get(index) : null;
@@ -267,7 +241,7 @@ public class DefaultGoogleSheetBuilderService implements GoogleSheetBuilderServi
     public Sheet buildStatsSheet(CharacterCreateRequest characterCreateRequest) {
         var sheet = buildSheetWithTitle(STATS_SHEET_TITLE);
         var isClassCharacter = (characterCreateRequest.level() > 0);
-        var skillsList = getSkillsList(characterCreateRequest);
+        var skillsList = characterSheetWorker.getSkillsList(characterCreateRequest);
 
         // Block with basic information and money sections
         var row1 = getRowBuilder()

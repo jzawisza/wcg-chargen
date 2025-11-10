@@ -2,6 +2,7 @@ package com.wcg.chargen.backend.worker;
 
 import com.wcg.chargen.backend.enums.FeatureAttributeType;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
+import com.wcg.chargen.backend.model.Skill;
 
 import java.util.List;
 
@@ -37,4 +38,6 @@ public interface CharacterSheetWorker {
     int getSilver(CharacterCreateRequest request);
 
     boolean hasMagic(CharacterCreateRequest request);
+
+    List<Skill> getSkillsList(CharacterCreateRequest request);
 }

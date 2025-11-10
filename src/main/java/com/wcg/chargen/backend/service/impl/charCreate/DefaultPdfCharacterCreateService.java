@@ -24,12 +24,14 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Service
 public class DefaultPdfCharacterCreateService implements PdfCharacterCreateService {
     private static final String PDF_FILE_NAME = "charSheet.pdf";
     private static final int NUM_WEAPONS_ROWS = 3;
+    private static final int NUM_SKILLS_ROWS = 8;
 
     private final Logger logger = LoggerFactory.getLogger(DefaultPdfCharacterCreateService.class);
 
@@ -41,6 +43,25 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
     CharacterSheetWorker characterSheetWorker;
     @Autowired
     CharClassesService charClassesService;
+
+    private class SkillInfo {
+        private final String names;
+        private final String modifiers;
+
+        public SkillInfo(String names, String modifiers) {
+            this.names = names;
+            this.modifiers = modifiers;
+        }
+
+        public String getNames() {
+            return names;
+        }
+
+        public String getModifiers() {
+            return modifiers;
+        }
+    }
+
 
     @Override
     public PdfCharacterCreateStatus createCharacter(CharacterCreateRequest request) {
@@ -139,6 +160,21 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             var advancedFeatures = getAdvancedFeatures(request);
             PdfUtil.setFieldValue(pdfDocument, PdfFieldConstants.TIER_I_II_FEATURES, advancedFeatures);
 
+            for (var j = 0; j < NUM_SKILLS_ROWS; j++) {
+                // The field names in the PDF are 1-based, not 0-based
+                var skillPdfIndex = j + 1;
+
+                var skillName = getSkillName(request, j);
+                var skillModifier = getSkillModifier(request, attributeScores, j);
+
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.SKILL_BASE + skillPdfIndex,
+                        skillName);
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.SKILL_MODIFIER_BASE + skillPdfIndex,
+                        skillModifier);
+            }
+
             // Construct and return object representing modified PDF
             pdfDocument.save(outputStream);
             var returnInputStream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -207,8 +243,8 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         }
 
         return switch (advOrDadv) {
-            case ADV -> " (ADV)";
-            case DADV -> " (DADV)";
+            case ADV -> " [ADV]";
+            case DADV -> " [DADV]";
             default -> "";
         };
     }
@@ -335,5 +371,94 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Return a skill name in the following format:
+     * - "SkillName [ADV/DADV]" if the skill has a single attribute
+     * - "SkillName (ATTR1/ATTR2) [ADV/DADV]" if the skill has multiple attributes
+     *
+     * @param request Original request
+     * @param index 0-based index of the skill to look up
+     * @return Skill name
+     */
+    private String getSkillName(CharacterCreateRequest request, int index) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        var skillsList = characterSheetWorker.getSkillsList(request);
+        if (index < skillsList.size()) {
+            var skill = skillsList.get(index);
+
+            var advOrDadv = getAdvOrDadvModifierString(request, skill.name());
+            var fullSkillName = skill.name();
+
+            if (skill.attributes().length > 1) {
+                var attributeJoiner = new StringJoiner("/", " (", ")");
+                for (var attribute : skill.attributes()) {
+                    attributeJoiner.add(attribute);
+                }
+                fullSkillName += attributeJoiner.toString();
+            }
+
+            if (!advOrDadv.isEmpty()) {
+                fullSkillName += advOrDadv;
+            }
+
+            return fullSkillName;
+        }
+        else {
+            return "";
+        }
+    }
+
+    /**
+     * Return a skill modifier in the following format:
+     * - "Modifier" if the skill has a single attribute
+     * - "Modifier1/Modifier2" if the skill has multiple attributes
+     *
+     * @param request Original request
+     * @param attributeScoreMap Scores for attributes
+     * @param index 0-based index of the skill to look up
+     * @return Skill modifier
+     */
+    private String getSkillModifier(CharacterCreateRequest request,
+                                    Map<AttributeType, Integer> attributeScoreMap, int index) {
+        if (request.isCommoner()) {
+            return "";
+        }
+
+        var level = request.level();
+        var skillsList = characterSheetWorker.getSkillsList(request);
+        if (index < skillsList.size()) {
+            var skill = skillsList.get(index);
+            if (skill.attributes().length > 1) {
+                var attributeJoiner = new StringJoiner("/");
+                for (var attribute : skill.attributes()) {
+                    var attrType = AttributeType.valueOf(attribute);
+                    var modifier = calculateSkillModifier(level, attrType, attributeScoreMap);
+                    attributeJoiner.add(modifier);
+                }
+
+                return attributeJoiner.toString();
+            }
+            else {
+                var attribute = skill.attributes()[0];
+                var attrType = AttributeType.valueOf(attribute);
+                return calculateSkillModifier(level, attrType, attributeScoreMap);
+            }
+        }
+        else {
+            return "";
+        }
+    }
+
+    private String calculateSkillModifier(int level, AttributeType attributeType,
+                                    Map<AttributeType, Integer> attributeScoreMap) {
+        var attributeScore = attributeScoreMap.get(attributeType);
+        var modifier = level + attributeScore;
+
+        return getModifierRepresentation(modifier);
     }
 }

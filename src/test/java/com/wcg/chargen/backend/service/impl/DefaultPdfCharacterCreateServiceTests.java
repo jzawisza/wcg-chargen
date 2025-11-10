@@ -15,6 +15,7 @@ import com.wcg.chargen.backend.util.PdfUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -218,7 +219,7 @@ public class DefaultPdfCharacterCreateServiceTests {
         var attributeType = AttributeType.STR;
         // We set the attribute map to all zeroes, so this attribute string will be true
         // for any attribute type
-        var expectedAttributeString = "0 (" + featureAttributeType.name() + ")";
+        var expectedAttributeString = "0 [" + featureAttributeType.name() + "]";
 
         var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
                 0, 0, 0, 0, 0, 0, 0);
@@ -445,8 +446,8 @@ public class DefaultPdfCharacterCreateServiceTests {
             FeatureAttributeType featureAttributeType) throws Exception {
         // arrange
         var perScore = 1;
-        var expectedInitiativeString = Integer.toString(perScore) + " (" +
-                featureAttributeType.name() + ")";
+        var expectedInitiativeString = Integer.toString(perScore) + " [" +
+                featureAttributeType.name() + "]";
 
         var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
                 0, 0, 0, perScore, 0, 0, 0);
@@ -580,7 +581,7 @@ public class DefaultPdfCharacterCreateServiceTests {
         var weaponIndex = 0;
         var weaponType = "Unarmed";
         var weaponDamage = "1d6";
-        var expectedCharSheetWeaponDamage = weaponDamage + " (" + featureAttributeType.name() + ")";
+        var expectedCharSheetWeaponDamage = weaponDamage + " [" + featureAttributeType.name() + "]";
 
         Mockito.when(characterSheetWorker.getWeaponType(any(), eq(weaponIndex)))
                 .thenReturn(weaponType);
@@ -1080,4 +1081,99 @@ public class DefaultPdfCharacterCreateServiceTests {
         }
     }
 
+    @Test
+    public void createCharacter_ReturnsEmptyStringForSkillsFieldsForCommonerCharacters()
+        throws Exception {
+        // arrange
+        var numSkillRows = 8;
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(0)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            for (var i = 0; i < numSkillRows; i++) {
+                var skillName = PdfUtil.getFieldValue(pdfDocument,
+                        PdfFieldConstants.SKILL_BASE + (i + 1));
+                var skillModifierName = PdfUtil.getFieldValue(pdfDocument,
+                        PdfFieldConstants.SKILL_MODIFIER_BASE + (i + 1));
+
+                assertEquals("", skillName);
+                assertEquals("", skillModifierName) ;
+            }
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsExpectedValuesForSkillsFieldsForClassCharacters()
+    throws Exception {
+        // arrange
+        var level = 3;
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                0, -1, 1, 0, 1, 2, 0);
+
+        var skillList = List.of(new Skill("Appraisal", new String[] {"INT"}),
+                new Skill("Athletics", new String[] {"STR", "COR", "STA"}),
+                new Skill("Deceit", new String[] {"PRS"}),
+                new Skill("Gather Information", new String[] {"PRS"}),
+                new Skill("Intimidation", new String[] {"STR", "PRS"}),
+                new Skill("Negotiation", new String[] {"PRS"}),
+                new Skill("Precise Tasks", new String[] {"PRS"}),
+                new Skill("Stealth", new String[] {"PRS"})
+                );
+        Mockito.when(characterSheetWorker.getSkillsList(any())).thenReturn(skillList);
+
+        // Mocks to test displaying skills with ADV/DADV
+        Mockito.when(characterSheetWorker.getAdvOrDadvByModifier(any(), eq("Athletics")))
+                .thenReturn(FeatureAttributeType.ADV);
+        Mockito.when(characterSheetWorker.getAdvOrDadvByModifier(any(), eq("Negotiation")))
+                .thenReturn(FeatureAttributeType.DADV);
+
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.ROGUE)
+                .withLevel(level)
+                .withAttributes(attributeMap)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            checkSkillRow(pdfDocument,1, "Appraisal", "+4");
+            checkSkillRow(pdfDocument,2, "Athletics (STR/COR/STA) [ADV]",
+                    "+3/+2/+4");
+            checkSkillRow(pdfDocument,3, "Deceit", "+5");
+            checkSkillRow(pdfDocument,4, "Gather Information",
+                    "+5");
+            checkSkillRow(pdfDocument,5, "Intimidation (STR/PRS)",
+                    "+3/+5");
+            checkSkillRow(pdfDocument,6, "Negotiation [DADV]", "+5");
+            checkSkillRow(pdfDocument,7, "Precise Tasks", "+5");
+            checkSkillRow(pdfDocument,8, "Stealth", "+5");
+        }
+    }
+
+    private void checkSkillRow(PDDocument pdfDocument, int row,
+                               String expectedSkillName, String expectedSkillModifier) {
+        var skillName = PdfUtil.getFieldValue(pdfDocument,
+                PdfFieldConstants.SKILL_BASE + row);
+        var skillModifierName = PdfUtil.getFieldValue(pdfDocument,
+                PdfFieldConstants.SKILL_MODIFIER_BASE + row);
+
+        assertEquals(expectedSkillName, skillName);
+        assertEquals(expectedSkillModifier, skillModifierName);
+    }
 }

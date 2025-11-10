@@ -7,11 +7,13 @@ import com.wcg.chargen.backend.enums.SpeciesType;
 import com.wcg.chargen.backend.model.CharClass;
 import com.wcg.chargen.backend.model.CharacterCreateRequest;
 import com.wcg.chargen.backend.model.Feature;
+import com.wcg.chargen.backend.model.Skill;
 import com.wcg.chargen.backend.service.CharClassesService;
 import com.wcg.chargen.backend.service.CommonerService;
 import com.wcg.chargen.backend.util.FeatureAttributeUtil;
 import com.wcg.chargen.backend.worker.CharacterSheetWorker;
 import com.wcg.chargen.backend.worker.RandomNumberWorker;
+import com.wcg.chargen.backend.worker.SkillsProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -38,6 +43,8 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
     CommonerService commonerService;
     @Autowired
     RandomNumberWorker randomNumberWorker;
+    @Autowired
+    SkillsProvider skillsProvider;
 
     public static final String SHIELD = "Shield";
 
@@ -568,5 +575,31 @@ public class DefaultCharacterSheetWorker implements CharacterSheetWorker {
         }
 
         return false;
+    }
+
+    public List<Skill> getSkillsList(CharacterCreateRequest characterCreateRequest) {
+        // Commoner characters don't have skills
+        if (characterCreateRequest.level() == 0) {
+            return Collections.emptyList();
+        }
+
+        // First, get all the class skills
+        var charClass = charClassesService.getCharClassByType(characterCreateRequest.characterClass());
+        // Wrap with ArrayList so we can mutate the list to add species and bonus skills
+        var skillsList = new ArrayList<>(charClass.skills().stream()
+                .map(x -> skillsProvider.getByName(x))
+                .toList());
+
+        // Then add the species skill (if applicable) and bonus skills
+        if (!StringUtils.isEmpty(characterCreateRequest.speciesSkill())) {
+            skillsList.add(skillsProvider.getByName(characterCreateRequest.speciesSkill()));
+        }
+        for (var bonusSkill : characterCreateRequest.bonusSkills()) {
+            skillsList.add(skillsProvider.getByName(bonusSkill));
+        }
+
+        return skillsList.stream()
+                .sorted((Comparator.comparing(Skill::name)))
+                .toList();
     }
 }
