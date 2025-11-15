@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +29,7 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
     private static final String PDF_FILE_NAME = "charSheet.pdf";
     private static final int NUM_WEAPONS_ROWS = 3;
     private static final int NUM_SKILLS_ROWS = 8;
+    private static final List<String> RANGED_WEAPON_TYPES = List.of("Bow", "Thrown");
 
     private final Logger logger = LoggerFactory.getLogger(DefaultPdfCharacterCreateService.class);
 
@@ -43,25 +41,6 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
     CharacterSheetWorker characterSheetWorker;
     @Autowired
     CharClassesService charClassesService;
-
-    private class SkillInfo {
-        private final String names;
-        private final String modifiers;
-
-        public SkillInfo(String names, String modifiers) {
-            this.names = names;
-            this.modifiers = modifiers;
-        }
-
-        public String getNames() {
-            return names;
-        }
-
-        public String getModifiers() {
-            return modifiers;
-        }
-    }
-
 
     @Override
     public PdfCharacterCreateStatus createCharacter(CharacterCreateRequest request) {
@@ -113,6 +92,7 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
 
                 var weaponName = characterSheetWorker.getWeaponName(request, i);
                 var weaponType = characterSheetWorker.getWeaponType(request, i);
+                var weaponAttackMod = getWeaponAttackModifier(request, weaponType);
                 var weaponDamage = characterSheetWorker.getWeaponDamage(request, i);
                 // This will never be null when processing actual requests, but could be
                 // null in unit test scenarios
@@ -126,6 +106,9 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
                 PdfUtil.setFieldValue(pdfDocument,
                         PdfFieldConstants.WEAPON_TYPE + weaponPdfIndex,
                         weaponType);
+                PdfUtil.setFieldValue(pdfDocument,
+                        PdfFieldConstants.WEAPON_ATTACK + weaponPdfIndex,
+                        weaponAttackMod);
                 PdfUtil.setFieldValue(pdfDocument,
                         PdfFieldConstants.WEAPON_DAMAGE + weaponPdfIndex,
                         weaponDamage);
@@ -247,6 +230,32 @@ public class DefaultPdfCharacterCreateService implements PdfCharacterCreateServi
             case DADV -> " [DADV]";
             default -> "";
         };
+    }
+
+    private String getWeaponAttackModifier(CharacterCreateRequest request, String weaponType) {
+        if (request.isCommoner() || !request.useQuickGear()) {
+            return "";
+        }
+
+        var modifierJoiner = new StringJoiner("/");
+        var charClass = charClassesService.getCharClassByType(request.characterClass());
+        var attackMod = charClass.attackModifiers().get(request.level() - 1);
+
+        var weaponTypes = weaponType.split("/");
+        for (var type: weaponTypes) {
+            if (RANGED_WEAPON_TYPES.contains(type)) {
+                var corMod = request.getAttributeValue(AttributeType.COR);
+                var totalMod = attackMod + corMod;
+                modifierJoiner.add(getModifierRepresentation(totalMod));
+            }
+            else {
+                var strMod = request.getAttributeValue(AttributeType.STR);
+                var totalMod = attackMod + strMod;
+                modifierJoiner.add(getModifierRepresentation(totalMod));
+            }
+        }
+
+        return modifierJoiner.toString();
     }
 
     private String getOffHandItem(CharacterCreateRequest request) {

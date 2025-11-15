@@ -32,8 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 
 @SpringBootTest
 public class DefaultPdfCharacterCreateServiceTests {
@@ -573,6 +572,103 @@ public class DefaultPdfCharacterCreateServiceTests {
         }
     }
 
+    @Test
+    public void createCharacter_ReturnsEmptyStringForWeaponAttackModifierForCommonerCharacters()
+            throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withLevel(0)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualWeaponAttackModifier = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_ATTACK + 1);
+            assertEquals("", actualWeaponAttackModifier);
+        }
+    }
+
+    @Test
+    public void createCharacter_ReturnsEmptyStringForWeaponAttackModifierForClassCharactersWithoutQuickGear()
+            throws Exception {
+        // arrange
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withUseQuickGear(false)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualWeaponAttackModifier = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_ATTACK + 1);
+            assertEquals("", actualWeaponAttackModifier);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "'Bow', '+3'",
+            "'Light', '+2'",
+            "'Light/Thrown', '+2/+3'"
+    })
+    public void createCharacter_ReturnsExpectedWeaponAttackModifiersForClassCharactersWithQuickGear(
+            String weaponType, String expectedWeaponAttackModifier) throws Exception {
+        // arrange
+        var weapon = new Weapon("Test Weapon", weaponType, "1d8");
+        var armor = new Armor("Leather", "Light", "3");
+        var gear = new Gear(List.of(armor), List.of(weapon), 0, 0, null);
+        var charClass = new CharClass(CharType.RANGER.toString(),
+                List.of(1,2,3,4,5,6,7),
+                null,
+                0,
+                0,
+                null,
+                gear,
+                null,
+                null);
+
+        Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        Mockito.when(characterSheetWorker.getWeaponType(any(), anyInt())).thenReturn(weaponType);
+
+        var attributeMap = CharacterCreateRequestBuilder.getAttributesMap(
+                1, 2, 0, 0, 0, 0, 0);
+        var request = CharacterCreateRequestBuilder.getBuilder()
+                .withSpeciesType(SpeciesType.HUMAN)
+                .withCharacterType(CharType.RANGER)
+                .withLevel(1)
+                .withAttributes(attributeMap)
+                .withUseQuickGear(true)
+                .build();
+
+        // act
+        var status = pdfCharacterCreateService.createCharacter(request);
+
+        // assert
+        assertNotNull(status);
+        assertNotNull(status.pdfStream());
+
+        try (var pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(status.pdfStream()))) {
+            var actualWeaponAttackModifier = PdfUtil.getFieldValue(pdfDocument,
+                    PdfFieldConstants.WEAPON_ATTACK + 1);
+            assertEquals(expectedWeaponAttackModifier, actualWeaponAttackModifier);
+        }
+    }
+
     @ParameterizedTest
     @EnumSource(value = FeatureAttributeType.class, names = {"ADV", "DADV"})
     public void createCharacter_DisplaysAdvOrDadvCorrectlyForWeaponDamage(
@@ -698,13 +794,13 @@ public class DefaultPdfCharacterCreateServiceTests {
     }
 
     @Test
-    public void createCharacter_ReturnsEmptyStringForOffHandItemForCharactersWithOnePieceOfAmor()
+    public void createCharacter_ReturnsEmptyStringForOffHandItemForCharactersWithOnePieceOfArmor()
             throws Exception {
         // arrange
         var armor = new Armor("Leather", "Light", "3");
         var gear = new Gear(List.of(armor), null, 0, 0, null);
         var charClass = new CharClass(CharType.SKALD.toString(),
-                null,
+                List.of(1,2,3,4,5,6,7),
                 null,
                 0,
                 0,
@@ -714,6 +810,8 @@ public class DefaultPdfCharacterCreateServiceTests {
                 null);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        // Needed to allow weapon attack modifier logic to work
+        Mockito.when(characterSheetWorker.getWeaponType(any(), anyInt())).thenReturn("Test");
 
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withSpeciesType(SpeciesType.HUMAN)
@@ -745,7 +843,7 @@ public class DefaultPdfCharacterCreateServiceTests {
         var shield = new Armor(expectedOffHandItem, "Shield", "All from one hit");
         var gear = new Gear(List.of(armor, shield), null, 0, 0, null);
         var charClass = new CharClass(CharType.SKALD.toString(),
-                null,
+                List.of(1,2,3,4,5,6,7),
                 null,
                 0,
                 0,
@@ -755,6 +853,8 @@ public class DefaultPdfCharacterCreateServiceTests {
                 null);
 
         Mockito.when(charClassesService.getCharClassByType(any())).thenReturn(charClass);
+        // Needed to allow weapon attack modifier logic to work
+        Mockito.when(characterSheetWorker.getWeaponType(any(), anyInt())).thenReturn("Test");
 
         var request = CharacterCreateRequestBuilder.getBuilder()
                 .withSpeciesType(SpeciesType.HUMAN)
