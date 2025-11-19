@@ -8,7 +8,7 @@ This application consists of a Spring Boot backend and a React frontend.  The Re
 
 ## Building and Running the Backend
 
-To build the Spring Boot backend, run `./mvnw clean package` in the current directory.  Java 21 is required to build the application.
+To build the Spring Boot backend, run `./mvnw clean package` in the current directory.  Java 25 is required to build the application.
 
 To run the backend locally in the IntelliJ IDE, create a new [run configuration](https://www.jetbrains.com/help/idea/run-debug-configuration.html) of type Application with the following parameters.
 

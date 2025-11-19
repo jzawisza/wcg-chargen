@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
+		<version>3.5.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.wcg.chargen</groupId>
@@ -16,11 +16,11 @@
 	<description>Backend for Wicked Cool Games character generator</description>
 
 	<properties>
-		<java.version>21</java.version>
-		<jackson.dataformat.yaml.version>2.16.1</jackson.dataformat.yaml.version>
-		<commons-lang3.version>3.14.0</commons-lang3.version>
+		<java.version>25</java.version>
+		<jackson.dataformat.yaml.version>2.20.1</jackson.dataformat.yaml.version>
+		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<google.api.services.sheets.version>v4-rev20250211-2.0.0</google.api.services.sheets.version>
-		<pdfbox.version>3.0.5</pdfbox.version>
+		<pdfbox.version>3.0.6</pdfbox.version>
 		<frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
 		<maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
 		<node.version>v24.11.1</node.version>
