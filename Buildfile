@@ -1,1 +1,1 @@
-build: ./mvnw clean install
+build: mvn clean install
