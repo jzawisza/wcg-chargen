@@ -1,0 +1,1 @@
+build: ./mvnw clean install
