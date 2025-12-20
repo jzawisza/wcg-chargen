@@ -64,7 +64,7 @@ const CreateCharacter: React.FC = () => {
             if (!status) {
                 Modal.error({
                     title: 'Error creating character sheet',
-                    content: 'Please retry this operation later.  If you get the same error, contact <CONTACT_INFO>.',
+                    content: 'Please retry this operation later.',
                 });
             }
         });

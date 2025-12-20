@@ -21,10 +21,11 @@
 		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<google.api.services.sheets.version>v4-rev20250211-2.0.0</google.api.services.sheets.version>
 		<pdfbox.version>3.0.6</pdfbox.version>
-		<frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
-		<maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
 		<node.version>v24.11.1</node.version>
-	</properties>
+        <frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
+    </properties>
 
 	<dependencies>
 		<dependency>
@@ -108,7 +109,7 @@
 						<goals>
 							<goal>install-node-and-npm</goal>
 						</goals>
-						<phase>install</phase>
+						<phase>prepare-package</phase>
 					</execution>
 					<execution>
 						<id>npm-build</id>
@@ -131,7 +132,7 @@
 						<goals>
 							<goal>copy-resources</goal>
 						</goals>
-						<phase>install</phase>
+						<phase>prepare-package</phase>
 						<configuration>
 							<outputDirectory>${project.build.outputDirectory}/static/</outputDirectory>
 							<resources>
@@ -142,8 +143,45 @@
 							</resources>
 						</configuration>
 					</execution>
+                    <execution>
+                        <id>copy-ebextensions-files</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/jar-root-files/.ebextensions</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+
+                <executions>
+                    <execution>
+                        <id>build-elastic-beanstalk-zip-file</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>install</phase>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/eb-deployment.xml</descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}-eb-deployment</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 
